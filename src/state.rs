@@ -1063,14 +1063,15 @@ impl PortalMouseController {
 }
 
 fn create_mouse_backend() -> Result<MouseBackend, String> {
-    let wayland_session = env::var("XDG_SESSION_TYPE").ok().as_deref() == Some("wayland")
-        || env::var("WAYLAND_DISPLAY")
-            .ok()
-            .is_some_and(|value| !value.is_empty());
-
     #[cfg(target_os = "linux")]
-    if wayland_session && let Ok(controller) = PortalMouseController::new() {
-        return Ok(MouseBackend::Portal(controller));
+    {
+        let wayland_session = env::var("XDG_SESSION_TYPE").ok().as_deref() == Some("wayland")
+            || env::var("WAYLAND_DISPLAY")
+                .ok()
+                .is_some_and(|value| !value.is_empty());
+        if wayland_session && let Ok(controller) = PortalMouseController::new() {
+            return Ok(MouseBackend::Portal(controller));
+        }
     }
 
     create_mouse_enigo().map(|enigo| MouseBackend::Enigo(Box::new(enigo)))

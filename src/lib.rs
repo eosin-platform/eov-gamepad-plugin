@@ -1,5 +1,5 @@
-mod sidebar;
 mod state;
+mod window;
 
 use abi_stable::std_types::{ROption, RString, RVec};
 use plugin_api::ffi::{
@@ -49,11 +49,11 @@ extern "C" fn on_hud_action_ffi(
 }
 
 extern "C" fn on_ui_callback_ffi(callback_name: RString, args_json: RString) {
-    sidebar::on_sidebar_callback(callback_name.as_str(), args_json.as_str());
+    window::on_sidebar_callback(callback_name.as_str(), args_json.as_str());
 }
 
 extern "C" fn get_sidebar_properties_ffi() -> RVec<UiPropertyFFI> {
-    sidebar::get_sidebar_properties()
+    window::get_sidebar_properties()
 }
 
 extern "C" fn get_viewport_context_menu_items_ffi(

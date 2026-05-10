@@ -8,14 +8,22 @@ import tarfile
 
 
 def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="Package the gamepad plugin as a .eop tarball")
-    parser.add_argument("--plugin-root", required=True, help="Path to the plugin repository root")
-    parser.add_argument("--library", required=True, help="Compiled plugin shared library to include")
+    parser = argparse.ArgumentParser(
+        description="Package the gamepad plugin as a .eop tarball"
+    )
+    parser.add_argument(
+        "--plugin-root", required=True, help="Path to the plugin repository root"
+    )
+    parser.add_argument(
+        "--library", required=True, help="Compiled plugin shared library to include"
+    )
     parser.add_argument("--output", required=True, help="Output .eop file path")
     return parser.parse_args()
 
 
-def add_directory(archive: tarfile.TarFile, root: pathlib.Path, relative_dir: pathlib.Path) -> None:
+def add_directory(
+    archive: tarfile.TarFile, root: pathlib.Path, relative_dir: pathlib.Path
+) -> None:
     directory = root / relative_dir
     for path in sorted(directory.rglob("*")):
         if path.is_file():
