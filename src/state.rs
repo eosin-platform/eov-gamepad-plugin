@@ -1,4 +1,5 @@
 use abi_stable::std_types::RString;
+#[cfg(target_os = "linux")]
 use ashpd::desktop::{
     PersistMode, Session,
     remote_desktop::{DeviceType, RemoteDesktop},
@@ -964,10 +965,12 @@ struct MouseController {
 }
 
 enum MouseBackend {
+    #[cfg(target_os = "linux")]
     Portal(PortalMouseController),
     Enigo(Box<Enigo>),
 }
 
+#[cfg(target_os = "linux")]
 struct PortalMouseController {
     remote_desktop: RemoteDesktop<'static>,
     session: Session<'static, RemoteDesktop<'static>>,
@@ -995,6 +998,7 @@ impl MouseController {
             }
         }
         let result = match self.backend.as_mut() {
+            #[cfg(target_os = "linux")]
             Some(MouseBackend::Portal(controller)) => controller.move_relative(x, y),
             Some(MouseBackend::Enigo(enigo)) => enigo
                 .move_mouse(x, y, Coordinate::Rel)
@@ -1012,6 +1016,7 @@ impl MouseController {
     }
 }
 
+#[cfg(target_os = "linux")]
 impl PortalMouseController {
     fn new() -> Result<Self, String> {
         futures::executor::block_on(async {
@@ -1063,6 +1068,7 @@ fn create_mouse_backend() -> Result<MouseBackend, String> {
             .ok()
             .is_some_and(|value| !value.is_empty());
 
+    #[cfg(target_os = "linux")]
     if wayland_session && let Ok(controller) = PortalMouseController::new() {
         return Ok(MouseBackend::Portal(controller));
     }

@@ -33,10 +33,6 @@ jobs:
             rust_target: aarch64-pc-windows-msvc
             ntldd_filter: clangarm64
 
-    env:
-      OPENSLIDE_REPO_URL: "https://github.com/Yanstart/openslide.git"
-      OPENSLIDE_COMMIT: "00bebfb6a412485f7fbfe7fdb5919a3868594c13"
-
     steps:
       - name: Check out repository
         uses: actions/checkout@v5
@@ -89,21 +85,10 @@ jobs:
           update: true
           install: >-
             ${{ matrix.msys2_prefix }}-clang
-            ${{ matrix.msys2_prefix }}-meson
-            ${{ matrix.msys2_prefix }}-ninja
             ${{ matrix.msys2_prefix }}-pkg-config
             ${{ matrix.msys2_prefix }}-cairo
             ${{ matrix.msys2_prefix }}-gdk-pixbuf2
             ${{ matrix.msys2_prefix }}-glib2
-            ${{ matrix.msys2_prefix }}-libjpeg-turbo
-            ${{ matrix.msys2_prefix }}-libpng
-            ${{ matrix.msys2_prefix }}-libtiff
-            ${{ matrix.msys2_prefix }}-libxml2
-            ${{ matrix.msys2_prefix }}-openjpeg2
-            ${{ matrix.msys2_prefix }}-zlib
-            ${{ matrix.msys2_prefix }}-ntldd
-            ${{ matrix.msys2_prefix }}-tools
-            git
 
       - name: Derive release metadata
         id: meta
@@ -147,76 +132,9 @@ jobs:
             echo "library_name=gamepad.dll"
           } >> "$GITHUB_OUTPUT"
 
-      - name: Install uthash headers
-        shell: msys2 {0}
-        run: |
-          set -euo pipefail
-          curl -fsSL https://github.com/troydhanson/uthash/archive/v2.3.0.tar.gz | tar xz --exclude='uthash-2.3.0/include'
-          install -Dm644 uthash-2.3.0/src/uthash.h "$MSYSTEM_PREFIX/include/uthash.h"
-          install -Dm644 uthash-2.3.0/src/utarray.h "$MSYSTEM_PREFIX/include/utarray.h"
-          install -Dm644 uthash-2.3.0/src/utlist.h "$MSYSTEM_PREFIX/include/utlist.h"
-          install -Dm644 uthash-2.3.0/src/utringbuffer.h "$MSYSTEM_PREFIX/include/utringbuffer.h"
-          install -Dm644 uthash-2.3.0/src/utstack.h "$MSYSTEM_PREFIX/include/utstack.h"
-          rm -rf uthash-2.3.0
-
-      - name: Build libdicom
-        shell: msys2 {0}
-        run: |
-          set -euo pipefail
-          curl -fsSL https://github.com/ImagingDataCommons/libdicom/releases/download/v1.2.0/libdicom-1.2.0.tar.xz | tar xJ
-          cd libdicom-1.2.0
-          meson setup _build \
-            --prefix="$MSYSTEM_PREFIX" \
-            --libdir=lib \
-            -Dtests=false \
-            --wrap-mode=nofallback
-          meson compile -C _build
-          meson install -C _build
-
-      - name: Build OpenSlide from source
-        shell: msys2 {0}
-        run: |
-          set -euo pipefail
-          git init openslide-src
-          git -C openslide-src remote add origin "$OPENSLIDE_REPO_URL"
-          git -C openslide-src fetch --depth 1 origin "$OPENSLIDE_COMMIT"
-          git -C openslide-src checkout --detach FETCH_HEAD
-          cd openslide-src
-          meson setup _build \
-            --prefix="$MSYSTEM_PREFIX" \
-            --libdir=lib \
-            -Dtest=disabled \
-            --wrap-mode=nofallback
-          meson compile -C _build
-          meson install -C _build
-
-      - name: Generate OpenSlide .def file
-        shell: msys2 {0}
-        run: |
-          set -euo pipefail
-          dll=$(find "$MSYSTEM_PREFIX/bin" -maxdepth 1 -name 'libopenslide-*.dll' -type f | head -1)
-          [[ -n "$dll" ]] || { echo "No OpenSlide DLL found in $MSYSTEM_PREFIX/bin" >&2; exit 1; }
-
-          mkdir -p openslide-msvc
-          gendef - "$dll" > openslide-msvc/openslide.def
-
-          export_count=$(grep -c '^openslide_' openslide-msvc/openslide.def || true)
-          if [[ "$export_count" -lt 1 ]]; then
-            echo "ERROR: .def contains no openslide exports" >&2
-            exit 1
-          fi
-
-      - name: Create MSVC import library for OpenSlide
-        shell: pwsh
-        run: |
-          $ErrorActionPreference = 'Stop'
-          lib /def:openslide-msvc\openslide.def /out:openslide-msvc\openslide.lib /machine:${{ matrix.lib_machine }}
-
       - name: Build plugin library
         shell: pwsh
         run: |
-          $libDir = Join-Path (Get-Location) "openslide-msvc"
-          $env:RUSTFLAGS = "-L native=$libDir"
           cargo build --release --target ${{ matrix.rust_target }}
 
       - name: Package .eop

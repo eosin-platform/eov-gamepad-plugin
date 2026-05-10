@@ -39,25 +39,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          brew install cairo gdk-pixbuf glib jpeg-turbo libpng libtiff libxml2 meson ninja openjpeg pkg-config sqlite
-
-      - name: Build OpenSlide from source
-        shell: bash
-        run: |
-          set -euo pipefail
-          openslide_prefix="$RUNNER_TEMP/openslide-prefix"
-          OPENSLIDE_PREFIX="$openslide_prefix" \
-          OPENSLIDE_BUILD_ROOT="$RUNNER_TEMP/openslide-build" \
-            bash eov-src/packaging/shared/build-openslide.sh
-
-          {
-            echo "OPENSLIDE_PREFIX=$openslide_prefix"
-            echo "OPENSLIDE_LIB_DIR=$openslide_prefix/lib"
-            echo "PKG_CONFIG_PATH=$openslide_prefix/lib/pkgconfig${PKG_CONFIG_PATH+:$PKG_CONFIG_PATH}"
-            echo "DYLD_LIBRARY_PATH=$openslide_prefix/lib${DYLD_LIBRARY_PATH+:$DYLD_LIBRARY_PATH}"
-            echo "LIBRARY_PATH=$openslide_prefix/lib${LIBRARY_PATH+:$LIBRARY_PATH}"
-            echo "RUSTFLAGS=-L native=$openslide_prefix/lib ${RUSTFLAGS:-}"
-          } >> "$GITHUB_ENV"
+          brew install cairo gdk-pixbuf glib pkg-config
 
       - name: Link eov workspace crates
         shell: bash
