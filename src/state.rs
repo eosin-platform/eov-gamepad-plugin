@@ -398,6 +398,10 @@ pub fn device_labels() -> Vec<String> {
 
 pub fn toggle_window() -> bool {
     prepare_window_runtime();
+    if host_api().is_some() {
+        return true;
+    }
+
     let open = window_is_open();
     if open {
         let _ = request_window_close();
@@ -668,7 +672,6 @@ fn worker_loop() {
     let mut pressed_buttons: HashSet<String> = HashSet::new();
     let mut last_visible_devices = Vec::<String>::new();
     let mut last_runtime_sync = SystemTime::UNIX_EPOCH;
-    let mut last_window_open_state = false;
     let mut mouse_controller = MouseController::default();
 
     loop {
@@ -784,12 +787,6 @@ fn worker_loop() {
         }
 
         apply_continuous_mappings(&axis_values, &pressed_buttons, &mut mouse_controller);
-
-        let window_open = window_is_open();
-        if window_open != last_window_open_state {
-            set_toolbar_button_active(window_open);
-            last_window_open_state = window_open;
-        }
 
         if refresh_window {
             let state = plugin_state().lock().unwrap();
@@ -1396,7 +1393,9 @@ fn ensure_window_watcher_started() {
                     let current_close_token =
                         fs::read_to_string(&close_request_path).unwrap_or_default();
                     if !current_close_token.is_empty() && current_close_token != last_close_token {
-                        let _ = slint::quit_event_loop();
+                        let _ = slint::invoke_from_event_loop(|| {
+                            let _ = slint::quit_event_loop();
+                        });
                         break;
                     }
                     last_close_token = current_close_token;
