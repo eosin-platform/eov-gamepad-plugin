@@ -36,7 +36,7 @@ The plugin is designed so the controller can handle both direct viewport motion 
 
 When the plugin is loaded into eov, it contributes one toolbar button:
 
-- `Gamepad`: opens or closes the gamepad settings window
+- `Gamepad` (<img src="ui/icons/gamepad.svg" width="24" />): opens or closes the gamepad settings window
 
 The window is a runtime-loaded Slint UI hosted by eov. It is wider than the standard plugin window size because it exposes both tuning controls and a full mapping table.
 
