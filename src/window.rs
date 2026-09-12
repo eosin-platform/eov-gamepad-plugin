@@ -1,5 +1,5 @@
 use abi_stable::std_types::RVec;
-use plugin_api::ffi::{HostLogLevelFFI, UiPropertyFFI};
+use eov_plugin_api::ffi::{HostLogLevelFFI, UiPropertyFFI};
 use serde_json::json;
 
 use crate::state;

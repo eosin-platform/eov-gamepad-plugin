@@ -2,7 +2,7 @@ mod state;
 mod window;
 
 use abi_stable::std_types::{ROption, RString, RVec};
-use plugin_api::ffi::{
+use eov_plugin_api::ffi::{
     ActionResponseFFI, GpuFilterContextFFI, HostApiVTable, HudToolbarButtonFFI, PluginVTable,
     ToolbarButtonFFI, UiPropertyFFI, ViewportContextMenuItemFFI, ViewportFilterFFI,
     ViewportOverlayComponentRequestFFI, ViewportOverlayPointFFI, ViewportOverlayPolygonFFI,

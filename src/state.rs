@@ -5,8 +5,8 @@ use ashpd::desktop::{
     remote_desktop::{DeviceType, RemoteDesktop},
 };
 use enigo::{Coordinate, Enigo, Mouse, Settings};
+use eov_plugin_api::ffi::{HostApiVTable, HostLogLevelFFI, UiPropertyFFI};
 use gilrs::{Axis, Button, EventType, GamepadId, Gilrs};
-use plugin_api::ffi::{HostApiVTable, HostLogLevelFFI, UiPropertyFFI};
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 use std::collections::{BTreeMap, HashMap, HashSet};
