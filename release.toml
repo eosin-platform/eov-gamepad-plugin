@@ -1,36 +1,36 @@
 [platform.windows.x86_64]
-version = "0.2.1"
-sha256 = "f7b226af807d2b0aa59d6580e00bb7a5d8b4d6a6990b836352c2fa3d1840bbc0"
-url = "https://github.com/eosin-platform/eov-gamepad-plugin/releases/download/v0.2.1/gamepad-v0.2.1-windows-x86_64.eop"
+version = "0.2.2"
+sha256 = "e67e707e83b3b18784ea2d9f40e5f17e31f0e36d78ba3ea1b38783686c8ffbe3"
+url = "https://github.com/eosin-platform/eov-gamepad-plugin/releases/download/v0.2.2/gamepad-v0.2.2-windows-x86_64.eop"
 environment = ">=0.4.1"
 
 [platform.windows.arm64]
-version = "0.2.1"
-sha256 = "48c3ce8b2b4180826ace2d905b14a65cf7af99120d28f20a60f8afc725c00ecc"
-url = "https://github.com/eosin-platform/eov-gamepad-plugin/releases/download/v0.2.1/gamepad-v0.2.1-windows-arm64.eop"
+version = "0.2.2"
+sha256 = "d14299268d34f58b93f22c80ad7b5451a39bac06e52fcc8d0d9c8fa0fd3dee88"
+url = "https://github.com/eosin-platform/eov-gamepad-plugin/releases/download/v0.2.2/gamepad-v0.2.2-windows-arm64.eop"
 environment = ">=0.4.1"
 
 [platform.linux.arm64]
-version = "0.2.1"
-sha256 = "bf7aff70917db6d30ea2d6e41bbe49c8795a27ea889c0cfd2d610e5c6a769ac0"
-url = "https://github.com/eosin-platform/eov-gamepad-plugin/releases/download/v0.2.1/gamepad-v0.2.1-linux-arm64.eop"
+version = "0.2.2"
+sha256 = "739739f70dd9fa8c6daa60bc73ac8c934ab880b3f7ac9a0c202e3f9ca4933328"
+url = "https://github.com/eosin-platform/eov-gamepad-plugin/releases/download/v0.2.2/gamepad-v0.2.2-linux-arm64.eop"
 environment = ">=0.4.1"
 
 [platform.linux.x86_64]
-version = "0.2.1"
-sha256 = "06dd5a05ed9c51d6b0de899cd518e2826e414bdde76fd3f353106dfd719f6874"
-url = "https://github.com/eosin-platform/eov-gamepad-plugin/releases/download/v0.2.1/gamepad-v0.2.1-linux-x86_64.eop"
+version = "0.2.2"
+sha256 = "19bc0a9fb0d2b30d1c79d3d4e473821ada40c8e4b7b60dfdc5b85ff87aefd74e"
+url = "https://github.com/eosin-platform/eov-gamepad-plugin/releases/download/v0.2.2/gamepad-v0.2.2-linux-x86_64.eop"
 environment = ">=0.4.1"
 
 [platform.macos.arm64]
-version = "0.2.1"
-sha256 = "6a13bb3f5fa876195cea38597148f58102fca15f23c3aec91d37ec20eceb73a2"
-url = "https://github.com/eosin-platform/eov-gamepad-plugin/releases/download/v0.2.1/gamepad-v0.2.1-macos-arm64.eop"
+version = "0.2.2"
+sha256 = "6932ac7ad8171b6623716f2606f0627ce6c1cd0fef2c27c28ef320f3560ba926"
+url = "https://github.com/eosin-platform/eov-gamepad-plugin/releases/download/v0.2.2/gamepad-v0.2.2-macos-arm64.eop"
 environment = ">=0.4.1"
 
 [platform.macos.x86_64]
-version = "0.2.1"
-sha256 = "2cd37e7c5273e01d3c951b95e98243db6c812895b27d326ea3b42155dffd9385"
-url = "https://github.com/eosin-platform/eov-gamepad-plugin/releases/download/v0.2.1/gamepad-v0.2.1-macos-x86_64.eop"
+version = "0.2.2"
+sha256 = "44a615ad51dab3fc9f9eea88a22a4e6a7de56c104b7b3ca7a24e58d1dc9f8ea8"
+url = "https://github.com/eosin-platform/eov-gamepad-plugin/releases/download/v0.2.2/gamepad-v0.2.2-macos-x86_64.eop"
 environment = ">=0.4.1"
 
