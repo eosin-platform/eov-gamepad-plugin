@@ -19,7 +19,7 @@ from release_infrastructure import (
 
 class GamepadReleaseInfrastructureTests(unittest.TestCase):
     def test_source_metadata_is_consistent(self) -> None:
-        self.assertEqual(validate_source(Path(__file__).parents[1], "0.2.2"), ">=0.4.1")
+        self.assertEqual(validate_source(Path(__file__).parents[1], "0.2.3"), ">=0.4.1")
 
     def test_manifest_uses_staged_hashes_and_immutable_urls(self) -> None:
         with tempfile.TemporaryDirectory() as temporary_directory:

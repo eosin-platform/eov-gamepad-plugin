@@ -1,6 +1,6 @@
 id = "gamepad"
 name = "Gamepad"
-version = "0.2.2"
+version = "0.2.3"
 entry_ui = "ui/gamepad-window.slint"
 entry_component = "GamepadWindow"
 
