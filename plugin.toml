@@ -1,6 +1,8 @@
 id = "gamepad"
 name = "Gamepad"
 version = "0.2.3"
+description = "Provides support for using gamepads as input devices"
+repository = "https://github.com/eosin-platform/eov-gamepad-plugin"
 entry_ui = "ui/gamepad-window.slint"
 entry_component = "GamepadWindow"
 

@@ -41,6 +41,9 @@ class GamepadReleaseInfrastructureTests(unittest.TestCase):
                 ">=0.4.1",
                 specs,
                 staged,
+                "gamepad",
+                "Gamepad",
+                "Provides support for using gamepads as input devices",
             )
             import tomllib
 
@@ -52,6 +55,9 @@ class GamepadReleaseInfrastructureTests(unittest.TestCase):
                 specs,
             )
             self.assertNotIn("/latest/", content)
+            self.assertIn("[manifest]", content)
+            self.assertIn("[plugin]", content)
+            self.assertIn('id = "gamepad"', content)
 
     def test_missing_artifact_fails(self) -> None:
         with tempfile.TemporaryDirectory() as temporary_directory:
