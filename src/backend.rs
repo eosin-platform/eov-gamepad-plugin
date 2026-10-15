@@ -5,9 +5,10 @@
 
 use crate::config::Control;
 use crate::engine::{DeviceId, DeviceInfo, InputEvent, Power};
-use gilrs::{Axis, Button, EventType, GamepadId, Gilrs};
+use gilrs::ev::filter::{Filter, Jitter, axis_dpad_to_button, deadzone};
+use gilrs::{Axis, Button, EventType, GamepadId, Gilrs, GilrsBuilder};
 use std::collections::HashMap;
-use std::time::Duration;
+use std::time::{Duration, Instant};
 
 /// Why a backend could not start.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -41,6 +42,34 @@ pub trait InputBackend: Sized + 'static {
     }
 }
 
+/// A raw event source with a blocking wait that returns for every raw event.
+trait Pump {
+    type Raw;
+    fn poll(&mut self) -> Option<Self::Raw>;
+    fn block(&mut self, timeout: Duration) -> Option<Self::Raw>;
+    /// Filters and translates one raw event (possibly into nothing).
+    fn handle(&mut self, raw: Self::Raw, events: &mut Vec<InputEvent>);
+}
+
+/// Waits until something lands in `events` or `timeout` passes, however
+/// many raw events are filtered away meanwhile.
+fn pump<P: Pump>(source: &mut P, timeout: Duration, events: &mut Vec<InputEvent>) {
+    let deadline = Instant::now() + timeout;
+    loop {
+        while let Some(raw) = source.poll() {
+            source.handle(raw, events);
+        }
+        let remaining = deadline.saturating_duration_since(Instant::now());
+        if !events.is_empty() || remaining.is_zero() {
+            return;
+        }
+        match source.block(remaining) {
+            Some(raw) => source.handle(raw, events),
+            None => return,
+        }
+    }
+}
+
 // ---------------------------------------------------------------------------
 // gilrs
 // ---------------------------------------------------------------------------
@@ -64,6 +93,7 @@ pub struct GilrsBackend {
     tracked: HashMap<GamepadId, Tracked>,
     next_id: DeviceId,
     pending: Vec<InputEvent>,
+    jitter: Jitter,
 }
 
 /// Controllers that can drive the default layout: a face or Start button and
@@ -144,6 +174,20 @@ fn trigger_from_axis(floor: &mut f32, value: f32) -> f32 {
 }
 
 impl GilrsBackend {
+    /// gilrs's default filters (D-pad hats to buttons, jitter, device dead
+    /// zones) and state update, as `Gilrs::next_event` applies them.
+    fn filtered(&mut self, raw: gilrs::Event) -> Option<gilrs::Event> {
+        let event = Some(raw)
+            .filter_ev(&axis_dpad_to_button, &mut self.gilrs)
+            .filter_ev(&self.jitter, &mut self.gilrs)
+            .filter_ev(&deadzone, &mut self.gilrs)?;
+        if event.is_dropped() {
+            return None;
+        }
+        self.gilrs.update(&event);
+        Some(event)
+    }
+
     fn track(&mut self, id: GamepadId) -> Option<InputEvent> {
         let gamepad = self.gilrs.connected_gamepad(id)?;
         if !is_supported(&gamepad) {
@@ -258,17 +302,42 @@ impl GilrsBackend {
     }
 }
 
+impl Pump for GilrsBackend {
+    type Raw = gilrs::Event;
+
+    fn poll(&mut self) -> Option<gilrs::Event> {
+        self.gilrs.next_event()
+    }
+
+    fn block(&mut self, timeout: Duration) -> Option<gilrs::Event> {
+        // Returns for every raw event: the default filters are off.
+        self.gilrs.next_event_blocking(Some(timeout))
+    }
+
+    fn handle(&mut self, raw: gilrs::Event, events: &mut Vec<InputEvent>) {
+        if let Some(event) = self.filtered(raw) {
+            self.translate(event, events);
+        }
+    }
+}
+
 impl InputBackend for GilrsBackend {
     fn open(_context: &BackendContext) -> Result<Self, BackendError> {
-        let gilrs = Gilrs::new().map_err(|error| BackendError {
-            message: error.to_string(),
-            hint: crate::environment::access_hint(),
-        })?;
+        // The default filters run in `filtered` instead (see `wait`).
+        let gilrs = GilrsBuilder::new()
+            .with_default_filters(false)
+            .set_update_state(false)
+            .build()
+            .map_err(|error| BackendError {
+                message: error.to_string(),
+                hint: crate::environment::access_hint(),
+            })?;
         let mut backend = Self {
             gilrs,
             tracked: HashMap::new(),
             next_id: 1,
             pending: Vec::new(),
+            jitter: Jitter::new(),
         };
         // gilrs reports controllers that were connected before it started
         // without Connected events.
@@ -281,16 +350,14 @@ impl InputBackend for GilrsBackend {
         Ok(backend)
     }
 
+    /// With its default filters, gilrs's blocking wait restarts the full
+    /// timeout whenever a filter drops an event, so a stick wobbling below
+    /// the jitter threshold could keep it from ever returning (and stall
+    /// motion, settings writes and shutdown). Its filters therefore run in
+    /// [`Pump::handle`], one raw event at a time, and the deadline is ours.
     fn wait(&mut self, timeout: Duration, events: &mut Vec<InputEvent>) {
         events.append(&mut self.pending);
-        if events.is_empty()
-            && let Some(event) = self.gilrs.next_event_blocking(Some(timeout))
-        {
-            self.translate(event, events);
-        }
-        while let Some(event) = self.gilrs.next_event() {
-            self.translate(event, events);
-        }
+        pump(self, timeout, events);
     }
 
     fn refresh(&mut self, events: &mut Vec<InputEvent>) {
@@ -429,6 +496,61 @@ mod tests {
         assert_eq!(button_control(Button::LeftTrigger2), None);
         assert_eq!(button_control(Button::Mode), None);
         assert!(stick_control(Axis::LeftZ).is_none());
+    }
+
+    /// Raw events every millisecond that the filters drop (stick jitter),
+    /// optionally followed by a real one.
+    struct Noisy {
+        started: Instant,
+        real_after: Option<Duration>,
+    }
+
+    impl Pump for Noisy {
+        type Raw = bool;
+
+        fn poll(&mut self) -> Option<bool> {
+            None
+        }
+
+        fn block(&mut self, timeout: Duration) -> Option<bool> {
+            std::thread::sleep(timeout.min(Duration::from_millis(1)));
+            let real = self
+                .real_after
+                .is_some_and(|after| self.started.elapsed() >= after);
+            Some(real)
+        }
+
+        fn handle(&mut self, real: bool, events: &mut Vec<InputEvent>) {
+            if real {
+                events.push(InputEvent::Disconnected(1));
+            }
+        }
+    }
+
+    #[test]
+    fn filtered_noise_does_not_extend_the_wait() {
+        let mut noisy = Noisy {
+            started: Instant::now(),
+            real_after: None,
+        };
+        let mut events = Vec::new();
+        let started = Instant::now();
+        pump(&mut noisy, Duration::from_millis(30), &mut events);
+        let waited = started.elapsed();
+        assert!(events.is_empty());
+        assert!(
+            waited >= Duration::from_millis(30) && waited < Duration::from_millis(500),
+            "{waited:?}"
+        );
+        // A real event ends the wait early.
+        let mut noisy = Noisy {
+            started: Instant::now(),
+            real_after: Some(Duration::from_millis(5)),
+        };
+        let started = Instant::now();
+        pump(&mut noisy, Duration::from_secs(5), &mut events);
+        assert_eq!(events, vec![InputEvent::Disconnected(1)]);
+        assert!(started.elapsed() < Duration::from_secs(1));
     }
 
     #[test]
