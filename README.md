@@ -75,13 +75,18 @@ Motion applies to the focused pane:
   or the gamepad settings window. Using the controller in another
   application does nothing in eov, and with two eov windows open only the
   focused one reacts.
+- eov reports focus changes when it draws a frame. When the controller is
+  used after a quiet moment, the plugin asks eov for a frame and checks the
+  focus before acting, so the first press or stick movement after a pause
+  can act about 70 ms late. Continuous use is not delayed.
 - **Enable / Pause** (the switch in the window, or Start by default) stops
   every action except Enable / Pause itself. While paused, the status bar
   shows "Gamepad paused".
 - Nothing outside eov is touched by default. The *System Pointer* option
   (off by default) lets "Move Pointer" mappings move the system pointer
   while eov has focus. Turning it on asks the system for permission:
-  - Wayland: the Remote Desktop portal asks once; the grant is remembered.
+  - Wayland: the Remote Desktop portal asks; where the portal supports it,
+    the grant is remembered until revoked.
   - X11: no prompt (XTest).
   - macOS: eov needs Accessibility access (System Settings › Privacy &
     Security › Accessibility). This applies to the whole eov process.
@@ -122,13 +127,18 @@ starts off.
 
 ## Platform and packaging notes
 
-- **Linux** reads controllers through evdev and udev (`libudev`). The
-  logged-in user can usually read game controllers; if not, add a udev rule
-  for the controller or add the user to the `input` group.
+- **Linux** reads controllers through evdev and udev (`libudev`). udev
+  normally gives the logged-in user access to game controllers (the
+  `uaccess` tag). If a connected controller is not detected, install a udev
+  rule that tags it with `uaccess` (distributions package such rules, for
+  example `steam-devices`) and reconnect it; the settings window says when
+  this is the likely cause. Adding the user to the `input` group also works,
+  but it lets every program of that user read all keyboards and mice.
 - **Flatpak**: the sandbox must expose input devices. eov's Flatpak manifest
   needs `--device=input` in `finish-args` (Flatpak 1.15.6 or newer; older
-  versions need `--device=all`). Without it the plugin explains this in its
-  window and in a notification. Users can grant it themselves:
+  versions need `--device=all`). Without it the settings window explains how
+  to grant access, and a notification does so once when the controller
+  subsystem cannot start. Users can grant it themselves:
 
   ```bash
   flatpak override --user --device=input io.eosin.eov
@@ -139,11 +149,8 @@ starts off.
 - **macOS** reads controllers through IOKit; controllers normally need no
   permission.
 - **Windows** reads controllers through Windows.Gaming.Input, which only
-  reports input while eov is in the foreground.
-
-eov publishes window focus changes with its next frame. When controller
-input starts, the plugin asks eov for a frame, so after switching back to eov
-the first input may take a frame to be recognised.
+  reports input while eov is in the foreground. It has no input events, so
+  gilrs reads the controllers every 8 ms in a thread of its own.
 
 ## Building
 
@@ -203,9 +210,9 @@ Source layout:
 | `src/plugin.rs` | The `Plugin` implementation: events, the settings window, profiles |
 | `src/engine.rs` | Input engine: device state, gating, dead zones, motion |
 | `src/backend.rs` | Controller input through gilrs (and the scripted test backend) |
-| `src/worker.rs` | The input thread: waits for input, calls eov, writes settings |
+| `src/worker.rs` | The input thread: waits for input, checks focus, calls eov |
 | `src/config.rs` | Controls, actions, tuning ranges, persisted format, profile names |
-| `src/shared.rs` | State shared between the UI thread and the plugin's threads |
+| `src/shared.rs` | State shared between the plugin's threads; settings writes |
 | `src/ui.rs` | Properties pushed to the settings window |
 | `src/pointer.rs` | Opt-in system pointer control |
 | `src/environment.rs` | Explanations when controllers cannot be read (Flatpak, permissions) |
@@ -214,9 +221,11 @@ Source layout:
 | `scripts/` | Packaging and release tooling |
 
 The input thread blocks until the controller reports something or a timer is
-due, so an idle controller costs nothing. It calls eov's non-blocking host
-methods directly and never holds a lock while doing so; the settings window
-is only updated on eov's UI thread.
+due; idle, it wakes four times a second to pick up setting changes and stop
+requests. While a stick, trigger or zoom button is active it wakes once per
+frame. It calls eov's non-blocking host methods directly and never holds a
+lock while doing so; the settings window is only updated on eov's UI thread,
+and settings are written by a separate thread.
 
 ## Releasing
 
