@@ -522,20 +522,36 @@ impl Engine {
         Some(self.last_tick.map_or(now, |last| last + FRAME))
     }
 
+    /// Ends the current motion burst if nothing moves any more, so the next
+    /// burst starts with a single frame step (and a fresh view size). The
+    /// worker calls this whenever no step is due.
+    pub fn settle(&mut self, now: Instant, gate: Gate) {
+        if self.last_tick.is_some() && self.signals(now, gate).is_idle() {
+            self.rest();
+        }
+    }
+
+    fn rest(&mut self) {
+        self.last_tick = None;
+        self.pan_rest = (0.0, 0.0);
+        self.zoom_rest = 0.0;
+        self.pointer_rest = (0.0, 0.0);
+    }
+
     /// Integrates continuous motion since the previous step. `view` is the
     /// focused pane; without one (no slide) nothing is panned or zoomed.
     pub fn tick(&mut self, now: Instant, gate: Gate, view: Option<ViewSize>) -> Vec<Command> {
         let signals = self.signals(now, gate);
         if signals.is_idle() {
-            self.last_tick = None;
-            self.pan_rest = (0.0, 0.0);
-            self.zoom_rest = 0.0;
-            self.pointer_rest = (0.0, 0.0);
+            self.rest();
             return Vec::new();
         }
         let step = match self.last_tick {
-            Some(last) => now.saturating_duration_since(last).min(MAX_STEP),
-            None => FRAME,
+            // A long gap means motion stopped in between: a new burst.
+            Some(last) if now.saturating_duration_since(last) <= MAX_STEP * 2 => {
+                now.saturating_duration_since(last).min(MAX_STEP)
+            }
+            _ => FRAME,
         };
         self.last_tick = Some(now);
         let dt = step.as_secs_f64();
@@ -725,8 +741,34 @@ mod tests {
         let long = pans(&e.tick(t0 + Duration::from_millis(30), FOCUSED, VIEW)).0;
         assert!((long / short - 2.0).abs() < 1e-6, "{short} {long}");
         // A stall is capped instead of jumping.
-        let stalled = pans(&e.tick(t0 + Duration::from_secs(5), FOCUSED, VIEW)).0;
+        let stalled = pans(&e.tick(t0 + Duration::from_millis(110), FOCUSED, VIEW)).0;
         assert!((stalled / short - 5.0).abs() < 1e-6, "{stalled}");
+    }
+
+    #[test]
+    fn every_burst_starts_with_one_frame() {
+        // As the worker drives it: ticks only while something moves, settle
+        // otherwise.
+        let t0 = Instant::now();
+        let mut e = engine();
+        axis(&mut e, 1, Control::LeftStickX, 1.0, t0);
+        let first = pans(&e.tick(t0, FOCUSED, VIEW)).0;
+        let t1 = t0 + Duration::from_millis(100);
+        axis(&mut e, 1, Control::LeftStickX, 0.0, t1);
+        assert_eq!(e.next_tick(t1, FOCUSED), None);
+        e.settle(t1, FOCUSED);
+        assert!(e.burst_starting());
+        let t2 = t1 + Duration::from_secs(5);
+        axis(&mut e, 1, Control::LeftStickX, 1.0, t2);
+        assert_eq!(e.next_tick(t2, FOCUSED), Some(t2));
+        let again = pans(&e.tick(t2, FOCUSED, VIEW)).0;
+        assert!((again - first).abs() < 1e-9, "{first} {again}");
+        // Even without settle, a long gap does not integrate MAX_STEP.
+        axis(&mut e, 1, Control::LeftStickX, 0.0, t2);
+        let t3 = t2 + Duration::from_secs(2);
+        axis(&mut e, 1, Control::LeftStickX, 1.0, t3);
+        let late = pans(&e.tick(t3, FOCUSED, VIEW)).0;
+        assert!((late - first).abs() < 1e-9, "{first} {late}");
     }
 
     #[test]
