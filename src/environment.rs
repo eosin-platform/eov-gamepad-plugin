@@ -84,8 +84,8 @@ pub fn access_hint_at(input_dir: &Path, flatpak: Option<&str>) -> Option<String>
 
 fn flatpak_message(app: &str) -> String {
     format!(
-        "eov runs as a Flatpak without access to input devices. Allow it with \
-         `flatpak override --user --device=input {app}` (Flatpak 1.15.6 or newer; \
+        "eov runs as a Flatpak without access to input devices. Allow it by running \
+         flatpak override --user --device=input {app} (Flatpak 1.15.6 or newer; \
          older versions need --device=all), then restart eov."
     )
 }

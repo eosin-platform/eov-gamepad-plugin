@@ -72,7 +72,12 @@ pub struct Model {
     /// `device-options[i]` selects `device_keys[i]` (`None`: every
     /// controller).
     pub device_keys: Vec<Option<String>>,
+    /// `profile-options[i]` selects `profile_keys[i]` (`None`: no profile).
+    pub profile_keys: Vec<Option<String>>,
 }
+
+/// The first entry of the profile list.
+pub const NO_PROFILE: &str = "No profile";
 
 /// Rounds for display and stable JSON (`0.16`, not `0.1599999964`).
 fn number(value: f32) -> f64 {
@@ -224,15 +229,22 @@ pub fn model(prefs: &Prefs, status: &Status, focus: Focus) -> Model {
     let selected_device = effective_device(prefs, status)
         .and_then(|key| device_keys.iter().position(|k| k.as_deref() == Some(key)))
         .unwrap_or(0);
-    let names = prefs.profile_names();
+    // Entry 0 means "no profile": every index stays valid, so the combo box
+    // never has to clamp (and rewrite) the selection.
+    let mut profile_keys = vec![None];
+    let mut profile_options = vec![json!(NO_PROFILE)];
+    for name in prefs.profile_names() {
+        profile_options.push(json!(name));
+        profile_keys.push(Some(name));
+    }
     let selected_profile = prefs
         .active_profile
         .as_ref()
-        .and_then(|active| names.iter().position(|name| name == active))
-        .map_or(-1, |index| index as i64);
+        .and_then(|active| profile_keys.iter().position(|k| k.as_ref() == Some(active)))
+        .unwrap_or(0);
     let profile_note = match &prefs.active_profile {
         Some(name) => format!("Changes are saved to “{name}”."),
-        None if names.is_empty() => {
+        None if profile_keys.len() == 1 => {
             "Changes are saved automatically. Save them as a profile to keep several \
              layouts."
                 .to_string()
@@ -247,7 +259,7 @@ pub fn model(prefs: &Prefs, status: &Status, focus: Focus) -> Model {
     p.insert("device-options".into(), Value::Array(device_options));
     p.insert("selected-device-index".into(), json!(selected_device));
     p.insert("device-note".into(), json!(device_note(prefs, status)));
-    p.insert("profile-options".into(), json!(names));
+    p.insert("profile-options".into(), Value::Array(profile_options));
     p.insert("selected-profile-index".into(), json!(selected_profile));
     p.insert("profile-note".into(), json!(profile_note));
     p.insert(
@@ -267,6 +279,7 @@ pub fn model(prefs: &Prefs, status: &Status, focus: Focus) -> Model {
     Model {
         properties: p,
         device_keys,
+        profile_keys,
     }
 }
 
@@ -393,10 +406,15 @@ mod tests {
         }
         prefs.active_profile = Some("b".into());
         let model = model(&prefs, &Status::default(), FOCUSED);
-        assert_eq!(model.properties["profile-options"], json!(["A", "b", "c"]));
-        assert_eq!(model.properties["selected-profile-index"], 1);
+        assert_eq!(
+            model.properties["profile-options"],
+            json!([NO_PROFILE, "A", "b", "c"])
+        );
+        assert_eq!(model.properties["selected-profile-index"], 2);
+        assert_eq!(model.profile_keys[2].as_deref(), Some("b"));
         prefs.active_profile = None;
         let model = super::model(&prefs, &Status::default(), FOCUSED);
-        assert_eq!(model.properties["selected-profile-index"], -1);
+        assert_eq!(model.properties["selected-profile-index"], 0);
+        assert_eq!(model.profile_keys[0], None);
     }
 }

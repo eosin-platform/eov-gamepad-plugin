@@ -4,7 +4,7 @@
 // to it (`Plugin::ui_callback`). Ranges, labels and defaults come from the
 // plugin, so the sliders always match its clamps.
 
-import { ComboBox } from "std-widgets.slint";
+import { ComboBox, Palette } from "std-widgets.slint";
 
 export struct MappingRow {
     control-key: string,
@@ -23,7 +23,7 @@ export struct TuningRow {
     default-value: float,
 }
 
-global Palette {
+global Theme {
     out property <color> window: #08111d;
     out property <color> card: #0f1726;
     out property <color> card-border: #ffffff10;
@@ -42,10 +42,10 @@ component Card inherits Rectangle {
     in property <string> title;
     in property <string> subtitle;
 
-    background: Palette.card;
+    background: Theme.card;
     border-radius: 12px;
     border-width: 1px;
-    border-color: Palette.card-border;
+    border-color: Theme.card-border;
 
     VerticalLayout {
         padding: 12px;
@@ -53,14 +53,14 @@ component Card inherits Rectangle {
 
         Text {
             text: root.title;
-            color: Palette.text;
+            color: Theme.text;
             font-size: 14px;
             font-weight: 700;
         }
 
         if root.subtitle != "": Text {
             text: root.subtitle;
-            color: Palette.muted;
+            color: Theme.muted;
             font-size: 11px;
             wrap: word-wrap;
         }
@@ -171,7 +171,7 @@ component StepButton inherits Rectangle {
         width: parent.width;
         height: parent.height;
         text: root.text;
-        color: Palette.label;
+        color: Theme.label;
         font-size: 13px;
         font-weight: 700;
         horizontal-alignment: center;
@@ -200,7 +200,7 @@ component TuningField inherits Rectangle {
         Text {
             width: 118px;
             text: root.setting.label;
-            color: Palette.label;
+            color: Theme.label;
             font-size: 11px;
             font-weight: 700;
             vertical-alignment: center;
@@ -227,14 +227,14 @@ component TuningField inherits Rectangle {
                 width: track-area.track-width;
                 height: 4px;
                 border-radius: 2px;
-                background: Palette.track;
+                background: Theme.track;
 
                 Rectangle {
                     x: 0px;
                     width: root.fraction * parent.width;
                     height: parent.height;
                     border-radius: parent.border-radius;
-                    background: Palette.accent;
+                    background: Theme.accent;
                 }
             }
 
@@ -247,7 +247,7 @@ component TuningField inherits Rectangle {
                 border-radius: 7px;
                 background: #f8fbff;
                 border-width: 1px;
-                border-color: Palette.accent;
+                border-color: Theme.accent;
             }
 
             touch := TouchArea {
@@ -389,7 +389,7 @@ component DeviceCard inherits Card {
 
     if root.note != "": Text {
         text: root.note;
-        color: Palette.muted;
+        color: Theme.muted;
         font-size: 10px;
         wrap: word-wrap;
     }
@@ -401,7 +401,7 @@ component ProfileCard inherits Card {
     in property <string> note;
     in-out property <string> name;
     out property <bool> editing: name-input.has-focus || combo.has-focus;
-    callback selected(string);
+    callback selected(int);
     callback save-as(string);
     callback new-profile(string);
     callback import-profile();
@@ -417,9 +417,9 @@ component ProfileCard inherits Card {
     combo := ComboBox {
         model: root.options;
         current-index <=> root.selected-index;
-        enabled: root.options.length > 0;
-        selected(value) => {
-            root.selected(value);
+        enabled: root.options.length > 1;
+        selected => {
+            root.selected(self.current-index);
             root.done();
         }
     }
@@ -431,9 +431,9 @@ component ProfileCard inherits Card {
             horizontal-stretch: 1;
             height: 30px;
             border-radius: 8px;
-            background: Palette.field;
+            background: Theme.field;
             border-width: 1px;
-            border-color: name-input.has-focus ? Palette.focus : Palette.field-border;
+            border-color: name-input.has-focus ? Theme.focus : Theme.field-border;
 
             name-input := TextInput {
                 x: 10px;
@@ -452,7 +452,7 @@ component ProfileCard inherits Card {
                 x: 10px;
                 height: parent.height;
                 text: "Name for a new profile";
-                color: Palette.faint;
+                color: Theme.faint;
                 font-size: 11px;
                 vertical-alignment: center;
             }
@@ -493,7 +493,8 @@ component ProfileCard inherits Card {
         ActionButton {
             horizontal-stretch: 1;
             text: "Delete";
-            enabled: root.selected-index >= 0;
+            // Entry 0 is "No profile".
+            enabled: root.selected-index > 0;
             base-color: #65404a;
             hover-color: #7f4c59;
             clicked => { root.delete-profile(); }
@@ -521,7 +522,7 @@ component MappingList inherits Rectangle {
         for row in root.rows: Rectangle {
             height: 44px;
             border-radius: 10px;
-            background: Palette.field;
+            background: Theme.field;
             border-width: 1px;
             border-color: #1c2d43;
 
@@ -567,8 +568,8 @@ export component GamepadWindow inherits Window {
     in property <[string]> device-options: ["All controllers"];
     in-out property <int> selected-device-index: 0;
     in property <string> device-note: "";
-    in property <[string]> profile-options: [];
-    in-out property <int> selected-profile-index: -1;
+    in property <[string]> profile-options: ["No profile"];
+    in-out property <int> selected-profile-index: 0;
     in property <string> profile-note: "";
     in-out property <string> profile-name: "";
     in property <[TuningRow]> tuning-rows: [];
@@ -582,7 +583,7 @@ export component GamepadWindow inherits Window {
 
     callback enabled-toggled(bool);
     callback device-selected(int);
-    callback profile-selected(string);
+    callback profile-selected(int);
     callback save-profile-as(string);
     callback new-profile(string);
     callback import-profile();
@@ -599,12 +600,14 @@ export component GamepadWindow inherits Window {
     callback window-active-changed(bool);
 
     title: "Gamepad";
-    background: Palette.window;
+    background: Theme.window;
     min-width: 380px;
     min-height: 360px;
     preferred-width: 820px;
     preferred-height: 760px;
     forward-focus: focus-root;
+    // The window is dark whatever the desktop's colour scheme.
+    init => { Palette.color-scheme = ColorScheme.dark; }
 
     private property <bool> scope-active;
     private property <bool> device-editing;
@@ -667,7 +670,7 @@ export component GamepadWindow inherits Window {
                     selected-index <=> root.selected-profile-index;
                     note: root.profile-note;
                     name <=> root.profile-name;
-                    selected(name) => { root.profile-selected(name); }
+                    selected(index) => { root.profile-selected(index); }
                     save-as(name) => { root.save-profile-as(name); }
                     new-profile(name) => { root.new-profile(name); }
                     import-profile => { root.import-profile(); }
@@ -708,7 +711,7 @@ export component GamepadWindow inherits Window {
                         Text {
                             horizontal-stretch: 1;
                             text: root.pointer-note;
-                            color: Palette.muted;
+                            color: Theme.muted;
                             font-size: 11px;
                             wrap: word-wrap;
                             vertical-alignment: center;

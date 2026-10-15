@@ -529,8 +529,11 @@ fn profiles_never_overwrite_without_asking() {
     let rig = rig();
     let id = rig.open_window();
     rig.callback(&id, "save-profile-as", vec![json!("  Xbox Elite  ")]);
-    assert_eq!(rig.property(&id, "profile-options"), json!(["Xbox Elite"]));
-    assert_eq!(rig.property(&id, "selected-profile-index"), json!(0));
+    assert_eq!(
+        rig.property(&id, "profile-options"),
+        json!(["No profile", "Xbox Elite"])
+    );
+    assert_eq!(rig.property(&id, "selected-profile-index"), json!(1));
     // The name field is cleared after saving.
     assert_eq!(rig.property(&id, "profile-name"), json!(""));
     // Edits go to the active profile only.
@@ -558,10 +561,10 @@ fn profiles_never_overwrite_without_asking() {
     rig.callback(&id, "save-profile-as", vec![json!("../../etc/passwd")]);
     assert_eq!(
         rig.property(&id, "profile-options"),
-        json!(["../../etc/passwd", "Xbox Elite"])
+        json!(["No profile", "../../etc/passwd", "Xbox Elite"])
     );
-    rig.callback(&id, "profile-selected", vec![json!("Xbox Elite")]);
-    assert_eq!(rig.property(&id, "selected-profile-index"), json!(1));
+    rig.callback(&id, "profile-selected", vec![json!(2)]);
+    assert_eq!(rig.property(&id, "selected-profile-index"), json!(2));
     // Deleting asks too.
     rig.callback(&id, "delete-profile", vec![]);
     assert_eq!(rig.calls("dialog.confirm").len(), 2);
@@ -573,9 +576,22 @@ fn profiles_never_overwrite_without_asking() {
         .unwrap();
     assert_eq!(
         rig.property(&id, "profile-options"),
-        json!(["../../etc/passwd"])
+        json!(["No profile", "../../etc/passwd"])
     );
-    assert_eq!(rig.property(&id, "selected-profile-index"), json!(-1));
+    assert_eq!(rig.property(&id, "selected-profile-index"), json!(0));
+    // "No profile" detaches edits from the profile that was shown.
+    rig.callback(&id, "profile-selected", vec![json!(1)]);
+    assert_eq!(rig.property(&id, "selected-profile-index"), json!(1));
+    rig.callback(&id, "profile-selected", vec![json!(0)]);
+    assert_eq!(rig.property(&id, "selected-profile-index"), json!(0));
+    rig.callback(
+        &id,
+        "tuning-changed",
+        vec![json!("pan-sensitivity"), json!(0.3)],
+    );
+    rig.callback(&id, "profile-selected", vec![json!(1)]);
+    let rows = rig.property(&id, "tuning-rows");
+    assert_ne!(rows.as_array().unwrap()[3]["value"], json!(0.3));
     // Bad names are refused with a message.
     rig.callback(&id, "save-profile-as", vec![json!("a\u{7}b")]);
     let notices = rig.harness.state().notifications.clone();
@@ -723,7 +739,11 @@ fn stored_settings_are_restored() {
     assert_eq!(notices.len(), 1);
     assert!(notices[0].message.contains("could not be read"));
     let id = rig.open_window();
-    assert_eq!(rig.property(&id, "profile-options"), json!(["Lab"]));
+    assert_eq!(
+        rig.property(&id, "profile-options"),
+        json!(["No profile", "Lab"])
+    );
+    assert_eq!(rig.property(&id, "selected-profile-index"), json!(1));
     assert_eq!(rig.property(&id, "pointer-control"), json!(false));
 }
 

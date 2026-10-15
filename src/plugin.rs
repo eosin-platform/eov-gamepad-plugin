@@ -39,8 +39,9 @@ enum Pending {
 #[derive(Default)]
 struct UiState {
     window: Option<Surface>,
-    /// What each entry of the device list selects.
+    /// What each entry of the device and profile lists selects.
     device_keys: Vec<Option<String>>,
+    profile_keys: Vec<Option<String>>,
     /// Confirmations and file dialogs by request id.
     pending: HashMap<String, Pending>,
 }
@@ -138,7 +139,11 @@ impl<B: InputBackend> GamepadPlugin<B> {
             return;
         };
         let model = self.model();
-        lock(&self.ui).device_keys = model.device_keys;
+        {
+            let mut ui = lock(&self.ui);
+            ui.device_keys = model.device_keys;
+            ui.profile_keys = model.profile_keys;
+        }
         let _ = window.set_many(model.properties);
     }
 
@@ -178,6 +183,7 @@ impl<B: InputBackend> GamepadPlugin<B> {
                     let mut ui = lock(&self.ui);
                     ui.window = Some(surface);
                     ui.device_keys = model.device_keys;
+                    ui.profile_keys = model.profile_keys;
                 }
                 let _ = self.host.set_toolbar_button_active(BUTTON_ID, true);
             }
@@ -201,13 +207,23 @@ impl<B: InputBackend> GamepadPlugin<B> {
 
     // -- profiles -------------------------------------------------------------------
 
-    fn load_profile(&self, name: &str) {
+    /// Entry `index` of the profile list: a profile, or "no profile" (the
+    /// settings stay, edits are no longer saved into a profile).
+    fn select_profile(&self, index: usize) {
+        let Some(key) = lock(&self.ui).profile_keys.get(index).cloned() else {
+            return;
+        };
+        let Some(name) = key else {
+            self.shared
+                .update(Persist::Now, |prefs| prefs.active_profile = None);
+            return;
+        };
         let loaded = self.shared.update(Persist::Now, |prefs| {
-            let Some(config) = prefs.profiles.get(name).cloned() else {
+            let Some(config) = prefs.profiles.get(&name).cloned() else {
                 return false;
             };
             prefs.config = config;
-            prefs.active_profile = Some(name.to_string());
+            prefs.active_profile = Some(name.clone());
             true
         });
         if !loaded {
@@ -586,8 +602,8 @@ impl<B: InputBackend> Plugin for GamepadPlugin<B> {
                 }
             }
             "profile-selected" => {
-                if let Some(name) = arg_str(args, 0) {
-                    self.load_profile(name);
+                if let Some(index) = arg_index(args, 0) {
+                    self.select_profile(index);
                 }
             }
             "save-profile-as" => self.save_profile_as(arg_str(args, 0).unwrap_or(""), false),
