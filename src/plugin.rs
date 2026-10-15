@@ -11,6 +11,7 @@ use crate::config::{
     Action, Config, Control, MAX_PROFILES, PersistedState, Prefs, ProfileFile, STATE_KEY,
     TuningKey, export_file_name, normalize_profile_name, unique_profile_name,
 };
+use crate::legacy;
 use crate::shared::{Persist, Shared, TOKEN_REFRESH, TOKEN_TOGGLE_WINDOW, lock};
 use crate::ui::{self, Focus};
 use crate::worker::{self, IDLE_WAIT, PAUSED_STATUS, Worker};
@@ -511,12 +512,38 @@ impl<B: InputBackend> GamepadPlugin<B> {
 
 impl<B: InputBackend> Plugin for GamepadPlugin<B> {
     fn create(host: Host, init: PluginInit) -> Result<Self, String> {
-        let (persisted, warnings) = PersistedState::from_value(init.settings.get(STATE_KEY));
-        let prefs = Prefs::from_persisted(persisted);
+        let stored = init.settings.get(STATE_KEY);
+        let (persisted, warnings) = PersistedState::from_value(stored);
+        let mut prefs = Prefs::from_persisted(persisted);
+        // First start of 1.0: keep what 0.x saved (read-only).
+        let imported = match (stored, legacy::default_dir()) {
+            (None, Some(dir)) => {
+                let legacy = legacy::read(&dir);
+                let found = (!legacy.is_empty()).then_some(legacy.profiles.len());
+                legacy.apply(&mut prefs);
+                found
+            }
+            _ => None,
+        };
         let enabled = prefs.enabled;
         // The focus at start-up; afterwards WindowFocusChanged keeps it.
         let focused = host.snapshot().map_or(true, |s| s.window_focused);
         let shared = Arc::new(Shared::new(host.clone(), prefs, focused));
+        if let Some(profiles) = imported {
+            // Write the import once, so it is not repeated.
+            shared.update(Persist::Now, |_| {});
+            host.notify(
+                NotifyLevel::Info,
+                format!(
+                    "Imported the gamepad settings{} of the previous plugin version",
+                    match profiles {
+                        0 => String::new(),
+                        1 => " and 1 profile".to_string(),
+                        n => format!(" and {n} profiles"),
+                    }
+                ),
+            );
+        }
         if !warnings.is_empty() {
             shared.notify_once(
                 "settings",

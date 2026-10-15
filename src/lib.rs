@@ -6,6 +6,7 @@
 //! - [`backend`]: controller input through gilrs.
 //! - `worker`: the input thread that runs the engine and calls the host.
 //! - `pointer`: opt-in system pointer control (off by default).
+//! - `legacy`: one-time, read-only import of the 0.x settings files.
 //! - [`plugin`]: the [`eov_plugin_api::sdk::Plugin`] implementation and the
 //!   settings window.
 
@@ -13,6 +14,7 @@ pub mod backend;
 pub mod config;
 pub mod engine;
 mod environment;
+mod legacy;
 pub mod plugin;
 mod pointer;
 mod shared;

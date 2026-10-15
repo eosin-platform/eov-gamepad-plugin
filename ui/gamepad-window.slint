@@ -310,9 +310,11 @@ component HeaderCard inherits Rectangle {
     callback toggled(bool);
 
     border-radius: 16px;
-    background: @linear-gradient(135deg, #1a66c2 0%, #0f3e70 55%, #0b223d 100%);
+    // Solid rather than a gradient: not every Slint renderer clips gradients
+    // to rounded corners.
+    background: #134a87;
     border-width: 1px;
-    border-color: #ffffff18;
+    border-color: #ffffff20;
 
     VerticalLayout {
         padding: 14px;

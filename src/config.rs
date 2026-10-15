@@ -538,15 +538,27 @@ pub struct ProfileFile {
     /// 0 for files written by 0.x.
     #[serde(default)]
     pub version: u32,
+    #[serde(serialize_with = "hundredths")]
     pub left_dead_zone: f32,
+    #[serde(serialize_with = "hundredths")]
     pub right_dead_zone: f32,
+    #[serde(serialize_with = "hundredths")]
     pub trigger_dead_zone: f32,
+    #[serde(serialize_with = "hundredths")]
     pub pan_sensitivity: f32,
+    #[serde(serialize_with = "hundredths")]
     pub zoom_sensitivity: f32,
+    #[serde(serialize_with = "hundredths")]
     pub response_curve: f32,
+    #[serde(serialize_with = "hundredths")]
     pub pointer_speed: f32,
     /// Control key → action key.
     pub mappings: BTreeMap<String, String>,
+}
+
+/// Writes `0.95` rather than `0.949999988079071` (values are kept to 0.01).
+fn hundredths<S: serde::Serializer>(value: &f32, serializer: S) -> Result<S::Ok, S::Error> {
+    serializer.serialize_f64((f64::from(*value) * 100.0).round() / 100.0)
 }
 
 impl Default for ProfileFile {
@@ -964,6 +976,8 @@ mod tests {
         config.mappings.set(Control::West, Action::FitView);
         let file = ProfileFile::from(&config);
         let text = serde_json::to_string(&file).unwrap();
+        // Readable numbers in exported files.
+        assert!(text.contains(r#""zoom_sensitivity":0.78"#), "{text}");
         let back = ProfileFile::parse(&text).unwrap().to_config();
         assert_eq!(back, config);
     }
