@@ -16,7 +16,7 @@ pub const COMPONENT: &str = "GamepadWindow";
 pub const TITLE: &str = "Gamepad";
 
 /// Preferred size; the host keeps windows within the screen.
-pub const WIDTH: f32 = 960.0;
+pub const WIDTH: f32 = 860.0;
 pub const HEIGHT: f32 = 760.0;
 
 /// The callbacks the window declares; the plugin handles exactly these.
