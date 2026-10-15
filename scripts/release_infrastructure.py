@@ -179,6 +179,14 @@ def validate_source(root: Path, version: str) -> str:
         environment.get("version"), str
     ):
         raise ReleaseError("plugin.toml has no valid [environment].version")
+    api = plugin_data.get("api")
+    if not isinstance(api, str) or not api.strip():
+        raise ReleaseError("plugin.toml has no plugin-API requirement ('api')")
+    if "toolbar_buttons" in plugin_data:
+        raise ReleaseError(
+            "plugin.toml still declares [[toolbar_buttons]]; plugin API 1.0 "
+            "registers toolbar buttons at runtime"
+        )
     if (
         plugin_data.get("repository")
         != "https://github.com/eosin-platform/eov-gamepad-plugin"
