@@ -42,11 +42,43 @@ pub fn access_hint() -> Option<String> {
     access_hint_at(Path::new("/dev/input"), flatpak_app().as_deref())
 }
 
+/// The device nodes of game controllers in an input directory: udev's
+/// `by-id/*-event-joystick` links and the joydev nodes (`js0`, …). Keyboard
+/// and mouse nodes are normally unreadable for users, which says nothing
+/// about controllers.
+fn joystick_nodes(input_dir: &Path, names: &[String]) -> Vec<std::path::PathBuf> {
+    let mut nodes: Vec<_> = std::fs::read_dir(input_dir.join("by-id"))
+        .into_iter()
+        .flatten()
+        .filter_map(Result::ok)
+        .filter(|entry| {
+            entry
+                .file_name()
+                .to_string_lossy()
+                .ends_with("-event-joystick")
+        })
+        .map(|entry| entry.path())
+        .collect();
+    nodes.extend(
+        names
+            .iter()
+            .filter(|name| {
+                name.strip_prefix("js")
+                    .is_some_and(|n| !n.is_empty() && n.chars().all(|c| c.is_ascii_digit()))
+            })
+            .map(|name| input_dir.join(name)),
+    );
+    nodes
+}
+
 /// [`access_hint`] for an input directory; `flatpak` is the app id when
 /// sandboxed.
 pub fn access_hint_at(input_dir: &Path, flatpak: Option<&str>) -> Option<String> {
-    let entries = match std::fs::read_dir(input_dir) {
-        Ok(entries) => entries,
+    let names: Vec<String> = match std::fs::read_dir(input_dir) {
+        Ok(entries) => entries
+            .filter_map(Result::ok)
+            .map(|entry| entry.file_name().to_string_lossy().into_owned())
+            .collect(),
         Err(_) => {
             return Some(match flatpak {
                 Some(app) => flatpak_message(app),
@@ -57,28 +89,26 @@ pub fn access_hint_at(input_dir: &Path, flatpak: Option<&str>) -> Option<String>
             });
         }
     };
-    let events: Vec<_> = entries
-        .filter_map(Result::ok)
-        .filter(|entry| entry.file_name().to_string_lossy().starts_with("event"))
-        .collect();
-    if events.is_empty() {
-        // Inside a sandbox an empty directory means the devices are hidden.
-        return flatpak.map(flatpak_message);
+    let joysticks = joystick_nodes(input_dir, &names);
+    if joysticks.is_empty() {
+        // Nothing connected; in a sandbox without any input device, the
+        // devices are hidden instead.
+        let hidden = !names.iter().any(|name| name.starts_with("event"));
+        return flatpak.filter(|_| hidden).map(flatpak_message);
     }
-    let readable = events
+    if joysticks
         .iter()
-        .any(|entry| std::fs::File::open(entry.path()).is_ok());
-    if readable {
+        .any(|node| std::fs::File::open(node).is_ok())
+    {
         return None;
     }
     Some(match flatpak {
         Some(app) => flatpak_message(app),
-        None => format!(
-            "eov may not read the input devices in {}. Controllers are usually \
-             accessible to the logged-in user; otherwise add a udev rule for your \
-             controller or add your user to the 'input' group, then reconnect it.",
-            input_dir.display()
-        ),
+        None => "A game controller is connected, but eov may not read it. udev normally \
+                 gives the logged-in user access to controllers (the uaccess tag); if \
+                 yours is not recognised as a joystick, add a udev rule that tags it \
+                 with uaccess, then reconnect it."
+            .to_string(),
     })
 }
 
@@ -94,27 +124,39 @@ fn flatpak_message(app: &str) -> String {
 mod tests {
     use super::*;
 
-    fn temp_dir(name: &str) -> std::path::PathBuf {
-        let dir =
-            std::env::temp_dir().join(format!("eov-gamepad-env-{}-{name}", std::process::id()));
-        let _ = std::fs::remove_dir_all(&dir);
-        std::fs::create_dir_all(&dir).unwrap();
-        dir
+    /// A temporary directory, removed again when dropped.
+    struct TempDir(std::path::PathBuf);
+
+    impl TempDir {
+        fn new(name: &str) -> Self {
+            let dir =
+                std::env::temp_dir().join(format!("eov-gamepad-env-{}-{name}", std::process::id()));
+            let _ = std::fs::remove_dir_all(&dir);
+            std::fs::create_dir_all(&dir).unwrap();
+            Self(dir)
+        }
+    }
+
+    impl Drop for TempDir {
+        fn drop(&mut self) {
+            let _ = std::fs::remove_dir_all(&self.0);
+        }
     }
 
     #[test]
     fn a_hidden_input_directory_in_a_flatpak_explains_the_override() {
-        let dir = temp_dir("missing");
-        let missing = dir.join("input");
+        let dir = TempDir::new("missing");
+        let missing = dir.0.join("input");
         let hint = access_hint_at(&missing, Some("io.eosin.eov")).unwrap();
         assert!(hint.contains("--device=input io.eosin.eov"), "{hint}");
+        assert!(!hint.contains('`'), "{hint}");
         // Outside a sandbox the message names the directory instead.
         let hint = access_hint_at(&missing, None).unwrap();
         assert!(hint.contains("is not available"), "{hint}");
         // An empty directory is only suspicious in a sandbox.
-        let empty = temp_dir("empty");
-        assert!(access_hint_at(&empty, None).is_none());
-        assert!(access_hint_at(&empty, Some("x.y")).is_some());
+        let empty = TempDir::new("empty");
+        assert!(access_hint_at(&empty.0, None).is_none());
+        assert!(access_hint_at(&empty.0, Some("x.y")).is_some());
     }
 
     #[test]
@@ -124,11 +166,46 @@ mod tests {
         assert_eq!(flatpak_app_from_info("[Instance]\nname=x\n"), None);
     }
 
+    #[cfg(unix)]
     #[test]
-    fn readable_devices_need_no_hint() {
-        let dir = temp_dir("readable");
-        std::fs::write(dir.join("event0"), b"").unwrap();
-        assert!(access_hint_at(&dir, None).is_none());
-        assert!(access_hint_at(&dir, Some("io.eosin.eov")).is_none());
+    fn only_controller_nodes_matter() {
+        use std::os::unix::fs::PermissionsExt;
+        let dir = TempDir::new("nodes");
+        let input = &dir.0;
+        // Keyboards and mice: root:input 0660, unreadable for users.
+        for name in ["event0", "event1"] {
+            let node = input.join(name);
+            std::fs::write(&node, b"").unwrap();
+            std::fs::set_permissions(&node, std::fs::Permissions::from_mode(0o000)).unwrap();
+        }
+        // No controller connected: no hint, even without access to them.
+        assert!(access_hint_at(input, None).is_none());
+        assert!(access_hint_at(input, Some("io.eosin.eov")).is_none());
+        // A readable controller: no hint either.
+        let pad = input.join("event7");
+        std::fs::write(&pad, b"").unwrap();
+        std::fs::create_dir_all(input.join("by-id")).unwrap();
+        std::os::unix::fs::symlink(&pad, input.join("by-id/usb-Pad-event-joystick")).unwrap();
+        assert!(access_hint_at(input, None).is_none());
+        // An unreadable controller explains the udev tag, not group changes.
+        std::fs::set_permissions(&pad, std::fs::Permissions::from_mode(0o000)).unwrap();
+        if std::fs::File::open(&pad).is_err() {
+            let hint = access_hint_at(input, None).unwrap();
+            assert!(hint.contains("uaccess"), "{hint}");
+            assert!(!hint.contains("input' group"), "{hint}");
+        }
+        for name in ["event0", "event1", "event7"] {
+            let _ =
+                std::fs::set_permissions(input.join(name), std::fs::Permissions::from_mode(0o600));
+        }
+    }
+
+    #[test]
+    fn joydev_nodes_count_as_controllers() {
+        let dir = TempDir::new("joydev");
+        std::fs::write(dir.0.join("js0"), b"").unwrap();
+        std::fs::write(dir.0.join("jsx"), b"").unwrap();
+        let names = vec!["js0".to_string(), "jsx".to_string()];
+        assert_eq!(joystick_nodes(&dir.0, &names), vec![dir.0.join("js0")]);
     }
 }
