@@ -42,7 +42,14 @@ class PackageTests(unittest.TestCase):
                 members = {m.name: m for m in archive.getmembers()}
             self.assertEqual(sorted(members), sorted(entries))
             self.assertEqual(members["libgamepad.so"].mode, 0o755)
-            self.assertTrue(output.stat().st_mode & 0o044, "the package is private")
+            # Readable like any other new file (not private like mkstemp's).
+            umask = os.umask(0)
+            os.umask(umask)
+            self.assertEqual(
+                output.stat().st_mode & 0o777,
+                0o644 & ~umask,
+                "the package does not get the usual permissions of a new file",
+            )
             self.assertEqual(members["plugin.toml"].uid, 0)
             self.assertFalse(any(name.startswith("ui/.") for name in members))
 

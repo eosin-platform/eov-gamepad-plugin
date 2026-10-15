@@ -1,8 +1,10 @@
 //! One-time import of the settings written by the 0.x plugin.
 //!
 //! 0.x kept its live configuration in `state.json` and its profiles in
-//! `profiles/*.json` under `<platform config dir>/eov/plugins/gamepad/`. 1.0
-//! stores everything in the host's settings store instead. On the first
+//! `profiles/*.json` under `plugins/gamepad/` of eov's per-user folder before
+//! 1.0 (`<platform config dir>/eov`, which the host passes as
+//! `PluginInit::legacy_config_dir`). 1.0 stores everything in the host's
+//! settings store instead. On the first
 //! start without 1.0 settings these files are read (never written or
 //! deleted), so upgrading keeps the user's tuning and profiles. Mappings that
 //! moved the system pointer are kept, but pointer control itself starts off:
@@ -36,25 +38,13 @@ impl Legacy {
     }
 }
 
-/// Where 0.x stored its files, as `dirs::config_dir()` resolved it. `None`
-/// in test builds, so tests never read the real home directory.
-pub fn default_dir() -> Option<PathBuf> {
-    if cfg!(test) {
-        return None;
-    }
-    let var = |name: &str| {
-        std::env::var_os(name)
-            .map(PathBuf::from)
-            .filter(|p| p.is_absolute())
-    };
-    let config = if cfg!(target_os = "windows") {
-        var("APPDATA")?
-    } else if cfg!(target_os = "macos") {
-        var("HOME")?.join("Library").join("Application Support")
-    } else {
-        var("XDG_CONFIG_HOME").or_else(|| var("HOME").map(|home| home.join(".config")))?
-    };
-    Some(config.join("eov").join("plugins").join("gamepad"))
+/// Where 0.x stored its files, given the host's `legacy_config_dir`. The
+/// host knows that folder (and redirects it when eov runs isolated, as in
+/// tests), so the plugin does not guess it from the environment.
+pub fn dir(legacy_config_dir: Option<&str>) -> Option<PathBuf> {
+    let root = Path::new(legacy_config_dir?);
+    root.is_absolute()
+        .then(|| root.join("plugins").join("gamepad"))
 }
 
 fn read_profile(path: &Path) -> Option<Config> {
@@ -104,12 +94,31 @@ mod tests {
     use super::*;
     use crate::config::{Action, Control};
 
-    fn temp_dir(name: &str) -> PathBuf {
-        let dir =
-            std::env::temp_dir().join(format!("eov-gamepad-legacy-{}-{name}", std::process::id()));
-        let _ = std::fs::remove_dir_all(&dir);
-        std::fs::create_dir_all(dir.join("profiles")).unwrap();
-        dir
+    /// A temporary 0.x configuration directory, removed again when dropped.
+    struct TempDir(PathBuf);
+
+    impl TempDir {
+        fn new(name: &str) -> Self {
+            let dir = std::env::temp_dir()
+                .join(format!("eov-gamepad-legacy-{}-{name}", std::process::id()));
+            let _ = std::fs::remove_dir_all(&dir);
+            std::fs::create_dir_all(dir.join("profiles")).unwrap();
+            Self(dir)
+        }
+    }
+
+    impl std::ops::Deref for TempDir {
+        type Target = Path;
+
+        fn deref(&self) -> &Path {
+            &self.0
+        }
+    }
+
+    impl Drop for TempDir {
+        fn drop(&mut self) {
+            let _ = std::fs::remove_dir_all(&self.0);
+        }
     }
 
     const PROFILE: &str = r#"{
@@ -120,7 +129,7 @@ mod tests {
 
     #[test]
     fn state_and_profiles_are_read() {
-        let dir = temp_dir("full");
+        let dir = TempDir::new("full");
         std::fs::write(dir.join("state.json"), PROFILE).unwrap();
         std::fs::write(dir.join("profiles/Desk.json"), PROFILE).unwrap();
         std::fs::write(dir.join("profiles/broken.json"), "{").unwrap();
@@ -142,9 +151,19 @@ mod tests {
 
     #[test]
     fn nothing_there_is_nothing_imported() {
-        let dir = temp_dir("empty");
+        let dir = TempDir::new("empty");
         assert!(read(&dir).is_empty());
         assert!(read(&dir.join("missing")).is_empty());
-        assert_eq!(default_dir(), None, "tests never read the home directory");
+    }
+
+    #[test]
+    fn the_folder_comes_from_the_host() {
+        assert_eq!(super::dir(None), None);
+        assert_eq!(super::dir(Some("relative/eov")), None);
+        let root = std::env::temp_dir().join("eov");
+        assert_eq!(
+            super::dir(root.to_str()),
+            Some(root.join("plugins").join("gamepad"))
+        );
     }
 }

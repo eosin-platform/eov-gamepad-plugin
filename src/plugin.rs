@@ -547,7 +547,7 @@ impl<B: InputBackend> Plugin for GamepadPlugin<B> {
         let (persisted, warnings) = PersistedState::from_value(stored);
         let mut prefs = Prefs::from_persisted(persisted);
         // First start of 1.0: keep what 0.x saved (read-only).
-        let imported = match (stored, legacy::default_dir()) {
+        let imported = match (stored, legacy::dir(init.legacy_config_dir.as_deref())) {
             (None, Some(dir)) => {
                 let legacy = legacy::read(&dir);
                 let found = (!legacy.is_empty()).then_some(legacy.profiles.len());

@@ -822,6 +822,57 @@ fn stored_settings_are_restored() {
 }
 
 #[test]
+fn settings_of_the_previous_version_are_imported_once() {
+    let mut init = test_init("gamepad");
+    let legacy = PathBuf::from(&init.plugin_root).join("legacy-config");
+    let dir = legacy.join("plugins").join("gamepad");
+    std::fs::create_dir_all(dir.join("profiles")).unwrap();
+    let profile = r#"{ "pan_sensitivity": 1.5, "mappings": { "south": "fit_view" } }"#;
+    std::fs::write(dir.join("state.json"), profile).unwrap();
+    std::fs::write(dir.join("profiles").join("Desk.json"), profile).unwrap();
+    init.legacy_config_dir = Some(legacy.to_string_lossy().into_owned());
+    let rig = rig_with(init.clone(), true);
+    // Written to the settings store right away, and announced.
+    eventually("the stored import", || rig.stored_state().is_some());
+    let stored = rig.stored_state().unwrap();
+    assert_eq!(stored.config.pan_sensitivity, 1.5);
+    assert_eq!(stored.config.mappings["south"], "fit_view");
+    assert_eq!(stored.profiles["Desk"].pan_sensitivity, 1.5);
+    let notices = rig.harness.state().notifications.clone();
+    assert_eq!(notices.len(), 1);
+    assert!(
+        notices[0].message.contains("and 1 profile"),
+        "{}",
+        notices[0].message
+    );
+    // The old files stay as they were.
+    assert_eq!(
+        std::fs::read_to_string(dir.join("state.json")).unwrap(),
+        profile
+    );
+
+    // Once 1.0 settings exist, they win: nothing is imported again.
+    let mut again = test_init("gamepad");
+    again.legacy_config_dir = init.legacy_config_dir.clone();
+    let mut changed = stored.clone();
+    changed.config.pan_sensitivity = 0.5;
+    again
+        .settings
+        .insert(STATE_KEY.into(), serde_json::to_value(&changed).unwrap());
+    let second = rig_with(again, true);
+    assert!(second.harness.state().notifications.is_empty());
+    let id = second.open_window();
+    let rows = second.property(&id, "tuning-rows");
+    let pan = rows
+        .as_array()
+        .unwrap()
+        .iter()
+        .find(|row| row["key"] == "pan-sensitivity")
+        .unwrap();
+    assert_eq!(pan["value"], json!(0.5));
+}
+
+#[test]
 fn shutdown_flushes_pending_changes() {
     let rig = rig();
     let id = rig.open_window();
@@ -837,6 +888,7 @@ fn shutdown_flushes_pending_changes() {
 #[test]
 fn an_unavailable_input_subsystem_is_explained() {
     let init = test_init("gamepad");
+    let root = PathBuf::from(&init.plugin_root);
     let harness =
         TestHarness::<GamepadPlugin<FailingBackend>>::with_host(mock_host(true), init).unwrap();
     eventually("the notification", || {
@@ -863,4 +915,7 @@ fn an_unavailable_input_subsystem_is_explained() {
             .starts_with("Controllers are unavailable")
     );
     assert_eq!(surface.properties["device-note"], "a hint for the test");
+    drop(state);
+    drop(harness);
+    let _ = std::fs::remove_dir_all(root);
 }
