@@ -498,7 +498,12 @@ impl<B: InputBackend> GamepadPlugin<B> {
             self.shared.update(Persist::Now, |prefs| prefs.device = key);
             // The input thread republishes the effective selection.
         }
-        let selected = self.model().properties["selected-device-index"].clone();
+        let selected = self
+            .model()
+            .properties
+            .get("selected-device-index")
+            .cloned()
+            .unwrap_or(json!(0));
         self.reset_field("selected-device-index", json!(index), selected);
     }
 
@@ -649,7 +654,7 @@ impl<B: InputBackend> Plugin for GamepadPlugin<B> {
             "tuning-step" => {
                 if let (Some(key), Some(direction)) = (
                     arg_str(args, 0).and_then(TuningKey::from_key),
-                    arg_f64(args, 1),
+                    arg_f64(args, 1).filter(|d| *d != 0.0),
                 ) {
                     let step = key.range().step * direction.signum() as f32;
                     self.set_tuning(key, |current| current + step);
