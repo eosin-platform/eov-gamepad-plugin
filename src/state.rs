@@ -789,8 +789,12 @@ fn worker_loop() {
         apply_continuous_mappings(&axis_values, &pressed_buttons, &mut mouse_controller);
 
         if refresh_window {
-            let state = plugin_state().lock().unwrap();
-            let _ = persist_runtime_state(&state);
+            {
+                let state = plugin_state().lock().unwrap();
+                let _ = persist_runtime_state(&state);
+            }
+            // The host may run the refresh on its UI thread, which also locks
+            // the plugin state: never hold the lock across host calls.
             refresh_window_ui_if_available();
         }
 
@@ -858,8 +862,10 @@ fn dispatch_button_action(control_key: &str) {
                     "gamepad controller paused"
                 },
             );
-            let state = plugin_state().lock().unwrap();
-            let _ = persist_runtime_state(&state);
+            {
+                let state = plugin_state().lock().unwrap();
+                let _ = persist_runtime_state(&state);
+            }
             refresh_window_ui_if_available();
         }
         MappingAction::ZoomIn => {
