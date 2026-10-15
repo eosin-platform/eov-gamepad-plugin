@@ -20,6 +20,7 @@ use crate::shared::{Persist, PointerState, Shared};
 use eov_plugin_api::prelude::NotifyLevel;
 use std::sync::Arc;
 use std::sync::mpsc::{Receiver, RecvTimeoutError, Sender, channel};
+use std::thread::JoinHandle;
 use std::time::{Duration, Instant};
 
 /// Moves older than this when the mechanism comes up are dropped instead of
@@ -51,6 +52,8 @@ type Connector = fn(&Shared, u32) -> Result<(Box<dyn PointerSink>, String), Conn
 /// The input thread's handle to the pointer thread, started on first use.
 pub struct PointerLink {
     sender: Option<Sender<Message>>,
+    /// The current (or last stopped) pointer thread.
+    thread: Option<JoinHandle<()>>,
     connector: Connector,
 }
 
@@ -64,6 +67,7 @@ impl PointerLink {
     pub fn with_connector(connector: Connector) -> Self {
         Self {
             sender: None,
+            thread: None,
             connector,
         }
     }
@@ -71,6 +75,15 @@ impl PointerLink {
     /// Queues relative pointer motion; never blocks.
     pub fn move_by(&mut self, shared: &Arc<Shared>, dx: i32, dy: i32) {
         if self.sender.is_none() {
+            // A stopped thread may still wait for a permission dialog; a
+            // second one would open another dialog.
+            if self
+                .thread
+                .as_ref()
+                .is_some_and(|thread| !thread.is_finished())
+            {
+                return;
+            }
             let (sender, receiver) = channel();
             let shared_for_thread = Arc::clone(shared);
             let connector = self.connector;
@@ -78,8 +91,12 @@ impl PointerLink {
                 .name("gamepad-pointer".to_string())
                 .spawn(move || run(shared_for_thread, receiver, connector))
             {
-                // Detached: it ends after a Stop, or when this link is dropped.
-                Ok(_thread) => self.sender = Some(sender),
+                // Not joined: it ends after a Stop, or when this link is
+                // dropped.
+                Ok(thread) => {
+                    self.sender = Some(sender);
+                    self.thread = Some(thread);
+                }
                 Err(error) => {
                     shared.update_status(|s| s.pointer = PointerState::Failed(error.to_string()));
                     return;
@@ -458,6 +475,32 @@ mod tests {
         // Reported once.
         assert_eq!(mock.state().notifications.len(), 1);
         assert!(shared.prefs().pointer_control);
+        link.stop();
+    }
+
+    #[test]
+    fn no_second_thread_while_a_prompt_is_pending() {
+        static STARTED: Mutex<u32> = Mutex::new(0);
+        let (_mock, shared) = shared();
+        let mut link = PointerLink::with_connector(|_, _| {
+            *crate::shared::lock(&STARTED) += 1;
+            // A permission dialog that takes a while to be answered.
+            std::thread::sleep(Duration::from_millis(300));
+            Ok((Box::new(Recorder), "test".to_string()))
+        });
+        link.move_by(&shared, 1, 0);
+        wait_for(|| *crate::shared::lock(&STARTED) == 1);
+        // Turned off and on again while the dialog is open.
+        link.stop();
+        link.move_by(&shared, 1, 0);
+        link.move_by(&shared, 1, 0);
+        std::thread::sleep(Duration::from_millis(100));
+        assert_eq!(*crate::shared::lock(&STARTED), 1);
+        assert!(!link.is_running());
+        // Once it has ended, pointer control starts again.
+        wait_for(|| link.thread.as_ref().is_none_or(|t| t.is_finished()));
+        link.move_by(&shared, 1, 0);
+        wait_for(|| *crate::shared::lock(&STARTED) == 2);
         link.stop();
     }
 
