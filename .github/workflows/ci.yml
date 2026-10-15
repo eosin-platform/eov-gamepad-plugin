@@ -1,0 +1,160 @@
+name: CI
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+  workflow_dispatch:
+    inputs:
+      eov_ref:
+        description: "eov tag or commit to build against (default: [package.metadata.eov] ref in Cargo.toml)"
+        required: false
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  test:
+    name: Lint, test and package (Linux)
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Check out the plugin
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+        with:
+          persist-credentials: false
+
+      - name: Resolve the eov reference
+        id: eov
+        shell: bash
+        env:
+          EOV_REF: ${{ inputs.eov_ref }}
+        run: python3 scripts/eov_ref.py >> "$GITHUB_OUTPUT"
+
+      # The plugin depends on ../../plugin_api: the eov-plugin-api crate of
+      # the pinned eov release, not eov's default branch.
+      - name: Check out eov-plugin-api
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+        with:
+          repository: eosin-platform/eov
+          ref: ${{ steps.eov.outputs.ref }}
+          path: eov-src
+          sparse-checkout: plugin_api
+          persist-credentials: false
+
+      - name: Link eov-plugin-api next to the plugin
+        shell: bash
+        run: |
+          set -euo pipefail
+          work_root="$(cd "$GITHUB_WORKSPACE/../.." && pwd)"
+          ln -sfn "$GITHUB_WORKSPACE/eov-src/plugin_api" "$work_root/plugin_api"
+
+      - name: Install system dependencies
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update
+          # libudev for gilrs; fontconfig for the Slint compiler used by the
+          # window contract test.
+          sudo apt-get install -y libudev-dev libfontconfig1-dev pkg-config
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@686976e191b89faba57d3206551f0f330d8cb249 # stable
+        with:
+          toolchain: stable
+          components: clippy, rustfmt
+
+      - name: Cache Rust build outputs
+        uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2.9.2
+
+      - name: Check formatting
+        run: cargo fmt --check
+
+      - name: Clippy
+        run: cargo clippy --all-targets --locked -- -D warnings
+
+      - name: Rust tests
+        run: cargo test --locked
+
+      - name: Script tests
+        run: python3 -m unittest discover -s scripts -p 'test_*.py' -v
+
+      - name: Build and package
+        shell: bash
+        run: |
+          set -euo pipefail
+          cargo build --release --locked
+          python3 scripts/package_eop.py --output dist/gamepad.eop
+          tar -tvf dist/gamepad.eop
+
+  build:
+    name: Build (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-latest, windows-latest]
+    steps:
+      - name: Check out the plugin
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+        with:
+          persist-credentials: false
+
+      - name: Set up Python
+        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
+        with:
+          python-version: "3.12"
+
+      - name: Resolve the eov reference
+        id: eov
+        shell: bash
+        env:
+          EOV_REF: ${{ inputs.eov_ref }}
+        run: python scripts/eov_ref.py >> "$GITHUB_OUTPUT"
+
+      - name: Check out eov-plugin-api
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+        with:
+          repository: eosin-platform/eov
+          ref: ${{ steps.eov.outputs.ref }}
+          path: eov-src
+          sparse-checkout: plugin_api
+          persist-credentials: false
+
+      - name: Link eov-plugin-api next to the plugin (macOS)
+        if: runner.os != 'Windows'
+        shell: bash
+        run: |
+          set -euo pipefail
+          work_root="$(cd "$GITHUB_WORKSPACE/../.." && pwd)"
+          ln -sfn "$GITHUB_WORKSPACE/eov-src/plugin_api" "$work_root/plugin_api"
+
+      - name: Link eov-plugin-api next to the plugin (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $workRoot = (Resolve-Path (Join-Path $env:GITHUB_WORKSPACE "..\..")).Path
+          $link = Join-Path $workRoot "plugin_api"
+          if (Test-Path $link) { Remove-Item $link -Force -Recurse }
+          New-Item -ItemType SymbolicLink -Path $link -Target (Join-Path $env:GITHUB_WORKSPACE "eov-src\plugin_api") | Out-Null
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@686976e191b89faba57d3206551f0f330d8cb249 # stable
+        with:
+          toolchain: stable
+          components: clippy
+
+      - name: Cache Rust build outputs
+        uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2.9.2
+
+      # The platform-specific input and pointer code.
+      - name: Clippy
+        run: cargo clippy --lib --locked -- -D warnings

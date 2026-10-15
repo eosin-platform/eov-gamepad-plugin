@@ -8,7 +8,7 @@ on:
         required: true
         type: string
       eov_source_sha:
-        description: "Exact EOV dependency commit to build against"
+        description: "Exact eov commit whose eov-plugin-api to build against"
         required: true
         type: string
       version:
@@ -26,7 +26,7 @@ on:
         required: true
         type: string
       eov_source_sha:
-        description: "Exact EOV dependency commit to build against"
+        description: "Exact eov commit whose eov-plugin-api to build against"
         required: true
         type: string
       version:
@@ -52,135 +52,99 @@ jobs:
         include:
           - arch: x86_64
             runner: windows-latest
-            msvc_arch: x64
-            msystem: CLANG64
-            msys2_prefix: mingw-w64-clang-x86_64
-            lib_machine: x64
             rust_target: x86_64-pc-windows-msvc
-            ntldd_filter: clang64
           - arch: arm64
             runner: windows-11-arm
-            msvc_arch: arm64
-            msystem: CLANGARM64
-            msys2_prefix: mingw-w64-clang-aarch64
-            lib_machine: arm64
             rust_target: aarch64-pc-windows-msvc
-            ntldd_filter: clangarm64
+
+    env:
+      VERSION: ${{ inputs.version }}
+      TAG: ${{ inputs.tag }}
+      ARCH: ${{ matrix.arch }}
+      RUST_TARGET: ${{ matrix.rust_target }}
 
     steps:
       - name: Check out repository
-        uses: actions/checkout@v5
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
         with:
           ref: ${{ inputs.source_sha }}
-          submodules: recursive
+          persist-credentials: false
 
-      - name: Check out eov dependency
-        uses: actions/checkout@v5
+      - name: Check out eov-plugin-api
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
         with:
           repository: eosin-platform/eov
           ref: ${{ inputs.eov_source_sha }}
           path: eov-src
+          sparse-checkout: plugin_api
+          persist-credentials: false
 
-      - name: Install Rust toolchain
-        uses: dtolnay/rust-toolchain@stable
-        with:
-          targets: ${{ matrix.rust_target }}
-
-      - name: Set up MSVC dev environment
-        uses: ilammy/msvc-dev-cmd@v1
-        with:
-          arch: ${{ matrix.msvc_arch }}
-
-      - name: Link eov workspace crates
+      - name: Link eov-plugin-api next to the plugin
         shell: pwsh
         run: |
           $ErrorActionPreference = 'Stop'
           $workRoot = (Resolve-Path (Join-Path $env:GITHUB_WORKSPACE "..\..")).Path
-          $commonLink = Join-Path $workRoot "common"
-          $pluginApiLink = Join-Path $workRoot "plugin_api"
+          $link = Join-Path $workRoot "plugin_api"
+          if (Test-Path $link) { Remove-Item $link -Force -Recurse }
+          New-Item -ItemType SymbolicLink -Path $link -Target (Join-Path $env:GITHUB_WORKSPACE "eov-src\plugin_api") | Out-Null
 
-          if (Test-Path $commonLink) {
-            Remove-Item $commonLink -Force -Recurse
-          }
-          if (Test-Path $pluginApiLink) {
-            Remove-Item $pluginApiLink -Force -Recurse
-          }
+      - name: Set up Python
+        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
+        with:
+          python-version: "3.12"
 
-          New-Item -ItemType SymbolicLink -Path $commonLink -Target (Join-Path $env:GITHUB_WORKSPACE "eov-src\common") | Out-Null
-          New-Item -ItemType SymbolicLink -Path $pluginApiLink -Target (Join-Path $env:GITHUB_WORKSPACE "eov-src\plugin_api") | Out-Null
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@686976e191b89faba57d3206551f0f330d8cb249 # stable
+        with:
+          toolchain: stable
+          targets: ${{ matrix.rust_target }}
 
       - name: Cache Rust build outputs
-        uses: Swatinem/rust-cache@v2
+        uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2.9.2
         with:
           key: windows-${{ matrix.arch }}
-
-      - name: Set up MSYS2 (${{ matrix.msystem }})
-        uses: msys2/setup-msys2@v2
-        with:
-          msystem: ${{ matrix.msystem }}
-          update: true
-          install: >-
-            ${{ matrix.msys2_prefix }}-clang
-            ${{ matrix.msys2_prefix }}-pkg-config
-            ${{ matrix.msys2_prefix }}-cairo
-            ${{ matrix.msys2_prefix }}-gdk-pixbuf2
-            ${{ matrix.msys2_prefix }}-glib2
 
       - name: Derive release metadata
         id: meta
         shell: bash
         run: |
           set -euo pipefail
-
-          cargo_version="$(sed -n 's/^version = "\([^"]*\)"$/\1/p' Cargo.toml | head -n 1)"
-          manifest_version="$(sed -n 's/^version = "\([^"]*\)"$/\1/p' plugin.toml | head -n 1)"
-          version="${{ inputs.version }}"
-          tag="${{ inputs.tag }}"
-
-          if [[ -z "$cargo_version" || -z "$manifest_version" ]]; then
-            echo "failed to derive version from Cargo.toml or plugin.toml" >&2
+          python scripts/release.py validate-source --root . --version "$VERSION"
+          if [[ "$TAG" != "v$VERSION" ]]; then
+            echo "release tag '$TAG' does not match version '$VERSION'" >&2
             exit 1
           fi
-
-          if [[ "$cargo_version" != "$manifest_version" ]]; then
-            echo "Cargo.toml version '$cargo_version' does not match plugin.toml version '$manifest_version'" >&2
-            exit 1
-          fi
-
-          if [[ "$version" != "$cargo_version" || "$tag" != "v$version" ]]; then
-            echo "release inputs do not match plugin version: tag=$tag version=$version cargo=$cargo_version" >&2
-            exit 1
-          fi
-
-          artifact_name="gamepad-${tag}-windows-${{ matrix.arch }}.eop"
-          checksum_name="${artifact_name}.sha256"
-
+          artifact_name="gamepad-${TAG}-windows-${ARCH}.eop"
           {
-            echo "tag=$tag"
-            echo "version=$version"
             echo "artifact_name=$artifact_name"
-            echo "checksum_name=$checksum_name"
-            echo "library_name=gamepad.dll"
+            echo "checksum_name=${artifact_name}.sha256"
           } >> "$GITHUB_OUTPUT"
 
       - name: Build plugin library
         shell: pwsh
-        run: |
-          cargo build --release --target ${{ matrix.rust_target }}
+        run: cargo build --release --locked --target $env:RUST_TARGET
 
       - name: Package .eop
-        shell: pwsh
+        shell: bash
+        env:
+          ARTIFACT: ${{ steps.meta.outputs.artifact_name }}
+          CHECKSUM: ${{ steps.meta.outputs.checksum_name }}
         run: |
-          New-Item -ItemType Directory -Force -Path dist | Out-Null
-          python scripts/package_eop.py --plugin-root "$env:GITHUB_WORKSPACE" --library "target/${{ matrix.rust_target }}/release/${{ steps.meta.outputs.library_name }}" --output "dist/${{ steps.meta.outputs.artifact_name }}"
-
-          $hash = (Get-FileHash "dist\${{ steps.meta.outputs.artifact_name }}" -Algorithm SHA256).Hash.ToLower()
-          "$hash  ${{ steps.meta.outputs.artifact_name }}" | Set-Content "dist\${{ steps.meta.outputs.checksum_name }}" -Encoding ASCII -NoNewline
+          set -euo pipefail
+          SOURCE_DATE_EPOCH="$(git log -1 --format=%ct)"
+          export SOURCE_DATE_EPOCH
+          python scripts/package_eop.py \
+            --plugin-root "$GITHUB_WORKSPACE" \
+            --library "target/$RUST_TARGET/release/gamepad.dll" \
+            --output "dist/$ARTIFACT"
+          cd dist
+          sha256sum "$ARTIFACT" > "$CHECKSUM"
 
       - name: Upload artifact
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: ${{ steps.meta.outputs.artifact_name }}
           path: |
             dist/${{ steps.meta.outputs.artifact_name }}
             dist/${{ steps.meta.outputs.checksum_name }}
+          if-no-files-found: error

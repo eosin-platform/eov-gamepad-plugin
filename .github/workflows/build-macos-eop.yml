@@ -8,7 +8,7 @@ on:
         required: true
         type: string
       eov_source_sha:
-        description: "Exact EOV dependency commit to build against"
+        description: "Exact eov commit whose eov-plugin-api to build against"
         required: true
         type: string
       version:
@@ -26,7 +26,7 @@ on:
         required: true
         type: string
       eov_source_sha:
-        description: "Exact EOV dependency commit to build against"
+        description: "Exact eov commit whose eov-plugin-api to build against"
         required: true
         type: string
       version:
@@ -57,41 +57,48 @@ jobs:
             runner: macos-15-intel
             rust_target: x86_64-apple-darwin
 
+    env:
+      VERSION: ${{ inputs.version }}
+      TAG: ${{ inputs.tag }}
+      ARCH: ${{ matrix.arch }}
+      RUST_TARGET: ${{ matrix.rust_target }}
+
     steps:
       - name: Check out repository
-        uses: actions/checkout@v5
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
         with:
           ref: ${{ inputs.source_sha }}
-          submodules: recursive
+          persist-credentials: false
 
-      - name: Check out eov dependency
-        uses: actions/checkout@v5
+      - name: Check out eov-plugin-api
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
         with:
           repository: eosin-platform/eov
           ref: ${{ inputs.eov_source_sha }}
           path: eov-src
+          sparse-checkout: plugin_api
+          persist-credentials: false
 
-      - name: Install system dependencies
-        shell: bash
-        run: |
-          set -euo pipefail
-          brew install cairo gdk-pixbuf glib pkg-config
-
-      - name: Link eov workspace crates
+      - name: Link eov-plugin-api next to the plugin
         shell: bash
         run: |
           set -euo pipefail
           work_root="$(cd "$GITHUB_WORKSPACE/../.." && pwd)"
-          ln -sfn "$GITHUB_WORKSPACE/eov-src/common" "$work_root/common"
           ln -sfn "$GITHUB_WORKSPACE/eov-src/plugin_api" "$work_root/plugin_api"
 
-      - name: Install Rust toolchain
-        uses: dtolnay/rust-toolchain@stable
+      - name: Set up Python
+        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
         with:
+          python-version: "3.12"
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@686976e191b89faba57d3206551f0f330d8cb249 # stable
+        with:
+          toolchain: stable
           targets: ${{ matrix.rust_target }}
 
       - name: Cache Rust build outputs
-        uses: Swatinem/rust-cache@v2
+        uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2.9.2
         with:
           key: macos-${{ matrix.arch }}
 
@@ -100,60 +107,44 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-
-          cargo_version="$(sed -n 's/^version = "\([^"]*\)"$/\1/p' Cargo.toml | head -n 1)"
-          manifest_version="$(sed -n 's/^version = "\([^"]*\)"$/\1/p' plugin.toml | head -n 1)"
-          version="${{ inputs.version }}"
-          tag="${{ inputs.tag }}"
-
-          if [[ -z "$cargo_version" || -z "$manifest_version" ]]; then
-            echo "failed to derive version from Cargo.toml or plugin.toml" >&2
+          python scripts/release.py validate-source --root . --version "$VERSION"
+          if [[ "$TAG" != "v$VERSION" ]]; then
+            echo "release tag '$TAG' does not match version '$VERSION'" >&2
             exit 1
           fi
-
-          if [[ "$cargo_version" != "$manifest_version" ]]; then
-            echo "Cargo.toml version '$cargo_version' does not match plugin.toml version '$manifest_version'" >&2
-            exit 1
-          fi
-
-          if [[ "$version" != "$cargo_version" || "$tag" != "v$version" ]]; then
-            echo "release inputs do not match plugin version: tag=$tag version=$version cargo=$cargo_version" >&2
-            exit 1
-          fi
-
-          artifact_name="gamepad-${tag}-macos-${{ matrix.arch }}.eop"
-          checksum_name="${artifact_name}.sha256"
-
+          artifact_name="gamepad-${TAG}-macos-${ARCH}.eop"
           {
-            echo "tag=$tag"
-            echo "version=$version"
             echo "artifact_name=$artifact_name"
-            echo "checksum_name=$checksum_name"
-            echo "library_name=libgamepad.dylib"
+            echo "checksum_name=${artifact_name}.sha256"
           } >> "$GITHUB_OUTPUT"
 
       - name: Build plugin library
         shell: bash
         run: |
           set -euo pipefail
-          cargo build --release --target ${{ matrix.rust_target }}
+          cargo build --release --locked --target "$RUST_TARGET"
 
       - name: Package .eop
         shell: bash
+        env:
+          ARTIFACT: ${{ steps.meta.outputs.artifact_name }}
+          CHECKSUM: ${{ steps.meta.outputs.checksum_name }}
         run: |
           set -euo pipefail
-          python3 scripts/package_eop.py \
+          SOURCE_DATE_EPOCH="$(git log -1 --format=%ct)"
+          export SOURCE_DATE_EPOCH
+          python scripts/package_eop.py \
             --plugin-root "$GITHUB_WORKSPACE" \
-            --library "target/${{ matrix.rust_target }}/release/${{ steps.meta.outputs.library_name }}" \
-            --output "dist/${{ steps.meta.outputs.artifact_name }}"
-
+            --library "target/$RUST_TARGET/release/libgamepad.dylib" \
+            --output "dist/$ARTIFACT"
           cd dist
-          shasum -a 256 "${{ steps.meta.outputs.artifact_name }}" | tee "${{ steps.meta.outputs.checksum_name }}" >/dev/null
+          shasum -a 256 "$ARTIFACT" > "$CHECKSUM"
 
       - name: Upload artifact
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: ${{ steps.meta.outputs.artifact_name }}
           path: |
             dist/${{ steps.meta.outputs.artifact_name }}
             dist/${{ steps.meta.outputs.checksum_name }}
+          if-no-files-found: error

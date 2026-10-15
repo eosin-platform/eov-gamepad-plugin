@@ -4,8 +4,12 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: "Version to release, e.g. 0.2.3"
+        description: "Version to release, e.g. 1.0.1"
         required: true
+        type: string
+      eov_ref:
+        description: "eov tag or commit to build against (default: [package.metadata.eov] ref in Cargo.toml)"
+        required: false
         type: string
 
 concurrency:
@@ -27,34 +31,33 @@ jobs:
       reuse_draft: ${{ steps.meta.outputs.reuse_draft }}
     steps:
       - name: Check out dispatched source
-        uses: actions/checkout@v5
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
         with:
           ref: ${{ github.sha }}
           fetch-depth: 0
-          token: ${{ github.token }}
+          persist-credentials: false
 
       - name: Validate version, source metadata, and release uniqueness
         id: meta
         env:
           GH_TOKEN: ${{ github.token }}
+          # Inputs reach the script only through the environment (GPD-8).
+          REQUESTED_VERSION: ${{ inputs.version }}
+          EOV_REF: ${{ inputs.eov_ref }}
         shell: bash
         run: |
           set -euo pipefail
-          version="${{ inputs.version }}"
+          version="$REQUESTED_VERSION"
           python3 scripts/release.py validate-source --root . --version "$version"
           tag="v$version"
           source_sha="$GITHUB_SHA"
 
-          tag_check_error="$RUNNER_TEMP/tag-check-error"
-          set +e
-          git ls-remote --exit-code --refs origin "refs/tags/$tag" >/dev/null 2>"$tag_check_error"
-          tag_status=$?
-          set -e
-          if [[ "$tag_status" -eq 0 ]]; then
+          # The checkout keeps no credentials, so ask the API (validated
+          # SemVer only reaches the jq filter).
+          existing_tags="$(gh api "repos/${GITHUB_REPOSITORY}/git/matching-refs/tags/$tag" \
+            --jq "[.[] | select(.ref == \"refs/tags/$tag\")] | length")"
+          if [[ "$existing_tags" != "0" ]]; then
             echo "tag '$tag' already exists" >&2
-            exit 1
-          elif [[ "$tag_status" -ne 2 ]]; then
-            cat "$tag_check_error" >&2
             exit 1
           fi
 
@@ -79,8 +82,10 @@ jobs:
             reuse_draft="true"
           fi
 
-          eov_default_branch="$(gh api repos/eosin-platform/eov --jq .default_branch)"
-          eov_source_sha="$(gh api "repos/eosin-platform/eov/commits/$eov_default_branch" --jq .sha)"
+          # Build against the pinned eov release, not eov's default branch.
+          eov_ref="$(python3 scripts/eov_ref.py | sed -n 's/^ref=//p')"
+          eov_source_sha="$(gh api "repos/eosin-platform/eov/commits/$eov_ref" --jq .sha)"
+          echo "building against eov $eov_ref ($eov_source_sha)"
           {
             echo "source_sha=$source_sha"
             echo "eov_source_sha=$eov_source_sha"
@@ -133,26 +138,28 @@ jobs:
       contents: read
     steps:
       - name: Check out exact source
-        uses: actions/checkout@v5
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
         with:
           ref: ${{ needs.prepare.outputs.source_sha }}
           fetch-depth: 1
-          token: ${{ github.token }}
+          persist-credentials: false
 
       - name: Download build artifacts
-        uses: actions/download-artifact@v8
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           path: artifacts
 
       - name: Stage artifacts and generate release.toml
         shell: bash
+        env:
+          VERSION: ${{ needs.prepare.outputs.version }}
         run: |
           set -euo pipefail
           rm -rf release-files
           python3 scripts/release.py manifest \
             --root . \
             --plugin-name gamepad \
-            --version '${{ needs.prepare.outputs.version }}' \
+            --version "$VERSION" \
             --repository eosin-platform/eov-gamepad-plugin \
             --artifacts-dir artifacts \
             --staging-dir release-files \
@@ -160,7 +167,7 @@ jobs:
           find release-files -maxdepth 1 -type f -printf '%f\n' | sort
 
       - name: Upload validated release staging
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: gamepad-release-staging-${{ github.run_id }}
           path: release-files
@@ -174,14 +181,14 @@ jobs:
       contents: write
     steps:
       - name: Check out exact source
-        uses: actions/checkout@v5
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
         with:
           ref: ${{ needs.prepare.outputs.source_sha }}
           fetch-depth: 1
-          token: ${{ github.token }}
+          persist-credentials: false
 
       - name: Download validated release staging
-        uses: actions/download-artifact@v8
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           name: gamepad-release-staging-${{ github.run_id }}
           path: release-files
@@ -190,15 +197,20 @@ jobs:
       - name: Create or update draft release at SOURCE_SHA
         env:
           GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          REUSE_DRAFT: ${{ needs.prepare.outputs.reuse_draft }}
+          TAG: ${{ needs.prepare.outputs.tag }}
+          SOURCE_SHA: ${{ needs.prepare.outputs.source_sha }}
+          VERSION: ${{ needs.prepare.outputs.version }}
         shell: bash
         run: |
           set -euo pipefail
-          if [[ '${{ needs.prepare.outputs.reuse_draft }}' == 'true' ]]; then
-            gh release upload '${{ needs.prepare.outputs.tag }}' release-files/* --clobber
+          if [[ "$REUSE_DRAFT" == 'true' ]]; then
+            gh release upload "$TAG" release-files/* --clobber
           else
-            gh release create '${{ needs.prepare.outputs.tag }}' \
-              --target '${{ needs.prepare.outputs.source_sha }}' \
-              --title 'Gamepad ${{ needs.prepare.outputs.version }}' \
+            gh release create "$TAG" \
+              --target "$SOURCE_SHA" \
+              --title "Gamepad $VERSION" \
               --generate-notes \
               --draft \
               release-files/*
@@ -207,11 +219,13 @@ jobs:
       - name: Verify draft release target and assets
         env:
           GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ needs.prepare.outputs.tag }}
+          RELEASE_SHA: ${{ needs.prepare.outputs.source_sha }}
         shell: bash
         run: |
           set -euo pipefail
-          tag='${{ needs.prepare.outputs.tag }}'
-          source_sha='${{ needs.prepare.outputs.source_sha }}'
+          tag="$RELEASE_TAG"
+          source_sha="$RELEASE_SHA"
           release_json="$(gh api "repos/${GITHUB_REPOSITORY}/releases?per_page=100" \
             --jq "[.[] | select(.tag_name == \"$tag\")][0]")"
           [[ "$release_json" != "null" ]] || {
@@ -238,17 +252,21 @@ jobs:
       - name: Publish verified release
         env:
           GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          TAG: ${{ needs.prepare.outputs.tag }}
         shell: bash
-        run: gh release edit '${{ needs.prepare.outputs.tag }}' --draft=false
+        run: gh release edit "$TAG" --draft=false
 
       - name: Verify published tag target
         env:
           GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ needs.prepare.outputs.tag }}
+          RELEASE_SHA: ${{ needs.prepare.outputs.source_sha }}
         shell: bash
         run: |
           set -euo pipefail
-          tag='${{ needs.prepare.outputs.tag }}'
-          source_sha='${{ needs.prepare.outputs.source_sha }}'
+          tag="$RELEASE_TAG"
+          source_sha="$RELEASE_SHA"
           ref_json="$(gh api "repos/${GITHUB_REPOSITORY}/git/ref/tags/$tag")"
           object_sha="$(jq -r '.object.sha' <<<"$ref_json")"
           object_type="$(jq -r '.object.type' <<<"$ref_json")"
@@ -262,14 +280,17 @@ jobs:
 
       - name: Verify published asset URLs and hashes
         shell: bash
+        env:
+          VERSION: ${{ needs.prepare.outputs.version }}
+          TAG: ${{ needs.prepare.outputs.tag }}
         run: |
           set -euo pipefail
           python3 scripts/release.py verify-assets \
             --root . \
             --plugin-name gamepad \
-            --version '${{ needs.prepare.outputs.version }}' \
+            --version "$VERSION" \
             --repository eosin-platform/eov-gamepad-plugin \
             --manifest release-files/release.toml
           curl --fail --location --silent --show-error \
-            "https://github.com/eosin-platform/eov-gamepad-plugin/releases/download/${{ needs.prepare.outputs.tag }}/release.toml" \
+            "https://github.com/eosin-platform/eov-gamepad-plugin/releases/download/$TAG/release.toml" \
             | cmp - release-files/release.toml
