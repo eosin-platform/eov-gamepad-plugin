@@ -1,235 +1,235 @@
 # Gamepad Plugin for eov
 
-[![Build Status](https://github.com/eosin-platform/eov-gamepad-plugin/actions/workflows/release.yml/badge.svg)](https://github.com/eosin-platform/eov-gamepad-plugin/actions/workflows/release.yml)
+[![CI](https://github.com/eosin-platform/eov-gamepad-plugin/actions/workflows/ci.yml/badge.svg)](https://github.com/eosin-platform/eov-gamepad-plugin/actions/workflows/ci.yml)
+[![Release](https://github.com/eosin-platform/eov-gamepad-plugin/actions/workflows/release.yml/badge.svg)](https://github.com/eosin-platform/eov-gamepad-plugin/actions/workflows/release.yml)
 [![License: MIT OR Apache-2.0 OR GPL-3.0](https://img.shields.io/badge/license-MIT%20OR%20Apache--2.0%20OR%20GPL--3.0-0366d6)](https://github.com/eosin-platform/eov-gamepad-plugin#license)
 
-This repository contains the Gamepad plugin for [eov](https://github.com/eosin-platform/eov), the lightweight whole-slide image viewer. The plugin adds controller-driven viewport navigation, workspace actions, and a dedicated settings window for tuning mappings, sensitivity, and saved controller profiles.
+This plugin lets you drive [eov](https://github.com/eosin-platform/eov), the
+whole-slide image viewer, with a game controller: pan and zoom the slide,
+switch panes and tabs, and step through a series. A settings window, opened
+from the toolbar, holds dead zones, speeds, mappings and saved profiles.
 
-The host application is documented in the main eov repository. This README covers the plugin itself: what it does, how it behaves today, and how to build and package it for eov.
-
-Prebuilt `.eop` release artifacts are published for Linux, macOS, and Windows across `x86_64` and `arm64` where GitHub-hosted runners are available.
-
-## Screenshots
+Version 1.0 targets eov 1.0 (plugin API 1.0). Release packages (`.eop`) are
+built for Linux, macOS and Windows on `x86_64` and `arm64`.
 
 <p align="center">
-	<img src="images/gamepad-settings-window.webp" width="768">
+	<img src="images/gamepad-settings-window.webp" width="768" alt="The gamepad settings window">
 </p>
 
-## What It Does
+## Installing
 
-The plugin extends eov with:
+From the official catalog:
 
-- Controller-driven viewport panning
-- Controller-driven zoom
-- Optional controller-driven mouse movement
-- Gamepad shortcuts for pane, tab, and series navigation
-- A dedicated settings window opened from the toolbar
-- Per-controller selection when multiple devices are connected
-- Adjustable dead zones for sticks and triggers
-- Adjustable pan and zoom sensitivity
-- Named mapping profiles saved as JSON
-- Profile import from external JSON files
+```bash
+eov plugin install gamepad
+```
 
-The plugin is designed so the controller can handle both direct viewport motion and higher-level workspace actions without adding a separate in-viewport overlay or HUD surface.
+Or from a downloaded package:
 
-## Current User-Facing Behavior
+```bash
+eov plugin install ./gamepad-v1.0.0-linux-x86_64.eop
+```
 
-When the plugin is loaded into eov, it contributes one toolbar button:
+Then restart eov. The plugin adds a **Gamepad** button to the toolbar.
 
-- `Gamepad` (<img src="ui/icons/gamepad.svg" width="24" />): opens or closes the gamepad settings window
+## Using it
 
-The window is a runtime-loaded Slint UI hosted by eov. It is wider than the standard plugin window size because it exposes both tuning controls and a full mapping table.
+Connect a controller by USB or Bluetooth and use it while eov has focus. The
+default layout:
 
-### Controller State
+| Control | Action |
+|---|---|
+| Left stick | Pan |
+| Right stick up / down | Zoom in / out |
+| Right trigger / left trigger | Zoom in / out (pressure sensitive) |
+| D-pad left / right | Previous / next pane |
+| D-pad up / down | Previous / next tab |
+| North button (Y, △) | Show or hide the series bar |
+| Left / right shoulder | Previous / next series item |
+| South button (A, ✕) | Open the selected series item |
+| East button (B, ○) | Fit the slide to the pane |
+| Start | Pause or resume controller input |
+| Select | Show or hide the settings window |
 
-The header card shows whether controller input is enabled and reports the currently selected device status.
+Every control can be remapped. Sticks and triggers offer pan, zoom and
+pointer actions; buttons offer the navigation actions, Fit View, Zoom In or
+Out (zooms while held; a tap zooms a step), the settings window and
+Enable / Pause.
 
-- If no supported controller is connected, the window shows `Waiting for a controller`.
-- If a supported controller is connected, the status updates to `Ready: ...` with the detected device label.
-- If controller input is paused, the status changes to `Controller paused: ...`.
+Motion applies to the focused pane:
 
-The plugin filters the device list to controllers that expose the minimum inputs it needs for the default workflow. It has been tested with:
+- Panning and zooming are relative and scaled by elapsed time, so the speed
+  does not depend on how often the controller reports or on the frame rate.
+  At speed 1, full deflection pans twice the pane's longer side per second
+  and zooms by a factor of 20 per second.
+- Sticks use a radial dead zone with rescaling: inside it nothing moves,
+  and just outside it motion starts from zero. Diagonals keep their
+  direction. The response curve (1 = linear) gives finer control near the
+  centre.
+- Triggers read from released (0) to fully pressed (1) on every controller,
+  whether it reports them as analog buttons or as axes.
 
-- PS5 DualSense
-- Xbox Elite controllers
+### Focus, pausing and system-wide effects
 
-If your gamepad is not detected or behaves incorrectly, please open an issue with the controller model, operating system, and whether you are using X11, Wayland, or Windows.
+- Controller input only acts while eov has keyboard focus: its main window
+  or the gamepad settings window. Using the controller in another
+  application does nothing in eov, and with two eov windows open only the
+  focused one reacts.
+- **Enable / Pause** (the switch in the window, or Start by default) stops
+  every action except Enable / Pause itself. While paused, the status bar
+  shows "Gamepad paused".
+- Nothing outside eov is touched by default. The *System Pointer* option
+  (off by default) lets "Move Pointer" mappings move the system pointer
+  while eov has focus. Turning it on asks the system for permission:
+  - Wayland: the Remote Desktop portal asks once; the grant is remembered.
+  - X11: no prompt (XTest).
+  - macOS: eov needs Accessibility access (System Settings › Privacy &
+    Security › Accessibility). This applies to the whole eov process.
+  - Windows: no prompt.
 
-### Default Mappings
+  If the permission is declined, the option turns itself off again.
 
-The default profile is oriented around slide navigation and light workspace control:
+### Settings window
 
-- `Left Stick X/Y`: pan horizontally and vertically
-- `Right Stick X/Y`: move the mouse cursor
-- `Left Trigger`: zoom out
-- `Right Trigger`: zoom in
-- `D-Pad Left/Right`: previous or next pane
-- `D-Pad Up/Down`: previous or next tab
-- `North Button`: toggle the series bar
-- `Left Shoulder`: previous series item
-- `Right Shoulder`: next series item
-- `South Button`: open the selected series item
+- **Device**: *All controllers* (the default) takes input from every
+  connected controller; with several, each stick and trigger follows the
+  controller that deflects it most, so drift on an idle pad is not added.
+  Choosing one controller ignores the others. Identical controllers are
+  listed separately, and the choice is remembered; while the chosen
+  controller is disconnected, every controller works.
+- **Profiles**: changes are saved automatically. When a profile is
+  selected, changes are also saved into that profile (never into another).
+  *Save As* stores the current settings under the typed name, *New* stores
+  the defaults, *Import* and *Export* read and write profile files (JSON, also
+  those of 0.x), and *Delete* removes the selected profile. Replacing or
+  deleting a profile asks first. *No profile* keeps the settings but stops
+  saving them into a profile.
+- **Tuning**: dead zones, pan and zoom speed and the response curve. Drag a
+  slider or use the step buttons; double-click a slider to reset it.
+- **Mappings**: an action for each stick axis, trigger and button.
 
-Every mapped control can be reassigned from the settings window. Axis controls and button controls expose separate action menus so the UI only shows actions that make sense for that input type.
+## Settings storage
 
-### Device Selection
+The plugin keeps its settings in eov's per-plugin settings store, written
+atomically by eov (`<eov data dir>/plugins/gamepad/settings.json`, for
+example `~/.local/share/eov/plugins/gamepad/settings.json` on Linux). Changes
+are written shortly after they are made, not on every slider movement.
 
-If multiple supported controllers are connected, the `Device` card lets you choose which one drives eov. The selected device is kept as the preferred device while it remains available.
+On the first start of 1.0, settings and profiles saved by 0.x (under
+`~/.config/eov/plugins/gamepad/` on Linux) are imported once. The old files
+are left untouched. Pointer mappings are kept, but system pointer control
+starts off.
 
-If no supported device is detected, the selector is replaced with a `No controllers detected` empty state.
+## Platform and packaging notes
 
-### Profiles
+- **Linux** reads controllers through evdev and udev (`libudev`). The
+  logged-in user can usually read game controllers; if not, add a udev rule
+  for the controller or add the user to the `input` group.
+- **Flatpak**: the sandbox must expose input devices. eov's Flatpak manifest
+  needs `--device=input` in `finish-args` (Flatpak 1.15.6 or newer; older
+  versions need `--device=all`). Without it the plugin explains this in its
+  window and in a notification. Users can grant it themselves:
 
-Profiles store dead zones, sensitivities, and the full control mapping table.
+  ```bash
+  flatpak override --user --device=input io.eosin.eov
+  ```
 
-- `New` resets the window to plugin defaults and saves a new profile name such as `untitled` or `untitled-2`.
-- The profile combo box loads one of the saved local profiles.
-- The `Load` button imports a profile from a JSON file chosen through the host file picker.
-- `Delete` removes the currently named local profile.
+  System pointer control uses the Remote Desktop portal, which needs no
+  extra permission.
+- **macOS** reads controllers through IOKit; controllers normally need no
+  permission.
+- **Windows** reads controllers through Windows.Gaming.Input, which only
+  reports input while eov is in the foreground.
 
-Any mapping or numeric tuning change is persisted immediately and also written back to the current profile name when one is set.
-
-### Tuning
-
-The settings window exposes five numeric controls:
-
-- Left stick dead zone
-- Right stick dead zone
-- Trigger dead zone
-- Pan sensitivity
-- Zoom sensitivity
-
-Each setting can be edited either as a numeric text field or with the inline slider. Slider double-click resets the field to its built-in default value.
-
-### Mouse Control
-
-By default, the right stick drives relative mouse motion. This is useful for desktop-level interactions that are not directly exposed through the host controller actions.
-
-On Linux Wayland sessions, the plugin first tries to use the XDG desktop portal remote desktop API for pointer motion. That may prompt for permission the first time mouse control is used. If portal-based pointer access is unavailable, the plugin falls back to `enigo` backends where possible.
-
-## Storage Model
-
-The plugin stores its runtime state and saved profiles under the local eov config directory.
-
-Files used today:
-
-- `plugins/gamepad/state.json`: last active tuning values and mappings
-- `plugins/gamepad/profiles/*.json`: named saved profiles
-
-On Linux this resolves under `~/.config/eov/plugins/gamepad/` unless `XDG_CONFIG_HOME` is set.
-
-Profile files are plain JSON and can be imported through the settings window.
-
-## Scope and Limitations
-
-The current implementation is intentionally narrow.
-
-Implemented today:
-
-- Controller-driven viewport panning and zoom
-- Controller-driven mouse motion
-- Pane, tab, and series navigation actions
-- Local JSON profile storage and import
-- Per-device selection inside the settings window
-
-Not implemented by this plugin today:
-
-- Viewport overlays
-- Viewport context menu actions
-- HUD toolbar controls
-- Automatic per-controller profile switching
-- Force feedback or haptics
-- Button chord support
-- Exporting profiles from the UI
-
-Controller support is based on what `gilrs` exposes for the platform and how the device reports its buttons and axes. Unsupported or partially mapped controllers may still require upstream mapping improvements or plugin-side handling.
+eov publishes window focus changes with its next frame. When controller
+input starts, the plugin asks eov for a frame, so after switching back to eov
+the first input may take a frame to be recognised.
 
 ## Building
 
-This is a Rust plugin crate built as a dynamic library.
-
-Build it from the plugin repository:
-
-```bash
-cargo build
-```
-
-Or from the host repository root:
+The crate builds on its own; it needs the `eov-plugin-api` crate of eov at
+`../../plugin_api`, which is where it is inside an eov checkout:
 
 ```bash
-cargo build --manifest-path plugins/gamepad/Cargo.toml
+# inside an eov checkout
+cargo build --release --manifest-path plugins/gamepad/Cargo.toml
 ```
 
-The produced shared library must be packaged together with `plugin.toml` and the `ui/` directory before eov can discover it.
+Outside eov, check out eov at the release named by
+`[package.metadata.eov] ref` in `Cargo.toml` so that its `plugin_api`
+directory is two levels up. CI and release builds do exactly that, instead of
+building against eov's default branch.
 
-## Packaging for eov
+Linux builds need `libudev-dev` and `pkg-config`.
 
-Recent eov builds discover plugins from packaged `.eop` tarballs placed in the configured plugin directory. By default that directory is:
+## Packaging
 
-```text
-~/.eov/plugins/
-```
-
-For this plugin, the package should contain at least:
-
-- `plugin.toml`
-- the compiled shared library for the target platform
-- `ui/gamepad-window.slint`
-- the rest of the `ui/` assets used by the window
-
-This repository includes a helper packager:
+An `.eop` is a tar archive with `plugin.toml`, the library (named after the
+plugin id: `libgamepad.so`, `libgamepad.dylib` or `gamepad.dll`) and the
+`ui/` directory:
 
 ```bash
-python3 scripts/package_eop.py \
-  --plugin-root . \
-  --library target/debug/libgamepad.so \
-  --output ~/.eov/plugins/gamepad.eop
+cargo build --release
+python3 scripts/package_eop.py --output dist/gamepad.eop
 ```
 
-If you are working inside the main eov repository, you can also build the plugin from the workspace root and then package it with the same helper by pointing `--plugin-root` at `plugins/gamepad`.
+Without `--library` the script uses the release build for the current
+platform; `--library` takes any other build. The archive is reproducible
+(sorted entries, fixed owners and modes, `SOURCE_DATE_EPOCH` timestamps).
 
-## Using the Plugin in eov
+## Development
 
-1. Start eov with the plugin available in its plugin directory.
-2. Click `Gamepad` in the toolbar to open the settings window.
-3. Connect a supported controller and select it if more than one is available.
-4. Leave the defaults in place or tune dead zones, sensitivities, and mappings.
-5. Save a named profile for the controller layout you want to keep.
-6. Use the controller to pan, zoom, navigate panes or tabs, and move through the series bar.
-
-## Repository Layout
-
-```text
-.
-├── Cargo.toml
-├── plugin.toml
-├── images/
-│   └── gamepad-settings-window.webp
-├── scripts/
-│   └── package_eop.py
-├── src/
-│   ├── lib.rs
-│   ├── state.rs
-│   └── window.rs
-└── ui/
-    ├── gamepad-window.slint
-    └── icons/
+```bash
+cargo fmt --check
+cargo clippy --all-targets --locked -- -D warnings
+cargo test --locked
+python3 -m unittest discover -s scripts -p 'test_*.py'
 ```
 
-Key pieces:
+The tests need no controller and never touch the home directory:
 
-- `src/lib.rs`: plugin FFI entrypoints and toolbar registration
-- `src/state.rs`: controller polling, action dispatch, persistence, and defaults
-- `src/window.rs`: settings window callbacks and property bridging
-- `ui/`: runtime-loaded Slint settings window
+- the input engine (dead zones, curves, triggers, timing, gating,
+  debouncing, several controllers) is a pure state machine with unit tests;
+- the plugin runs in `eov_plugin_api::testing::TestHarness` with scripted
+  controller input;
+- a contract test compiles `ui/gamepad-window.slint` with the Slint version
+  eov uses and checks every property the plugin pushes and every callback it
+  handles. Building it needs `libfontconfig1-dev` on Linux.
 
-## Development Notes
+Source layout:
 
-- The plugin is a Rust FFI plugin using the eov `plugin_api` crate.
-- Its primary UI surface is a standalone plugin window rather than a docked sidebar.
-- The worker thread uses `gilrs` for controller input.
-- Mouse movement uses `enigo`, with Linux Wayland portal support through `ashpd` when available.
-- The host application handles plugin window sizing and refresh for the gamepad window.
+| Path | Contents |
+|---|---|
+| `src/plugin.rs` | The `Plugin` implementation: events, the settings window, profiles |
+| `src/engine.rs` | Input engine: device state, gating, dead zones, motion |
+| `src/backend.rs` | Controller input through gilrs (and the scripted test backend) |
+| `src/worker.rs` | The input thread: waits for input, calls eov, writes settings |
+| `src/config.rs` | Controls, actions, tuning ranges, persisted format, profile names |
+| `src/shared.rs` | State shared between the UI thread and the plugin's threads |
+| `src/ui.rs` | Properties pushed to the settings window |
+| `src/pointer.rs` | Opt-in system pointer control |
+| `src/environment.rs` | Explanations when controllers cannot be read (Flatpak, permissions) |
+| `src/legacy.rs` | One-time import of 0.x settings |
+| `ui/gamepad-window.slint` | The settings window |
+| `scripts/` | Packaging and release tooling |
+
+The input thread blocks until the controller reports something or a timer is
+due, so an idle controller costs nothing. It calls eov's non-blocking host
+methods directly and never holds a lock while doing so; the settings window
+is only updated on eov's UI thread.
+
+## Releasing
+
+`scripts/dispatch-release-workflow.sh <version>` starts the release workflow
+for a version that matches `Cargo.toml` and `plugin.toml`. It builds every
+platform against the pinned eov release, publishes the `.eop` files with
+checksums and writes `release.toml` for eov's plugin catalog.
+
+## Not implemented
+
+Clicking or scrolling with the system pointer, held-button repeat for
+navigation actions, button chords, automatic per-controller profiles and
+force feedback.
 
 ## License
 
