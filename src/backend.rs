@@ -5,7 +5,7 @@
 
 use crate::config::Control;
 use crate::engine::{DeviceId, DeviceInfo, InputEvent, Power};
-use gilrs::ev::filter::{Filter, Jitter, axis_dpad_to_button, deadzone};
+use gilrs::ev::filter::{Filter, Jitter, axis_dpad_to_button};
 use gilrs::{Axis, Button, EventType, GamepadId, Gilrs, GilrsBuilder};
 use std::collections::HashMap;
 use std::time::{Duration, Instant};
@@ -174,13 +174,14 @@ fn trigger_from_axis(floor: &mut f32, value: f32) -> f32 {
 }
 
 impl GilrsBackend {
-    /// gilrs's default filters (D-pad hats to buttons, jitter, device dead
-    /// zones) and state update, as `Gilrs::next_event` applies them.
+    /// gilrs's default filters and state update, as `Gilrs::next_event`
+    /// applies them, except its dead zone: the engine applies the user's
+    /// radial dead zone, and gilrs's own (0.1 on Windows and macOS) would
+    /// stack on top of it, so even a dead zone of 0 would not be 0.
     fn filtered(&mut self, raw: gilrs::Event) -> Option<gilrs::Event> {
         let event = Some(raw)
             .filter_ev(&axis_dpad_to_button, &mut self.gilrs)
-            .filter_ev(&self.jitter, &mut self.gilrs)
-            .filter_ev(&deadzone, &mut self.gilrs)?;
+            .filter_ev(&self.jitter, &mut self.gilrs)?;
         if event.is_dropped() {
             return None;
         }
@@ -389,37 +390,57 @@ pub mod scripted {
 
     use super::*;
     use std::collections::BTreeMap;
-    use std::sync::Mutex;
+    use std::sync::atomic::{AtomicU64, Ordering};
     use std::sync::mpsc::{Receiver, Sender, channel};
+    use std::sync::{Arc, Mutex};
 
-    type Scripts = BTreeMap<String, Receiver<InputEvent>>;
+    type Scripts = BTreeMap<String, (Receiver<InputEvent>, Arc<AtomicU64>)>;
 
     static SCRIPTS: Mutex<Scripts> = Mutex::new(BTreeMap::new());
 
+    /// The test's end of a scripted backend.
+    pub struct Script {
+        pub sender: Sender<InputEvent>,
+        /// How often the input thread has waited for input: once per loop.
+        pub waits: Arc<AtomicU64>,
+    }
+
     /// Registers the event source for the plugin instance using `data_dir`.
-    pub fn script(data_dir: &str) -> Sender<InputEvent> {
+    pub fn script(data_dir: &str) -> Script {
         let (sender, receiver) = channel();
+        let waits = Arc::new(AtomicU64::new(0));
         SCRIPTS
             .lock()
             .unwrap_or_else(|e| e.into_inner())
-            .insert(data_dir.to_string(), receiver);
-        sender
+            .insert(data_dir.to_string(), (receiver, Arc::clone(&waits)));
+        Script { sender, waits }
     }
 
     pub struct ScriptedBackend {
         receiver: Option<Receiver<InputEvent>>,
+        waits: Arc<AtomicU64>,
     }
 
     impl InputBackend for ScriptedBackend {
         fn open(context: &BackendContext) -> Result<Self, BackendError> {
-            let receiver = SCRIPTS
+            let script = SCRIPTS
                 .lock()
                 .unwrap_or_else(|e| e.into_inner())
                 .remove(&context.instance);
-            Ok(Self { receiver })
+            Ok(match script {
+                Some((receiver, waits)) => Self {
+                    receiver: Some(receiver),
+                    waits,
+                },
+                None => Self {
+                    receiver: None,
+                    waits: Arc::new(AtomicU64::new(0)),
+                },
+            })
         }
 
         fn wait(&mut self, timeout: Duration, events: &mut Vec<InputEvent>) {
+            self.waits.fetch_add(1, Ordering::AcqRel);
             let Some(receiver) = &self.receiver else {
                 std::thread::sleep(timeout);
                 return;
