@@ -10,6 +10,9 @@ use crate::ui::{self, Focus};
 use crate::worker::PAUSED_STATUS;
 use eov_plugin_api::prelude::*;
 use eov_plugin_api::testing::{MockHost, TestHarness, test_init};
+use std::path::PathBuf;
+use std::sync::Arc;
+use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::mpsc::Sender;
 use std::time::{Duration, Instant};
 
@@ -119,6 +122,16 @@ const PAD: u64 = 1;
 struct Rig {
     harness: TestHarness<Plugin>,
     input: Sender<InputEvent>,
+    /// Counts the input thread's loops (one wait each).
+    waits: Arc<AtomicU64>,
+    /// The temporary plugin directories of `test_init`.
+    root: PathBuf,
+}
+
+impl Drop for Rig {
+    fn drop(&mut self) {
+        let _ = std::fs::remove_dir_all(&self.root);
+    }
 }
 
 fn mock_host(focused: bool) -> MockHost {
@@ -145,8 +158,10 @@ fn mock_host(focused: bool) -> MockHost {
 }
 
 fn rig_with(init: PluginInit, focused: bool) -> Rig {
-    let input = script(&init.data_dir);
+    let script = script(&init.data_dir);
+    let root = PathBuf::from(&init.plugin_root);
     let harness = TestHarness::<Plugin>::with_host(mock_host(focused), init).unwrap();
+    let input = script.sender;
     input
         .send(InputEvent::Connected(DeviceInfo {
             id: PAD,
@@ -156,7 +171,12 @@ fn rig_with(init: PluginInit, focused: bool) -> Rig {
             power: Power::Unknown,
         }))
         .unwrap();
-    Rig { harness, input }
+    Rig {
+        harness,
+        input,
+        waits: script.waits,
+        root,
+    }
 }
 
 fn rig() -> Rig {
@@ -172,12 +192,24 @@ fn eventually(what: &str, mut condition: impl FnMut() -> bool) {
     }
 }
 
-/// Gives the input thread time to (not) react.
-fn settle() {
-    std::thread::sleep(Duration::from_millis(300));
-}
-
 impl Rig {
+    /// Returns once the input thread has handled everything sent so far
+    /// (including a focus check it started): a few more loops of it.
+    fn settle(&self) {
+        let target = self.waits.load(Ordering::Acquire) + 3;
+        eventually("the input thread", || {
+            self.waits.load(Ordering::Acquire) >= target
+        });
+    }
+
+    /// Focus changes as eov reports them: the snapshot and the event.
+    fn set_focus(&self, focused: bool) {
+        self.harness.state().snapshot.window_focused = focused;
+        self.harness
+            .send(HostEvent::WindowFocusChanged { focused })
+            .unwrap();
+    }
+
     fn calls(&self, method: &str) -> Vec<Value> {
         self.harness.calls_to(method)
     }
@@ -330,9 +362,9 @@ fn sticks_pan_relatively_and_stop_on_disconnect() {
     assert!(rig.calls("view.set").is_empty(), "no read-modify-write");
     // The pad goes away with the stick still deflected.
     rig.input.send(InputEvent::Disconnected(PAD)).unwrap();
-    settle();
+    rig.settle();
     let count = rig.calls("view.pan").len();
-    settle();
+    rig.settle();
     assert_eq!(rig.calls("view.pan").len(), count, "panning continued");
 }
 
@@ -350,20 +382,14 @@ fn triggers_zoom_the_focused_pane() {
 #[test]
 fn input_is_ignored_while_eov_is_in_the_background() {
     let rig = rig();
-    rig.harness
-        .send(HostEvent::WindowFocusChanged { focused: false })
-        .unwrap();
+    rig.set_focus(false);
     rig.press(Control::DPadDown);
     rig.axis(Control::LeftStickX, 1.0);
-    settle();
+    rig.settle();
     assert!(rig.calls("app.cycle_tab").is_empty());
     assert!(rig.calls("view.pan").is_empty());
-    // Input asked the host to republish its focus.
-    assert!(!rig.calls("render.request").is_empty());
     // Back in front: the held stick pans again.
-    rig.harness
-        .send(HostEvent::WindowFocusChanged { focused: true })
-        .unwrap();
+    rig.set_focus(true);
     eventually("panning after refocus", || {
         !rig.calls("view.pan").is_empty()
     });
@@ -371,19 +397,67 @@ fn input_is_ignored_while_eov_is_in_the_background() {
 }
 
 #[test]
+fn a_stale_focus_is_checked_before_acting() {
+    let rig = rig();
+    // The user switched to another application while eov was idle: eov has
+    // published nothing yet, but would report "unfocused" after a frame.
+    std::thread::sleep(Duration::from_millis(1100));
+    rig.harness.state().snapshot.window_focused = false;
+    rig.press(Control::DPadDown);
+    rig.press(Control::Start);
+    rig.axis(Control::LeftStickX, 1.0);
+    rig.settle();
+    // A frame was requested and the snapshot re-read; nothing acted, and
+    // Start did not pause the plugin from inside the other application.
+    assert!(!rig.calls("render.request").is_empty());
+    assert!(rig.calls("app.cycle_tab").is_empty());
+    assert!(rig.calls("view.pan").is_empty());
+    assert!(rig.calls("status").is_empty());
+    rig.axis(Control::LeftStickX, 0.0);
+}
+
+#[test]
+fn switching_back_without_an_event_is_noticed() {
+    let rig = rig();
+    rig.set_focus(false);
+    // Back in eov, which has not rendered (so no event), but would report
+    // "focused" after a frame.
+    std::thread::sleep(Duration::from_millis(600));
+    rig.harness.state().snapshot.window_focused = true;
+    let started = Instant::now();
+    rig.press(Control::DPadDown);
+    eventually("the tab change", || !rig.calls("app.cycle_tab").is_empty());
+    // The press waited for the check instead of being dropped.
+    assert!(started.elapsed() >= Duration::from_millis(60));
+    assert!(!rig.calls("render.request").is_empty());
+}
+
+#[test]
+fn continuous_motion_is_not_interrupted_by_checks() {
+    let rig = rig();
+    rig.axis(Control::LeftStickX, 1.0);
+    eventually("panning", || !rig.calls("view.pan").is_empty());
+    // Well past the trust period: eov renders for every pan, so its focus
+    // stays current and no check interrupts the motion.
+    std::thread::sleep(Duration::from_millis(1500));
+    assert!(rig.calls("render.request").is_empty());
+    let pans = rig.calls("view.pan").len();
+    assert!(pans > 60, "{pans} pans in 1.5 s");
+    rig.axis(Control::LeftStickX, 0.0);
+}
+
+#[test]
 fn the_settings_window_counts_as_focus() {
     let rig = rig();
     let id = rig.open_window();
-    rig.harness
-        .send(HostEvent::WindowFocusChanged { focused: false })
-        .unwrap();
+    rig.set_focus(false);
     rig.callback(&id, "window-active-changed", vec![json!(true)]);
     rig.press(Control::DPadUp);
     eventually("the tab change", || !rig.calls("app.cycle_tab").is_empty());
     // Leaving it (to another application) stops input again.
     rig.callback(&id, "window-active-changed", vec![json!(false)]);
     rig.press(Control::DPadUp);
-    settle();
+    rig.settle();
     assert_eq!(rig.calls("app.cycle_tab").len(), 1);
 }
 
@@ -391,7 +465,7 @@ fn the_settings_window_counts_as_focus() {
 fn starting_unfocused_gates_input_until_focus_arrives() {
     let rig = rig_with(test_init("gamepad"), false);
     rig.press(Control::DPadDown);
-    settle();
+    rig.settle();
     assert!(rig.calls("app.cycle_tab").is_empty());
 }
 
@@ -404,7 +478,7 @@ fn pausing_blocks_every_action_but_resume() {
     assert_eq!(rig.property(&id, "controller-enabled"), json!(false));
     rig.press(Control::DPadDown);
     rig.axis(Control::LeftStickX, 1.0);
-    settle();
+    rig.settle();
     assert!(rig.calls("app.cycle_tab").is_empty());
     assert!(rig.calls("view.pan").is_empty());
     rig.axis(Control::LeftStickX, 0.0);
@@ -465,7 +539,7 @@ fn slider_drags_update_the_window_now_and_disk_later() {
     // Nothing written on the UI thread; one debounced write later.
     assert!(rig.calls("settings.set").is_empty());
     eventually("the write", || !rig.calls("settings.set").is_empty());
-    settle();
+    rig.settle();
     let writes = rig.calls("settings.set");
     assert!(writes.len() <= 2, "{} writes", writes.len());
     assert_eq!(rig.stored_state().unwrap().config.pan_sensitivity, 1.45);
@@ -703,7 +777,7 @@ fn device_choice_is_persisted() {
     });
     // Only the chosen pad acts now.
     rig.press(Control::DPadDown);
-    settle();
+    rig.settle();
     assert!(rig.calls("app.cycle_tab").is_empty());
     rig.input
         .send(InputEvent::Button {

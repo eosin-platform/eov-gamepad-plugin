@@ -14,7 +14,7 @@ use crate::config::{
 use crate::legacy;
 use crate::shared::{Persist, Shared, TOKEN_REFRESH, TOKEN_TOGGLE_WINDOW, lock};
 use crate::ui::{self, Focus};
-use crate::worker::{self, IDLE_WAIT, PAUSED_STATUS, Worker};
+use crate::worker::{self, PAUSED_STATUS, Worker};
 use eov_plugin_api::prelude::*;
 use eov_plugin_api::protocol::{FileDialogArgs, FileFilter, event_names};
 use std::collections::HashMap;
@@ -22,6 +22,8 @@ use std::io::Read;
 use std::marker::PhantomData;
 use std::path::{Path, PathBuf};
 use std::sync::{Arc, Mutex};
+use std::thread::JoinHandle;
+use std::time::{Duration, Instant};
 
 /// The toolbar button that shows and hides the settings window.
 pub const BUTTON_ID: &str = "toggle_gamepad";
@@ -54,8 +56,12 @@ pub struct GamepadPlugin<B: InputBackend = GilrsBackend> {
     shared: Arc<Shared>,
     ui: Mutex<UiState>,
     worker: Mutex<Option<Worker>>,
+    persister: Mutex<Option<JoinHandle<()>>>,
     _backend: PhantomData<fn() -> B>,
 }
+
+/// The settings writer gets this long to write what is pending at shutdown.
+const PERSIST_STOP: Duration = Duration::from_secs(2);
 
 fn arg_bool(args: &[Value], index: usize) -> Option<bool> {
     args.get(index)?.as_bool()
@@ -498,19 +504,39 @@ impl<B: InputBackend> GamepadPlugin<B> {
             self.shared.update(Persist::Now, |prefs| prefs.device = key);
             // The input thread republishes the effective selection.
         }
-        let selected = self
-            .model()
-            .properties
-            .get("selected-device-index")
-            .cloned()
-            .unwrap_or(json!(0));
-        self.reset_field("selected-device-index", json!(index), selected);
+        self.reset_selection("device", index);
     }
 
-    fn stop_worker(&self) {
+    /// After a combo box choice: what the user picked, then what is selected
+    /// now (the same unless the choice was refused). See [`Self::reset_field`].
+    fn reset_selection(&self, list: &str, picked: usize) {
+        let model = self.model();
+        let property = |name: String| model.properties.get(&name).cloned().unwrap_or(Value::Null);
+        let options = property(format!("{list}-options"));
+        let index_name = format!("selected-{list}-index");
+        let label_name = format!("selected-{list}-label");
+        let picked_label = options.get(picked).cloned().unwrap_or(json!(""));
+        self.reset_field(&index_name, json!(picked), property(index_name.clone()));
+        self.reset_field(&label_name, picked_label, property(label_name.clone()));
+    }
+
+    /// Stops the threads; waits only for the settings writer to save what is
+    /// pending (a single small write).
+    fn stop_threads(&self) {
         let worker = lock(&self.worker).take();
         if let Some(mut worker) = worker {
-            worker.stop(&self.shared, IDLE_WAIT * 2);
+            worker.stop(&self.shared);
+        }
+        self.shared.stop_persister();
+        let persister = lock(&self.persister).take();
+        if let Some(persister) = persister {
+            let deadline = Instant::now() + PERSIST_STOP;
+            while !persister.is_finished() && Instant::now() < deadline {
+                std::thread::sleep(Duration::from_millis(2));
+            }
+            if persister.is_finished() {
+                let _ = persister.join();
+            }
         }
     }
 }
@@ -569,18 +595,32 @@ impl<B: InputBackend> Plugin for GamepadPlugin<B> {
         if !enabled {
             host.set_status(Some(PAUSED_STATUS));
         }
+        let persister = {
+            let shared = Arc::clone(&shared);
+            std::thread::Builder::new()
+                .name("gamepad-settings".to_string())
+                .spawn(move || shared.run_persister())
+                .map_err(|e| format!("cannot start the settings writer: {e}"))?
+        };
         let worker = Worker::spawn::<B>(
             Arc::clone(&shared),
             BackendContext {
                 instance: init.data_dir.clone(),
             },
-        )
-        .map_err(|e| format!("cannot start the input thread: {e}"))?;
+        );
+        let worker = match worker {
+            Ok(worker) => worker,
+            Err(error) => {
+                shared.stop_persister();
+                return Err(format!("cannot start the input thread: {error}"));
+            }
+        };
         Ok(Self {
             host,
             shared,
             ui: Mutex::new(UiState::default()),
             worker: Mutex::new(Some(worker)),
+            persister: Mutex::new(Some(persister)),
             _backend: PhantomData,
         })
     }
@@ -589,11 +629,11 @@ impl<B: InputBackend> Plugin for GamepadPlugin<B> {
         match event {
             HostEvent::Ready { .. } => {
                 if let Ok(snapshot) = self.host.snapshot() {
-                    self.shared.set_main_focused(snapshot.window_focused);
+                    self.shared.focus_event(snapshot.window_focused);
                 }
             }
             HostEvent::WindowFocusChanged { focused } => {
-                self.shared.set_main_focused(focused);
+                self.shared.focus_event(focused);
                 self.push_ui();
             }
             HostEvent::ToolbarButtonClicked { button_id } if button_id == BUTTON_ID => {
@@ -609,10 +649,7 @@ impl<B: InputBackend> Plugin for GamepadPlugin<B> {
                 confirmed,
             } => self.answered(&request_id, confirmed),
             HostEvent::DialogResult { request_id, paths } => self.files_chosen(&request_id, paths),
-            HostEvent::Shutdown => {
-                self.stop_worker();
-                self.shared.flush();
-            }
+            HostEvent::Shutdown => self.stop_threads(),
             _ => {}
         }
         Ok(())
@@ -636,6 +673,7 @@ impl<B: InputBackend> Plugin for GamepadPlugin<B> {
             "profile-selected" => {
                 if let Some(index) = arg_index(args, 0) {
                     self.select_profile(index);
+                    self.reset_selection("profile", index);
                 }
             }
             "save-profile-as" => self.save_profile_as(arg_str(args, 0).unwrap_or(""), false),
@@ -692,9 +730,8 @@ impl<B: InputBackend> Plugin for GamepadPlugin<B> {
     }
 
     fn shutdown(&self) {
-        self.stop_worker();
-        // Usually already written on Shutdown; after a revoke this fails
-        // quietly.
-        self.shared.flush();
+        // Usually done on Shutdown already. After a revoke (the plugin was
+        // disabled) a pending write fails quietly.
+        self.stop_threads();
     }
 }

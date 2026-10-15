@@ -8,13 +8,17 @@
 //! Only the UI thread pushes properties to the settings window. Other threads
 //! ask for a refresh with `host.post`, which the host answers with a
 //! `Posted` event on the UI thread, so pushes are naturally serialised.
+//!
+//! Settings are written by one thread of their own ([`Shared::run_persister`]),
+//! so a write is never concurrent with another, never runs on the UI thread
+//! and never stalls controller input (GPD-5).
 
 use crate::config::{Config, Prefs, STATE_KEY};
 use crate::engine::{DeviceInfo, Gate};
 use eov_plugin_api::prelude::*;
 use std::collections::BTreeSet;
 use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
-use std::sync::{Arc, Mutex, MutexGuard};
+use std::sync::{Arc, Condvar, Mutex, MutexGuard};
 use std::time::{Duration, Instant};
 
 /// `Posted` token: push the current state to the settings window.
@@ -82,6 +86,14 @@ pub struct WorkerView {
     pub device: Option<String>,
 }
 
+#[derive(Default)]
+struct PersistState {
+    /// When the next write is due.
+    due: Option<Instant>,
+    /// The persister should write what is pending and end.
+    stop: bool,
+}
+
 pub struct Shared {
     pub host: Host,
     prefs: Mutex<Prefs>,
@@ -91,9 +103,12 @@ pub struct Shared {
     enabled: AtomicBool,
     pointer_control: AtomicBool,
     main_focused: AtomicBool,
+    /// Bumped whenever the host reports a window focus change.
+    focus_epoch: AtomicU64,
     settings_active: AtomicBool,
     window_open: AtomicBool,
-    persist_due: Mutex<Option<Instant>>,
+    persist: Mutex<PersistState>,
+    persist_wake: Condvar,
     refresh_queued: AtomicBool,
     stop: AtomicBool,
     notified: Mutex<BTreeSet<String>>,
@@ -114,9 +129,11 @@ impl Shared {
             revision: AtomicU64::new(1),
             status: Mutex::new(Status::default()),
             main_focused: AtomicBool::new(focused),
+            focus_epoch: AtomicU64::new(0),
             settings_active: AtomicBool::new(false),
             window_open: AtomicBool::new(false),
-            persist_due: Mutex::new(None),
+            persist: Mutex::new(PersistState::default()),
+            persist_wake: Condvar::new(),
             refresh_queued: AtomicBool::new(false),
             stop: AtomicBool::new(false),
             notified: Mutex::new(BTreeSet::new()),
@@ -139,27 +156,28 @@ impl Shared {
     /// Edits the preferences, republishes what the input thread uses and
     /// schedules a write.
     pub fn update<R>(&self, persist: Persist, edit: impl FnOnce(&mut Prefs) -> R) -> R {
-        let (result, view) = {
+        let result = {
             let mut prefs = lock(&self.prefs);
             let result = edit(&mut prefs);
             self.enabled.store(prefs.enabled, Ordering::Release);
             self.pointer_control
                 .store(prefs.pointer_control, Ordering::Release);
-            (
-                result,
-                WorkerView {
-                    config: Arc::new(prefs.config.clone()),
-                    device: prefs.device.clone(),
-                },
-            )
+            // Published under the prefs lock, so concurrent updates from
+            // several threads cannot leave an older view in place.
+            *lock(&self.worker_view) = WorkerView {
+                config: Arc::new(prefs.config.clone()),
+                device: prefs.device.clone(),
+            };
+            self.revision.fetch_add(1, Ordering::AcqRel);
+            result
         };
-        *lock(&self.worker_view) = view;
-        self.revision.fetch_add(1, Ordering::AcqRel);
         self.schedule_persist(persist);
         result
     }
 
     /// The revision of [`Self::worker_view`]; changes with every update.
+    /// Read it before the view: a newer view then shows up as another
+    /// revision change instead of being missed.
     pub fn revision(&self) -> u64 {
         self.revision.load(Ordering::Acquire)
     }
@@ -172,41 +190,59 @@ impl Shared {
 
     fn schedule_persist(&self, persist: Persist) {
         let now = Instant::now();
-        let mut due = lock(&self.persist_due);
-        *due = Some(match (persist, *due) {
-            (Persist::Now, _) => now,
-            (Persist::Soon, Some(existing)) => existing,
-            (Persist::Soon, None) => now + PERSIST_DELAY,
-        });
+        {
+            let mut state = lock(&self.persist);
+            state.due = Some(match (persist, state.due) {
+                (Persist::Now, _) => now,
+                (Persist::Soon, Some(existing)) => existing,
+                (Persist::Soon, None) => now + PERSIST_DELAY,
+            });
+        }
+        self.persist_wake.notify_all();
     }
 
     /// When the next write is due.
+    #[cfg(test)]
     pub fn persist_due(&self) -> Option<Instant> {
-        *lock(&self.persist_due)
+        lock(&self.persist).due
     }
 
-    /// Writes the preferences if a write is due (input thread).
-    pub fn persist_if_due(&self, now: Instant) {
-        let due = {
-            let mut due = lock(&self.persist_due);
-            match *due {
-                Some(at) if at <= now => {
-                    *due = None;
-                    true
+    /// The settings writer: sleeps until a write is due, writes, and on
+    /// [`Self::stop_persister`] writes what is pending and returns.
+    pub fn run_persister(&self) {
+        let mut state = lock(&self.persist);
+        loop {
+            let now = Instant::now();
+            let (due, stop) = (state.due, state.stop);
+            match due {
+                Some(at) if at <= now || stop => {
+                    state.due = None;
+                    drop(state);
+                    self.write_prefs();
+                    state = lock(&self.persist);
                 }
-                _ => false,
+                _ if stop => return,
+                Some(at) => {
+                    state = self
+                        .persist_wake
+                        .wait_timeout(state, at - now)
+                        .map(|(guard, _)| guard)
+                        .unwrap_or_else(|e| e.into_inner().0);
+                }
+                None => {
+                    state = self
+                        .persist_wake
+                        .wait(state)
+                        .unwrap_or_else(|e| e.into_inner());
+                }
             }
-        };
-        if due {
-            self.write_prefs();
         }
     }
 
-    /// Writes pending changes immediately (shutdown).
-    pub fn flush(&self) {
-        if lock(&self.persist_due).take().is_some() {
-            self.write_prefs();
-        }
+    /// Asks the settings writer to write what is pending and end.
+    pub fn stop_persister(&self) {
+        lock(&self.persist).stop = true;
+        self.persist_wake.notify_all();
     }
 
     fn write_prefs(&self) {
@@ -217,9 +253,9 @@ impl Shared {
                 return;
             }
             {
-                let mut due = lock(&self.persist_due);
-                if due.is_none() {
-                    *due = Some(Instant::now() + PERSIST_RETRY);
+                let mut persist = lock(&self.persist);
+                if persist.due.is_none() && !persist.stop {
+                    persist.due = Some(Instant::now() + PERSIST_RETRY);
                 }
             }
             self.notify_once(
@@ -246,8 +282,20 @@ impl Shared {
         self.main_focused.load(Ordering::Acquire)
     }
 
+    /// The host reported a focus change (fresh information).
+    pub fn focus_event(&self, focused: bool) {
+        self.main_focused.store(focused, Ordering::Release);
+        self.focus_epoch.fetch_add(1, Ordering::AcqRel);
+    }
+
+    /// The focus as just read from the host snapshot.
     pub fn set_main_focused(&self, focused: bool) {
         self.main_focused.store(focused, Ordering::Release);
+    }
+
+    /// Changes whenever [`Self::focus_event`] is called.
+    pub fn focus_epoch(&self) -> u64 {
+        self.focus_epoch.load(Ordering::Acquire)
     }
 
     pub fn settings_active(&self) -> bool {
@@ -340,6 +388,7 @@ impl Shared {
 mod tests {
     use super::*;
     use eov_plugin_api::testing::MockHost;
+    use serde_json::Value;
 
     fn shared() -> (MockHost, Shared) {
         let mock = MockHost::new();
@@ -347,28 +396,76 @@ mod tests {
         (mock, Shared::new(host, Prefs::default(), true))
     }
 
+    fn writes(mock: &MockHost) -> Vec<Value> {
+        mock.state().calls_to("settings.set")
+    }
+
+    fn eventually(mut condition: impl FnMut() -> bool) {
+        let deadline = Instant::now() + Duration::from_secs(5);
+        while !condition() {
+            assert!(Instant::now() < deadline, "timed out");
+            std::thread::sleep(Duration::from_millis(5));
+        }
+    }
+
     #[test]
-    fn edits_are_debounced_and_written_once() {
+    fn edits_are_debounced_and_written_by_the_persister() {
         let (mock, shared) = shared();
+        let shared = Arc::new(shared);
+        let persister = {
+            let shared = Arc::clone(&shared);
+            std::thread::spawn(move || shared.run_persister())
+        };
         let start = Instant::now();
         for _ in 0..10 {
             shared.update(Persist::Soon, |p| p.enabled = !p.enabled);
         }
         let due = shared.persist_due().unwrap();
         assert!(due >= start + PERSIST_DELAY);
-        shared.persist_if_due(start);
-        assert!(mock.state().calls_to("settings.set").is_empty());
-        shared.persist_if_due(due);
-        let writes = mock.state().calls_to("settings.set");
-        assert_eq!(writes.len(), 1);
-        assert_eq!(writes[0]["key"], STATE_KEY);
-        assert_eq!(writes[0]["value"]["enabled"], true);
+        // Nothing yet: a burst of edits is written once, after the delay.
+        std::thread::sleep(Duration::from_millis(100));
+        assert!(writes(&mock).is_empty());
+        eventually(|| writes(&mock).len() == 1);
+        assert!(Instant::now() >= due);
+        assert_eq!(writes(&mock)[0]["key"], STATE_KEY);
+        assert_eq!(writes(&mock)[0]["value"]["enabled"], true);
         assert_eq!(shared.persist_due(), None);
-        // Discrete changes are due immediately.
+        // Discrete changes are written right away.
+        let before = Instant::now();
         shared.update(Persist::Now, |p| p.enabled = false);
-        assert!(shared.persist_due().unwrap() <= Instant::now());
-        shared.flush();
-        assert_eq!(mock.state().calls_to("settings.set").len(), 2);
+        eventually(|| writes(&mock).len() == 2);
+        assert!(before.elapsed() < PERSIST_DELAY);
+        // Stopping writes what is still pending.
+        shared.update(Persist::Soon, |p| p.enabled = true);
+        shared.stop_persister();
+        persister.join().unwrap();
+        assert_eq!(writes(&mock).len(), 3);
+        assert_eq!(writes(&mock)[2]["value"]["enabled"], true);
+    }
+
+    #[test]
+    fn the_input_thread_never_sees_an_older_view() {
+        let (_mock, shared) = shared();
+        let shared = Arc::new(shared);
+        let threads: Vec<_> = (0..4)
+            .map(|n| {
+                let shared = Arc::clone(&shared);
+                std::thread::spawn(move || {
+                    for i in 0..200 {
+                        shared.update(Persist::Soon, |p| {
+                            p.device = Some(format!("{n}-{i}"));
+                        });
+                    }
+                })
+            })
+            .collect();
+        for thread in threads {
+            thread.join().unwrap();
+        }
+        let revision = shared.revision();
+        let view = shared.worker_view();
+        assert_eq!(view.device, shared.read_prefs(|p| p.device.clone()));
+        assert_eq!(revision, 1 + 4 * 200);
     }
 
     #[test]

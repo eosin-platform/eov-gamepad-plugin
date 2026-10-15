@@ -23,6 +23,8 @@ mod worker;
 
 #[cfg(test)]
 mod tests;
+#[cfg(test)]
+mod window_tests;
 
 pub use plugin::GamepadPlugin;
 

@@ -10,6 +10,8 @@ export struct MappingRow {
     control-key: string,
     control-label: string,
     current-index: int,
+    // The text shown for the current choice (pushed, not derived).
+    current-label: string,
     axis-control: bool,
 }
 
@@ -369,11 +371,11 @@ component HeaderCard inherits Rectangle {
 component DeviceCard inherits Card {
     in property <[string]> options;
     in-out property <int> selected-index;
+    in-out property <string> selected-label;
     in property <string> note;
     out property <bool> editing: combo.has-focus;
     callback selected(int);
     callback editing-changed(bool);
-    callback done();
 
     title: "Device";
     subtitle: "Choose the controller that drives eov.";
@@ -382,11 +384,11 @@ component DeviceCard inherits Card {
     combo := ComboBox {
         model: root.options;
         current-index <=> root.selected-index;
+        // The shown text is pushed too: the combo box does not re-read its
+        // model when rows are patched in place.
+        current-value <=> root.selected-label;
         enabled: root.options.length > 1;
-        selected => {
-            root.selected(self.current-index);
-            root.done();
-        }
+        selected => { root.selected(self.current-index); }
     }
 
     if root.note != "": Text {
@@ -400,6 +402,7 @@ component DeviceCard inherits Card {
 component ProfileCard inherits Card {
     in property <[string]> options;
     in-out property <int> selected-index;
+    in-out property <string> selected-label;
     in property <string> note;
     in-out property <string> name;
     out property <bool> editing: name-input.has-focus || combo.has-focus;
@@ -410,7 +413,6 @@ component ProfileCard inherits Card {
     callback export-profile();
     callback delete-profile();
     callback editing-changed(bool);
-    callback done();
 
     title: "Profiles";
     subtitle: root.note;
@@ -419,11 +421,9 @@ component ProfileCard inherits Card {
     combo := ComboBox {
         model: root.options;
         current-index <=> root.selected-index;
+        current-value <=> root.selected-label;
         enabled: root.options.length > 1;
-        selected => {
-            root.selected(self.current-index);
-            root.done();
-        }
+        selected => { root.selected(self.current-index); }
     }
 
     HorizontalLayout {
@@ -509,7 +509,8 @@ component MappingList inherits Rectangle {
     in property <[MappingRow]> rows;
     in property <[string]> options;
     callback selected(string, int);
-    callback done();
+    // A row's combo box gained (true) or lost (false) the keyboard focus.
+    callback focus-moved(bool);
 
     VerticalLayout {
         spacing: 6px;
@@ -552,10 +553,9 @@ component MappingList inherits Rectangle {
                         // Two-way, so mappings pushed later (e.g. a loaded
                         // profile) still show after the user picked one.
                         current-index <=> row.current-index;
-                        selected => {
-                            root.selected(row.control-key, self.current-index);
-                            root.done();
-                        }
+                        current-value <=> row.current-label;
+                        changed has-focus => { root.focus-moved(self.has-focus); }
+                        selected => { root.selected(row.control-key, self.current-index); }
                     }
                 }
             }
@@ -569,9 +569,11 @@ export component GamepadWindow inherits Window {
     in property <int> status-tone: 0;
     in property <[string]> device-options: ["All controllers"];
     in-out property <int> selected-device-index: 0;
+    in-out property <string> selected-device-label: "All controllers";
     in property <string> device-note: "";
     in property <[string]> profile-options: ["No profile"];
     in-out property <int> selected-profile-index: 0;
+    in-out property <string> selected-profile-label: "No profile";
     in property <string> profile-note: "";
     in-out property <string> profile-name: "";
     in property <[TuningRow]> tuning-rows: [];
@@ -611,17 +613,36 @@ export component GamepadWindow inherits Window {
     // The window is dark whatever the desktop's colour scheme.
     init => { Palette.color-scheme = ColorScheme.dark; }
 
+    // Activity evidence:
+    // - scope-active: the root focus scope has the focus, and gained it
+    //   through window activation, a click or Tab (not programmatically);
+    // - armed: an editor (name field, combo box) took the focus from the
+    //   active window; it stays armed while focus moves between editors.
+    // Input reaching an inactive window (a background click, assistive
+    // technology) therefore never makes the window active.
     private property <bool> scope-active;
+    private property <bool> armed;
     private property <bool> device-editing;
     private property <bool> profile-editing;
-    private property <bool> window-active: root.scope-active || root.device-editing || root.profile-editing;
+    private property <int> mapping-focus;
+    private property <bool> editing: root.device-editing || root.profile-editing || root.mapping-focus > 0;
+    private property <bool> window-active: root.scope-active || (root.editing && root.armed);
     changed window-active => { root.window-active-changed(self.window-active); }
+    // No editor has the focus any more (the window was deactivated, or the
+    // user clicked elsewhere): disarm and give the focus back to the root
+    // scope, so that the next activation reaches it.
+    changed editing => { settle.running = !self.editing; }
 
-    // After a menu choice: the user is in this window; take the focus back
-    // from the combo box.
-    function interacted() {
-        root.scope-active = true;
-        focus-root.focus();
+    settle := Timer {
+        interval: 150ms;
+        running: false;
+        triggered => {
+            self.running = false;
+            if !root.editing {
+                root.armed = false;
+                focus-root.focus();
+            }
+        }
     }
 
     focus-root := FocusScope {
@@ -629,12 +650,20 @@ export component GamepadWindow inherits Window {
         height: 100%;
 
         focus-gained(reason) => {
-            // Programmatic focus (window creation) proves nothing.
+            // Programmatic focus (window creation, `settle`) proves nothing.
             if reason == FocusReason.window-activation || reason == FocusReason.pointer-click || reason == FocusReason.tab-navigation {
                 root.scope-active = true;
             }
         }
-        focus-lost(reason) => { root.scope-active = false; }
+        focus-lost(reason) => {
+            // Handing the focus to an editor of the active window (combo
+            // boxes take it programmatically when clicked). An inactive
+            // window never arms: scope-active is false there.
+            if root.scope-active && reason != FocusReason.window-activation {
+                root.armed = true;
+            }
+            root.scope-active = false;
+        }
 
         Rectangle {
             background: @linear-gradient(180deg, #11203a 0%, #08111d 30%, #08111d 100%);
@@ -661,15 +690,16 @@ export component GamepadWindow inherits Window {
                 DeviceCard {
                     options: root.device-options;
                     selected-index <=> root.selected-device-index;
+                    selected-label <=> root.selected-device-label;
                     note: root.device-note;
                     selected(index) => { root.device-selected(index); }
                     editing-changed(editing) => { root.device-editing = editing; }
-                    done => { root.interacted(); }
                 }
 
                 ProfileCard {
                     options: root.profile-options;
                     selected-index <=> root.selected-profile-index;
+                    selected-label <=> root.selected-profile-label;
                     note: root.profile-note;
                     name <=> root.profile-name;
                     selected(index) => { root.profile-selected(index); }
@@ -679,7 +709,6 @@ export component GamepadWindow inherits Window {
                     export-profile => { root.export-profile(); }
                     delete-profile => { root.delete-profile(); }
                     editing-changed(editing) => { root.profile-editing = editing; }
-                    done => { root.interacted(); }
                 }
 
                 Card {
@@ -738,7 +767,7 @@ export component GamepadWindow inherits Window {
                         rows: root.axis-mappings;
                         options: root.axis-action-options;
                         selected(key, index) => { root.mapping-selected(key, index); }
-                        done => { root.interacted(); }
+                        focus-moved(focused) => { root.mapping-focus = max(0, root.mapping-focus + (focused ? 1 : -1)); }
                     }
 
                     MappingList {
@@ -746,7 +775,7 @@ export component GamepadWindow inherits Window {
                         rows: root.button-mappings;
                         options: root.button-action-options;
                         selected(key, index) => { root.mapping-selected(key, index); }
-                        done => { root.interacted(); }
+                        focus-moved(focused) => { root.mapping-focus = max(0, root.mapping-focus + (focused ? 1 : -1)); }
                     }
                 }
             }

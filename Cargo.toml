@@ -35,8 +35,10 @@ enigo = { version = "0.6.1", default-features = false }
 
 [dev-dependencies]
 # The settings window is compiled by the host with this exact Slint version;
-# the UI contract test compiles it the same way.
+# the UI tests compile and run it the same way, on Slint's testing backend.
+i-slint-backend-testing = "=1.17.1"
 i-slint-compiler = { version = "=1.17.1", default-features = false }
+slint = { version = "=1.17.1", default-features = false, features = ["std", "compat-1-2"] }
 slint-interpreter = { version = "=1.17.1", default-features = false, features = [
     "compat-1-2",
     "internal",
