@@ -620,13 +620,80 @@ impl ProfileFile {
         Config { tuning, mappings }
     }
 
-    /// Parses an exported or 0.x profile file.
+    /// The keys a profile may have.
+    const FIELDS: [&'static str; 9] = [
+        "version",
+        "left_dead_zone",
+        "right_dead_zone",
+        "trigger_dead_zone",
+        "pan_sensitivity",
+        "zoom_sensitivity",
+        "response_curve",
+        "pointer_speed",
+        "mappings",
+    ];
+
+    /// Reads a profile field by field: a value of the wrong type keeps its
+    /// default (and is reported) instead of discarding the whole profile.
+    pub fn from_value(value: &Value) -> Result<(Self, Vec<String>), String> {
+        let map = value
+            .as_object()
+            .ok_or_else(|| "not a profile object".to_string())?;
+        let mut file = Self {
+            version: 0,
+            ..Self::default()
+        };
+        let mut warnings = Vec::new();
+        if let Some(version) = map.get("version") {
+            match version.as_u64().and_then(|v| u32::try_from(v).ok()) {
+                Some(version) => file.version = version,
+                None => warnings.push(format!("ignoring the version {version}")),
+            }
+        }
+        for (key, slot) in [
+            ("left_dead_zone", &mut file.left_dead_zone),
+            ("right_dead_zone", &mut file.right_dead_zone),
+            ("trigger_dead_zone", &mut file.trigger_dead_zone),
+            ("pan_sensitivity", &mut file.pan_sensitivity),
+            ("zoom_sensitivity", &mut file.zoom_sensitivity),
+            ("response_curve", &mut file.response_curve),
+            ("pointer_speed", &mut file.pointer_speed),
+        ] {
+            if let Some(value) = map.get(key) {
+                match value.as_f64() {
+                    Some(number) => *slot = number as f32,
+                    None => warnings.push(format!("ignoring '{key}': {value} is not a number")),
+                }
+            }
+        }
+        if let Some(mappings) = map.get("mappings") {
+            match mappings.as_object() {
+                Some(mappings) => {
+                    file.mappings = mappings
+                        .iter()
+                        .filter_map(|(control, action)| {
+                            Some((control.clone(), action.as_str()?.to_string()))
+                        })
+                        .collect();
+                }
+                None => warnings.push("ignoring 'mappings': not an object".to_string()),
+            }
+        }
+        Ok((file, warnings))
+    }
+
+    /// Parses an exported or 0.x profile file. Refuses JSON that is not a
+    /// profile (no profile field at all), so an unrelated file is not
+    /// imported as the defaults.
     pub fn parse(text: &str) -> Result<Self, String> {
         let value: Value = serde_json::from_str(text).map_err(|e| e.to_string())?;
-        if !value.is_object() {
-            return Err("the file does not contain a profile object".to_string());
+        let is_profile = value
+            .as_object()
+            .is_some_and(|map| Self::FIELDS.iter().any(|key| map.contains_key(*key)));
+        if !is_profile {
+            return Err("the file is not a gamepad profile".to_string());
         }
-        serde_json::from_value(value).map_err(|e| e.to_string())
+        Self::from_value(&value).map(|(file, _)| file)
     }
 }
 
@@ -705,19 +772,35 @@ impl PersistedState {
         if let Some(active) = field(map, "active_profile", &mut warnings) {
             state.active_profile = active;
         }
-        if let Some(config) = field(map, "config", &mut warnings) {
-            state.config = config;
+        if let Some(config) = map.get("config") {
+            match ProfileFile::from_value(config) {
+                Ok((config, problems)) => {
+                    state.config = config;
+                    warnings.extend(problems.into_iter().map(|p| format!("settings: {p}")));
+                }
+                Err(error) => warnings.push(format!("ignoring the stored settings: {error}")),
+            }
         }
         if let Some(token) = field(map, "portal_restore_token", &mut warnings) {
             state.portal_restore_token = token;
         }
         if let Some(profiles) = map.get("profiles").and_then(Value::as_object) {
             for (name, profile) in profiles {
-                match serde_json::from_value::<ProfileFile>(profile.clone()) {
-                    Ok(profile) if normalize_profile_name(name).as_deref() == Ok(name) => {
+                if normalize_profile_name(name).as_deref() != Ok(name) {
+                    warnings.push(format!("ignoring the profile with the name {name:?}"));
+                    continue;
+                }
+                if state.profiles.len() >= MAX_PROFILES {
+                    warnings.push(format!(
+                        "ignoring the profile {name:?}: at most {MAX_PROFILES} profiles are kept"
+                    ));
+                    continue;
+                }
+                match ProfileFile::from_value(profile) {
+                    Ok((profile, problems)) => {
                         state.profiles.insert(name.clone(), profile);
+                        warnings.extend(problems.into_iter().map(|p| format!("{name}: {p}")));
                     }
-                    Ok(_) => warnings.push(format!("ignoring the profile with the name {name:?}")),
                     Err(error) => warnings.push(format!("ignoring the profile {name:?}: {error}")),
                 }
             }
@@ -967,6 +1050,26 @@ mod tests {
         assert_eq!(m.get(Control::Start), Action::None);
         assert!(ProfileFile::parse("[1, 2]").is_err());
         assert!(ProfileFile::parse("not json").is_err());
+        // Unrelated JSON is not a profile.
+        assert!(ProfileFile::parse("{}").is_err());
+        assert!(ProfileFile::parse(r#"{"theme": "dark"}"#).is_err());
+    }
+
+    #[test]
+    fn one_bad_value_does_not_discard_a_profile() {
+        let (file, warnings) = ProfileFile::from_value(&json!({
+            "pan_sensitivity": "fast",
+            "zoom_sensitivity": 1.5,
+            "mappings": { "south": "fit_view", "east": 7 }
+        }))
+        .unwrap();
+        assert_eq!(warnings.len(), 1, "{warnings:?}");
+        let config = file.to_config();
+        assert_eq!(config.tuning.pan_sensitivity, 0.95);
+        assert_eq!(config.tuning.zoom_sensitivity, 1.5);
+        assert_eq!(config.mappings.get(Control::South), Action::FitView);
+        assert_eq!(config.mappings.get(Control::East), Action::None);
+        assert!(ProfileFile::from_value(&json!(3)).is_err());
     }
 
     #[test]
@@ -990,7 +1093,7 @@ mod tests {
             "device": "045e:02ea:x#2",
             "pointer_control": "yes please",
             "active_profile": "Desk",
-            "config": { "pan_sensitivity": 2.0 },
+            "config": { "pan_sensitivity": 2.0, "zoom_sensitivity": "slow" },
             "profiles": {
                 "Desk": { "zoom_sensitivity": 1.5 },
                 "Broken": 7,
@@ -1004,8 +1107,9 @@ mod tests {
         // The bad field keeps its default, the others survive.
         assert!(!state.pointer_control);
         assert_eq!(state.config.pan_sensitivity, 2.0);
+        assert_eq!(state.config.zoom_sensitivity, 0.78);
         assert_eq!(state.profiles.len(), 1);
-        assert_eq!(warnings.len(), 3, "{warnings:?}");
+        assert_eq!(warnings.len(), 4, "{warnings:?}");
 
         let prefs = Prefs::from_persisted(state);
         assert_eq!(prefs.active_profile.as_deref(), Some("Desk"));
@@ -1017,6 +1121,16 @@ mod tests {
         assert!(defaults.enabled && warnings.is_empty());
         let (_, warnings) = PersistedState::from_value(Some(&json!("garbage")));
         assert_eq!(warnings.len(), 1);
+    }
+
+    #[test]
+    fn profiles_beyond_the_limit_are_reported() {
+        let profiles: serde_json::Map<String, Value> = (0..MAX_PROFILES + 3)
+            .map(|n| (format!("p{n:03}"), json!({})))
+            .collect();
+        let (state, warnings) = PersistedState::from_value(Some(&json!({ "profiles": profiles })));
+        assert_eq!(state.profiles.len(), MAX_PROFILES);
+        assert_eq!(warnings.len(), 3, "{warnings:?}");
     }
 
     #[test]
