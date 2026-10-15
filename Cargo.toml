@@ -2,29 +2,49 @@
 name = "gamepad"
 version = "1.0.0"
 edition = "2024"
+rust-version = "1.88"
+description = "Game controller navigation for eov, the whole-slide image viewer"
 license = "MIT OR Apache-2.0 OR GPL-3.0"
+repository = "https://github.com/eosin-platform/eov-gamepad-plugin"
 publish = false
 
+[package.metadata.eov]
+# The eov release whose `plugin_api` crate CI and release builds compile
+# against (checked out next to this repository as `../../plugin_api`).
+ref = "v1.0.0"
+
 [lib]
+# The library file must be named after the plugin id in plugin.toml.
+name = "gamepad"
 crate-type = ["cdylib", "rlib"]
 
 [dependencies]
-abi_stable = { version = "0.11", default-features = false }
-dirs = "6"
-enigo = { version = "0.6.1", features = ["wayland", "libei_smol"] }
-futures = "0.3"
+eov-plugin-api = { path = "../../plugin_api", version = "1.0" }
 gilrs = "0.11"
-eov-plugin-api = { path = "../../plugin_api" }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
-slint = { version = "1.17.1", default-features = false, features = [
-    "std",
-    "compat-1-2",
-    "backend-winit",
-    "renderer-femtovg-wgpu",
-    "unstable-wgpu-29",
-    "unstable-winit-030",
-] }
 
+# Opt-in system pointer control ("Move Pointer" mappings, off by default).
 [target.'cfg(target_os = "linux")'.dependencies]
 ashpd = { version = "0.12", default-features = false, features = ["async-std"] }
+enigo = { version = "0.6.1", default-features = false, features = ["x11rb"] }
+futures-lite = "2"
+
+[target.'cfg(any(target_os = "macos", target_os = "windows"))'.dependencies]
+enigo = { version = "0.6.1", default-features = false }
+
+[dev-dependencies]
+# The settings window is compiled by the host with this exact Slint version;
+# the UI contract test compiles it the same way.
+i-slint-compiler = { version = "=1.17.1", default-features = false }
+slint-interpreter = { version = "=1.17.1", default-features = false, features = [
+    "compat-1-2",
+    "internal",
+    "internal-json",
+] }
+
+[profile.release]
+lto = "thin"
+
+# Build standalone, also when checked out inside the eov repository.
+[workspace]

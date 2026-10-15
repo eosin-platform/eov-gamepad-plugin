@@ -1,3 +1,9 @@
+// The gamepad settings window: a plugin surface of kind Window.
+//
+// Every value is pushed by the plugin (`Surface::set_many`); callbacks go back
+// to it (`Plugin::ui_callback`). Ranges, labels and defaults come from the
+// plugin, so the sliders always match its clamps.
+
 import { ComboBox } from "std-widgets.slint";
 
 export struct MappingRow {
@@ -7,207 +13,80 @@ export struct MappingRow {
     axis-control: bool,
 }
 
-component SectionCard inherits Rectangle {
-    in property <string> title;
-    in property <string> subtitle: "";
+export struct TuningRow {
+    key: string,
+    label: string,
+    value: float,
+    text: string,
+    min: float,
+    max: float,
+    default-value: float,
+}
 
-    background: #0f1726;
+global Palette {
+    out property <color> window: #08111d;
+    out property <color> card: #0f1726;
+    out property <color> card-border: #ffffff10;
+    out property <color> field: #0a101b;
+    out property <color> field-border: #1f3149;
+    out property <color> focus: #5bb2ff;
+    out property <color> text: #f5f7fb;
+    out property <color> label: #d7e2f3;
+    out property <color> muted: #97a3ba;
+    out property <color> faint: #5d6d85;
+    out property <color> accent: #4d9fff;
+    out property <color> track: #18283d;
+}
+
+component Card inherits Rectangle {
+    in property <string> title;
+    in property <string> subtitle;
+
+    background: Palette.card;
     border-radius: 12px;
     border-width: 1px;
-    border-color: #ffffff10;
+    border-color: Palette.card-border;
 
     VerticalLayout {
-        width: parent.width;
-        padding-top: 12px;
-        padding-right: 12px;
-        padding-bottom: 12px;
-        padding-left: 12px;
+        padding: 12px;
         spacing: 8px;
 
         Text {
             text: root.title;
-            color: #f5f7fb;
+            color: Palette.text;
             font-size: 14px;
             font-weight: 700;
         }
 
         if root.subtitle != "": Text {
             text: root.subtitle;
-            color: #97a3ba;
+            color: Palette.muted;
             font-size: 11px;
             wrap: word-wrap;
         }
-    }
-}
 
-component InputField inherits Rectangle {
-    in property <string> label;
-    in-out property <string> value;
-    out property <bool> has-focus: input.has-focus;
-    callback changed(string, string);
-
-    height: 30px;
-    border-radius: 8px;
-    background: #0a101b;
-    border-width: 1px;
-    border-color: input.has-focus ? #5bb2ff : #1f3149;
-
-    HorizontalLayout {
-        width: parent.width;
-        height: parent.height;
-        padding-left: 10px;
-        padding-right: 10px;
-        spacing: 8px;
-
-        Text {
-            text: root.label;
-            color: #9eb0ca;
-            font-size: 10px;
-            font-weight: 700;
-            vertical-alignment: center;
-        }
-
-        input := TextInput {
-            horizontal-stretch: 1;
-            text <=> root.value;
-            color: #edf3ff;
-            font-size: 11px;
-            horizontal-alignment: right;
-            vertical-alignment: center;
-            input-type: InputType.number;
-
-            accepted => { root.changed(root.label, self.text); }
-            edited => { root.changed(root.label, self.text); }
-        }
-    }
-}
-
-component TuningField inherits Rectangle {
-    in property <string> label;
-    in property <string> field-key;
-    in-out property <string> value-text;
-    in property <float> value-number;
-    in property <float> min-value;
-    in property <float> max-value;
-    in property <float> default-value;
-    out property <bool> has-focus: value-input.has-focus;
-    callback text-changed(string, string);
-    callback slider-changed(string, float);
-
-    height: 38px;
-    background: transparent;
-
-    HorizontalLayout {
-        width: parent.width;
-        height: parent.height;
-        spacing: 8px;
-
-        Text {
-            width: 104px;
-            text: root.label;
-            color: #d7e2f3;
-            font-size: 11px;
-            font-weight: 700;
-            vertical-alignment: center;
-        }
-
-        slider-area := Rectangle {
-            horizontal-stretch: 1;
-            height: parent.height;
-            background: transparent;
-            property <float> normalized: (root.value-number - root.min-value) / max(root.max-value - root.min-value, 0.001);
-            property <length> track-left: 6px;
-            property <length> track-right: 6px;
-            property <length> track-width: max(self.width - self.track-left - self.track-right, 1px);
-
-            Rectangle {
-                x: parent.track-left;
-                y: (parent.height - 4px) / 2;
-                width: parent.track-width;
-                height: 4px;
-                border-radius: 2px;
-                background: #18283d;
-
-                Rectangle {
-                    x: 0px;
-                    width: slider-area.normalized * slider-area.track-width;
-                    height: parent.height;
-                    border-radius: parent.border-radius;
-                    background: #4d9fff;
-                }
-            }
-
-            Rectangle {
-                x: parent.track-left + slider-area.normalized * parent.track-width - 7px;
-                y: (parent.height - 14px) / 2;
-                width: 14px;
-                height: 14px;
-                border-radius: 7px;
-                background: #f8fbff;
-                border-width: 1px;
-                border-color: #4d9fff;
-            }
-
-            slider-touch := TouchArea {
-                x: parent.track-left - 6px;
-                y: 0px;
-                width: parent.track-width + 12px;
-                height: parent.height;
-
-                double-clicked => {
-                    root.slider-changed(root.field-key, root.default-value);
-                }
-
-                pointer-event(e) => {
-                    if e.kind == PointerEventKind.down || (e.kind == PointerEventKind.move && self.pressed) {
-                        let normalized = max(0.0, min(1.0, (self.mouse-x - 6px) / max(parent.track-width, 1px)));
-                        root.slider-changed(
-                            root.field-key,
-                            root.min-value + normalized * (root.max-value - root.min-value)
-                        );
-                    }
-                }
-            }
-        }
-
-        Rectangle {
-            width: 72px;
-            height: parent.height;
-            border-radius: 9px;
-            background: #09111d;
-            border-width: 1px;
-            border-color: value-input.has-focus ? #5bb2ff : #24364d;
-
-            value-input := TextInput {
-                x: 10px;
-                y: 0px;
-                width: parent.width - 20px;
-                height: parent.height;
-                text <=> root.value-text;
-                color: #edf3ff;
-                font-size: 11px;
-                horizontal-alignment: right;
-                vertical-alignment: center;
-                input-type: InputType.number;
-
-                edited => { root.text-changed(root.field-key, self.text); }
-                accepted => { root.text-changed(root.field-key, self.text); }
-            }
-        }
+        @children
     }
 }
 
 component ActionButton inherits Rectangle {
     in property <string> text;
+    in property <bool> enabled: true;
     in property <color> base-color: #1f4d84;
     in property <color> hover-color: #2562a8;
     callback clicked();
 
+    min-width: 64px;
     height: 30px;
     border-radius: 8px;
-    background: touch.has-hover ? root.hover-color : root.base-color;
+    background: !root.enabled ? #1b2433 : touch.pressed ? root.base-color.darker(0.15) : touch.has-hover ? root.hover-color : root.base-color;
+    accessible-role: button;
+    accessible-label: root.text;
+    accessible-enabled: root.enabled;
+    accessible-action-default => { root.clicked(); }
 
     touch := TouchArea {
+        enabled: root.enabled;
         clicked => { root.clicked(); }
     }
 
@@ -215,7 +94,7 @@ component ActionButton inherits Rectangle {
         width: parent.width;
         height: parent.height;
         text: root.text;
-        color: white;
+        color: root.enabled ? white : #6b7a90;
         font-size: 11px;
         font-weight: 700;
         horizontal-alignment: center;
@@ -225,14 +104,20 @@ component ActionButton inherits Rectangle {
 
 component ToggleChip inherits Rectangle {
     in property <bool> checked;
+    in property <string> label;
     callback toggled(bool);
 
     width: 72px;
     height: 30px;
     border-radius: 15px;
     background: root.checked ? #1d6fd1 : #293443;
+    accessible-role: switch;
+    accessible-label: root.label;
+    accessible-checked: root.checked;
+    accessible-action-default => { root.toggled(!root.checked); }
+    animate background { duration: 120ms; }
 
-    touch := TouchArea {
+    TouchArea {
         clicked => { root.toggled(!root.checked); }
     }
 
@@ -243,10 +128,11 @@ component ToggleChip inherits Rectangle {
         x: root.checked ? 45px : 3px;
         border-radius: 12px;
         background: white;
+        animate x { duration: 120ms; }
     }
 
     Text {
-        x: root.checked ? 12px : 28px;
+        x: root.checked ? 10px : 30px;
         y: 0px;
         width: 32px;
         height: parent.height;
@@ -259,639 +145,603 @@ component ToggleChip inherits Rectangle {
     }
 }
 
-component ProfileCard inherits Rectangle {
-    in property <[string]> profile-options: [];
-    in property <int> selected-profile-index: -1;
-    in property <string> profile-hint-text: "";
-    in-out property <string> profile-draft-name: "default";
-    out property <bool> name-focused: profile-name-input.has-focus;
-    callback profile-name-changed(string);
-    callback new-profile-clicked();
-    callback import-profile-clicked();
-    callback load-profile-selected(string);
-    callback delete-profile-clicked();
+component StepButton inherits Rectangle {
+    in property <string> text;
+    in property <string> label;
+    in property <bool> enabled: true;
+    callback clicked();
 
-    border-radius: 12px;
-    background: #0f1726;
+    width: 26px;
+    height: 26px;
+    border-radius: 7px;
+    background: touch.pressed ? #23395a : touch.has-hover ? #1b2c45 : #121d2e;
     border-width: 1px;
-    border-color: #ffffff10;
+    border-color: #24364d;
+    accessible-role: button;
+    accessible-label: root.label;
+    accessible-enabled: root.enabled;
+    accessible-action-default => { root.clicked(); }
 
-    VerticalLayout {
-        horizontal-stretch: 1;
-        padding-top: 12px;
-        padding-right: 12px;
-        padding-bottom: 12px;
-        padding-left: 12px;
+    touch := TouchArea {
+        enabled: root.enabled;
+        clicked => { root.clicked(); }
+    }
+
+    Text {
+        width: parent.width;
+        height: parent.height;
+        text: root.text;
+        color: Palette.label;
+        font-size: 13px;
+        font-weight: 700;
+        horizontal-alignment: center;
+        vertical-alignment: center;
+    }
+}
+
+// A slider with step buttons. The value comes from `setting`; drags and steps are
+// reported to the plugin, which clamps them and pushes the stored value back.
+component TuningField inherits Rectangle {
+    in property <TuningRow> setting;
+    in property <bool> enabled: true;
+    callback changed(string, float);
+    callback step(string, int);
+    callback reset(string);
+
+    private property <float> span: max(root.setting.max - root.setting.min, 0.001);
+    private property <float> fraction: max(0, min(1, (root.setting.value - root.setting.min) / root.span));
+
+    height: 34px;
+    opacity: root.enabled ? 1 : 0.45;
+
+    HorizontalLayout {
         spacing: 8px;
 
         Text {
-            text: "Profiles";
-            color: #f5f7fb;
-            font-size: 14px;
+            width: 118px;
+            text: root.setting.label;
+            color: Palette.label;
+            font-size: 11px;
             font-weight: 700;
+            vertical-alignment: center;
+            overflow: elide;
+        }
+
+        track-area := Rectangle {
+            horizontal-stretch: 1;
+            min-width: 60px;
+            property <length> inset: 7px;
+            property <length> track-width: max(self.width - 2 * self.inset, 1px);
+            accessible-role: slider;
+            accessible-label: root.setting.label;
+            accessible-value: root.setting.text;
+            accessible-value-minimum: root.setting.min;
+            accessible-value-maximum: root.setting.max;
+            accessible-enabled: root.enabled;
+            accessible-action-increment => { root.step(root.setting.key, 1); }
+            accessible-action-decrement => { root.step(root.setting.key, -1); }
+
+            Rectangle {
+                x: track-area.inset;
+                y: (parent.height - 4px) / 2;
+                width: track-area.track-width;
+                height: 4px;
+                border-radius: 2px;
+                background: Palette.track;
+
+                Rectangle {
+                    x: 0px;
+                    width: root.fraction * parent.width;
+                    height: parent.height;
+                    border-radius: parent.border-radius;
+                    background: Palette.accent;
+                }
+            }
+
+            // The knob stays inside the track (GPD-8).
+            Rectangle {
+                x: track-area.inset + root.fraction * track-area.track-width - 7px;
+                y: (parent.height - 14px) / 2;
+                width: 14px;
+                height: 14px;
+                border-radius: 7px;
+                background: #f8fbff;
+                border-width: 1px;
+                border-color: Palette.accent;
+            }
+
+            touch := TouchArea {
+                enabled: root.enabled;
+                mouse-cursor: pointer;
+
+                function report() {
+                    root.changed(
+                        root.setting.key,
+                        root.setting.min + max(0, min(1, (self.mouse-x - track-area.inset) / track-area.track-width)) * root.span);
+                }
+
+                pointer-event(event) => {
+                    if event.kind == PointerEventKind.down && event.button == PointerEventButton.left {
+                        self.report();
+                    }
+                }
+                moved => { self.report(); }
+                double-clicked => { root.reset(root.setting.key); }
+            }
+        }
+
+        VerticalLayout {
+            alignment: center;
+
+            StepButton {
+                text: "−";
+                label: "Decrease " + root.setting.label;
+                enabled: root.enabled;
+                clicked => { root.step(root.setting.key, -1); }
+            }
         }
 
         Text {
-            text: root.profile-hint-text;
-            color: #97a3ba;
-            font-size: 10px;
-            wrap: word-wrap;
+            width: 38px;
+            text: root.setting.text;
+            color: #edf3ff;
+            font-size: 11px;
+            horizontal-alignment: center;
+            vertical-alignment: center;
         }
 
-        HorizontalLayout {
-            spacing: 8px;
+        VerticalLayout {
+            alignment: center;
 
-            Rectangle {
-                horizontal-stretch: 1;
-                height: 30px;
-                border-radius: 8px;
-                background: #0a101b;
-                border-width: 1px;
-                border-color: profile-name-input.has-focus ? #5bb2ff : #1f3149;
-
-                profile-name-input := TextInput {
-                    x: 10px;
-                    y: 0px;
-                    width: parent.width - 20px;
-                    height: parent.height;
-                    text <=> root.profile-draft-name;
-                    color: #edf3ff;
-                    font-size: 11px;
-                    vertical-alignment: center;
-                    edited => { root.profile-name-changed(self.text); }
-                    accepted => { root.profile-name-changed(self.text); }
-                }
-            }
-
-            if root.profile-options.length > 0: ComboBox {
-                width: 132px;
-                height: 30px;
-                model: root.profile-options;
-                current-index: root.selected-profile-index;
-                selected(value) => { root.load-profile-selected(value); }
-            }
-
-            if root.profile-options.length == 0: Rectangle {
-                width: 132px;
-                height: 30px;
-                border-radius: 8px;
-                background: #0a101b;
-                border-width: 1px;
-                border-color: #1f3149;
-
-                Text {
-                    width: parent.width;
-                    height: parent.height;
-                    text: "No Profiles";
-                    color: #8fa4bf;
-                    font-size: 10px;
-                    vertical-alignment: center;
-                    horizontal-alignment: center;
-                }
-            }
-        }
-
-        HorizontalLayout {
-            spacing: 8px;
-
-            ActionButton {
-                horizontal-stretch: 1;
-                text: "New";
-                clicked => { root.new-profile-clicked(); }
-            }
-
-            ActionButton {
-                horizontal-stretch: 1;
-                text: "Load";
-                base-color: #1e5678;
-                hover-color: #29719d;
-                clicked => { root.import-profile-clicked(); }
-            }
-
-            ActionButton {
-                width: 84px;
-                text: "Delete";
-                base-color: #65404a;
-                hover-color: #7f4c59;
-                clicked => { root.delete-profile-clicked(); }
+            StepButton {
+                text: "+";
+                label: "Increase " + root.setting.label;
+                enabled: root.enabled;
+                clicked => { root.step(root.setting.key, 1); }
             }
         }
     }
 }
 
-export component GamepadWindow inherits Rectangle {
-    in property <bool> controller-enabled: true;
-    in property <string> status-text: "Waiting for a controller";
-    in property <[string]> device-options: [];
-    in property <int> selected-device-index: -1;
-    in property <[string]> profile-options: [];
-    in property <int> selected-profile-index: -1;
-    in property <string> profile-hint-text: "Save named mapping profiles under your local EOV config directory.";
-    in-out property <string> profile-draft-name: "default";
-    in-out property <string> left-dead-zone: "0.16";
-    in-out property <string> right-dead-zone: "0.12";
-    in-out property <string> trigger-dead-zone: "0.08";
-    in-out property <string> pan-sensitivity: "0.95";
-    in-out property <string> zoom-sensitivity: "0.78";
-    in property <float> left-dead-zone-value: 0.16;
-    in property <float> right-dead-zone-value: 0.12;
-    in property <float> trigger-dead-zone-value: 0.08;
-    in property <float> pan-sensitivity-value: 0.95;
-    in property <float> zoom-sensitivity-value: 0.78;
-    in property <[string]> axis-action-options: [];
-    in property <[string]> button-action-options: [];
-    in property <[MappingRow]> mapping-rows: [];
-    out property <bool> capture-hotkeys:
-        wide-profile-card.name-focused
-        || stacked-profile-card.name-focused
-        || left-dead-zone-input.has-focus
-        || right-dead-zone-input.has-focus
-        || trigger-dead-zone-input.has-focus
-        || pan-sensitivity-input.has-focus
-        || zoom-sensitivity-input.has-focus;
+component HeaderCard inherits Rectangle {
+    in property <bool> enabled;
+    in property <string> status;
+    in property <int> tone;
+    callback toggled(bool);
 
-    callback enabled-changed(bool);
-    callback device-selected(string);
-    callback profile-name-changed(string);
-    callback new-profile-clicked();
-    callback import-profile-clicked();
-    callback load-profile-selected(string);
-    callback delete-profile-clicked();
-    callback numeric-field-changed(string, string);
-    callback numeric-slider-changed(string, float);
-    callback axis-mapping-selected(string, string);
-    callback button-mapping-selected(string, string);
+    border-radius: 16px;
+    background: @linear-gradient(135deg, #1a66c2 0%, #0f3e70 55%, #0b223d 100%);
+    border-width: 1px;
+    border-color: #ffffff18;
 
-    private property <bool> stack-first-row: self.width < 780px;
+    VerticalLayout {
+        padding: 14px;
+        spacing: 8px;
 
-    background: #08111d;
-    Rectangle {
-        width: parent.width;
-        height: parent.height;
-        background: @linear-gradient(180deg, #11203a 0%, #08111d 30%, #08111d 100%);
+        Text {
+            text: "Gamepad Control";
+            color: white;
+            font-size: 18px;
+            font-weight: 800;
+        }
+
+        Text {
+            text: "Pan, zoom and move between panes, tabs and series items with a game controller. Input only acts while eov has focus.";
+            color: #d8e6ff;
+            font-size: 11px;
+            wrap: word-wrap;
+        }
+
+        HorizontalLayout {
+            spacing: 10px;
+
+            ToggleChip {
+                checked: root.enabled;
+                label: "Gamepad input";
+                toggled(value) => { root.toggled(value); }
+            }
+
+            VerticalLayout {
+                alignment: center;
+
+                Rectangle {
+                    width: 8px;
+                    height: 8px;
+                    border-radius: 4px;
+                    background: root.tone == 1 ? #4cc38a : root.tone == 2 ? #f0b44c : root.tone == 3 ? #ff7a7a : #9fb3cf;
+                }
+            }
+
+            Text {
+                horizontal-stretch: 1;
+                text: root.status;
+                color: #eff6ff;
+                font-size: 11px;
+                vertical-alignment: center;
+                wrap: word-wrap;
+            }
+        }
+    }
+}
+
+component DeviceCard inherits Card {
+    in property <[string]> options;
+    in-out property <int> selected-index;
+    in property <string> note;
+    out property <bool> editing: combo.has-focus;
+    callback selected(int);
+    callback editing-changed(bool);
+    callback done();
+
+    title: "Device";
+    subtitle: "Choose the controller that drives eov.";
+    changed editing => { root.editing-changed(self.editing); }
+
+    combo := ComboBox {
+        model: root.options;
+        current-index <=> root.selected-index;
+        enabled: root.options.length > 1;
+        selected => {
+            root.selected(self.current-index);
+            root.done();
+        }
     }
 
-    Rectangle {
-        width: parent.width;
-        height: parent.height;
-        background: transparent;
-        clip: true;
+    if root.note != "": Text {
+        text: root.note;
+        color: Palette.muted;
+        font-size: 10px;
+        wrap: word-wrap;
+    }
+}
+
+component ProfileCard inherits Card {
+    in property <[string]> options;
+    in-out property <int> selected-index;
+    in property <string> note;
+    in-out property <string> name;
+    out property <bool> editing: name-input.has-focus || combo.has-focus;
+    callback selected(string);
+    callback save-as(string);
+    callback new-profile(string);
+    callback import-profile();
+    callback export-profile();
+    callback delete-profile();
+    callback editing-changed(bool);
+    callback done();
+
+    title: "Profiles";
+    subtitle: root.note;
+    changed editing => { root.editing-changed(self.editing); }
+
+    combo := ComboBox {
+        model: root.options;
+        current-index <=> root.selected-index;
+        enabled: root.options.length > 0;
+        selected(value) => {
+            root.selected(value);
+            root.done();
+        }
+    }
+
+    HorizontalLayout {
+        spacing: 8px;
+
+        Rectangle {
+            horizontal-stretch: 1;
+            height: 30px;
+            border-radius: 8px;
+            background: Palette.field;
+            border-width: 1px;
+            border-color: name-input.has-focus ? Palette.focus : Palette.field-border;
+
+            name-input := TextInput {
+                x: 10px;
+                width: parent.width - 20px;
+                height: parent.height;
+                text <=> root.name;
+                color: #edf3ff;
+                font-size: 11px;
+                vertical-alignment: center;
+                single-line: true;
+                accessible-label: "Profile name";
+                accepted => { root.save-as(self.text); }
+            }
+
+            if root.name == "": Text {
+                x: 10px;
+                height: parent.height;
+                text: "Name for a new profile";
+                color: Palette.faint;
+                font-size: 11px;
+                vertical-alignment: center;
+            }
+        }
+
+        ActionButton {
+            width: 84px;
+            text: "Save As";
+            clicked => { root.save-as(root.name); }
+        }
+    }
+
+    HorizontalLayout {
+        spacing: 8px;
+
+        ActionButton {
+            horizontal-stretch: 1;
+            text: "New";
+            clicked => { root.new-profile(root.name); }
+        }
+
+        ActionButton {
+            horizontal-stretch: 1;
+            text: "Import";
+            base-color: #1e5678;
+            hover-color: #29719d;
+            clicked => { root.import-profile(); }
+        }
+
+        ActionButton {
+            horizontal-stretch: 1;
+            text: "Export";
+            base-color: #1e5678;
+            hover-color: #29719d;
+            clicked => { root.export-profile(); }
+        }
+
+        ActionButton {
+            horizontal-stretch: 1;
+            text: "Delete";
+            enabled: root.selected-index >= 0;
+            base-color: #65404a;
+            hover-color: #7f4c59;
+            clicked => { root.delete-profile(); }
+        }
+    }
+}
+
+component MappingList inherits Rectangle {
+    in property <string> heading;
+    in property <[MappingRow]> rows;
+    in property <[string]> options;
+    callback selected(string, int);
+    callback done();
+
+    VerticalLayout {
+        spacing: 6px;
+
+        Text {
+            text: root.heading;
+            color: #9eb0ca;
+            font-size: 10px;
+            font-weight: 700;
+        }
+
+        for row in root.rows: Rectangle {
+            height: 44px;
+            border-radius: 10px;
+            background: Palette.field;
+            border-width: 1px;
+            border-color: #1c2d43;
+
+            HorizontalLayout {
+                padding-left: 10px;
+                padding-right: 8px;
+                spacing: 10px;
+
+                Text {
+                    width: 122px;
+                    text: row.control-label;
+                    color: #f2f6ff;
+                    font-size: 11px;
+                    font-weight: 700;
+                    vertical-alignment: center;
+                    wrap: word-wrap;
+                }
+
+                VerticalLayout {
+                    alignment: center;
+                    horizontal-stretch: 1;
+
+                    ComboBox {
+                        model: root.options;
+                        // Two-way, so mappings pushed later (e.g. a loaded
+                        // profile) still show after the user picked one.
+                        current-index <=> row.current-index;
+                        selected => {
+                            root.selected(row.control-key, self.current-index);
+                            root.done();
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+export component GamepadWindow inherits Window {
+    in property <bool> controller-enabled: true;
+    in property <string> status-text: "Starting…";
+    in property <int> status-tone: 0;
+    in property <[string]> device-options: ["All controllers"];
+    in-out property <int> selected-device-index: 0;
+    in property <string> device-note: "";
+    in property <[string]> profile-options: [];
+    in-out property <int> selected-profile-index: -1;
+    in property <string> profile-note: "";
+    in-out property <string> profile-name: "";
+    in property <[TuningRow]> tuning-rows: [];
+    in property <TuningRow> pointer-row;
+    in property <bool> pointer-control: false;
+    in property <string> pointer-note: "";
+    in property <[string]> axis-action-options: [];
+    in property <[string]> button-action-options: [];
+    in property <[MappingRow]> axis-mappings: [];
+    in property <[MappingRow]> button-mappings: [];
+
+    callback enabled-toggled(bool);
+    callback device-selected(int);
+    callback profile-selected(string);
+    callback save-profile-as(string);
+    callback new-profile(string);
+    callback import-profile();
+    callback export-profile();
+    callback delete-profile();
+    callback tuning-changed(string, float);
+    callback tuning-step(string, int);
+    callback tuning-reset(string);
+    callback pointer-control-toggled(bool);
+    callback mapping-selected(string, int);
+    // Whether this window is the active one, so the controller keeps working
+    // while it has focus. Conservative: it turns on only after the window was
+    // activated or used, and off whenever it may not be active.
+    callback window-active-changed(bool);
+
+    title: "Gamepad";
+    background: Palette.window;
+    min-width: 380px;
+    min-height: 360px;
+    preferred-width: 820px;
+    preferred-height: 760px;
+    forward-focus: focus-root;
+
+    private property <bool> scope-active;
+    private property <bool> device-editing;
+    private property <bool> profile-editing;
+    private property <bool> window-active: root.scope-active || root.device-editing || root.profile-editing;
+    changed window-active => { root.window-active-changed(self.window-active); }
+
+    // After a menu choice: the user is in this window; take the focus back
+    // from the combo box.
+    function interacted() {
+        root.scope-active = true;
+        focus-root.focus();
+    }
+
+    focus-root := FocusScope {
+        width: 100%;
+        height: 100%;
+
+        focus-gained(reason) => {
+            // Programmatic focus (window creation) proves nothing.
+            if reason == FocusReason.window-activation || reason == FocusReason.pointer-click || reason == FocusReason.tab-navigation {
+                root.scope-active = true;
+            }
+        }
+        focus-lost(reason) => { root.scope-active = false; }
+
+        Rectangle {
+            background: @linear-gradient(180deg, #11203a 0%, #08111d 30%, #08111d 100%);
+        }
 
         Flickable {
-            width: parent.width;
-            height: parent.height;
-            viewport-height: content-box.preferred-height + 24px;
+            viewport-height: content.preferred-height + 28px;
             viewport-width: self.width;
-            interactive: content-box.preferred-height > self.height;
+            interactive: content.preferred-height + 28px > self.height;
 
-            content-box := VerticalLayout {
-                x: 14px;
+            content := VerticalLayout {
+                width: min(parent.width - 28px, 800px);
+                x: (parent.width - self.width) / 2;
                 y: 14px;
-                width: parent.width - 28px;
                 spacing: 12px;
 
-                wide-first-row := HorizontalLayout {
-                    visible: !root.stack-first-row;
-                    height: root.stack-first-row ? 0px : 168px;
-                    spacing: 12px;
+                HeaderCard {
+                    enabled: root.controller-enabled;
+                    status: root.status-text;
+                    tone: root.status-tone;
+                    toggled(value) => { root.enabled-toggled(value); }
+                }
 
-                    Rectangle {
-                        width: (parent.width - 24px) * 0.38;
-                        height: parent.height;
-                        border-radius: 16px;
-                        background: @linear-gradient(135deg, #1a66c2 0%, #0f3e70 55%, #0b223d 100%);
-                        border-width: 1px;
-                        border-color: #ffffff18;
+                DeviceCard {
+                    options: root.device-options;
+                    selected-index <=> root.selected-device-index;
+                    note: root.device-note;
+                    selected(index) => { root.device-selected(index); }
+                    editing-changed(editing) => { root.device-editing = editing; }
+                    done => { root.interacted(); }
+                }
 
-                        VerticalLayout {
-                            horizontal-stretch: 1;
-                            padding-top: 14px;
-                            padding-right: 14px;
-                            padding-bottom: 14px;
-                            padding-left: 14px;
-                            spacing: 8px;
+                ProfileCard {
+                    options: root.profile-options;
+                    selected-index <=> root.selected-profile-index;
+                    note: root.profile-note;
+                    name <=> root.profile-name;
+                    selected(name) => { root.profile-selected(name); }
+                    save-as(name) => { root.save-profile-as(name); }
+                    new-profile(name) => { root.new-profile(name); }
+                    import-profile => { root.import-profile(); }
+                    export-profile => { root.export-profile(); }
+                    delete-profile => { root.delete-profile(); }
+                    editing-changed(editing) => { root.profile-editing = editing; }
+                    done => { root.interacted(); }
+                }
 
-                            Text {
-                                text: "Gamepad Control";
-                                color: white;
-                                font-size: 18px;
-                                font-weight: 800;
-                            }
+                Card {
+                    title: "Tuning";
+                    subtitle: "Dead zones ignore stick drift. Speeds scale panning and zooming, and a higher response curve gives finer control near the centre. Double-click a slider to reset it.";
 
-                            Text {
-                                text: "Map controller input to viewport navigation and workspace actions.";
-                                color: #d8e6ff;
-                                font-size: 11px;
-                                wrap: word-wrap;
-                            }
-
-                            HorizontalLayout {
-                                spacing: 10px;
-
-                                ToggleChip {
-                                    checked: root.controller-enabled;
-                                    toggled(value) => { root.enabled-changed(value); }
-                                }
-
-                                Text {
-                                    horizontal-stretch: 1;
-                                    text: root.status-text;
-                                    color: #eff6ff;
-                                    font-size: 11px;
-                                    vertical-alignment: center;
-                                    wrap: word-wrap;
-                                }
-                            }
-                        }
-                    }
-
-                    Rectangle {
-                        width: (parent.width - 24px) * 0.28;
-                        height: parent.height;
-                        border-radius: 12px;
-                        background: #0f1726;
-                        border-width: 1px;
-                        border-color: #ffffff10;
-
-                        VerticalLayout {
-                            horizontal-stretch: 1;
-                            padding-top: 12px;
-                            padding-right: 12px;
-                            padding-bottom: 12px;
-                            padding-left: 12px;
-                            spacing: 8px;
-
-                            Text {
-                                text: "Device";
-                                color: #f5f7fb;
-                                font-size: 14px;
-                                font-weight: 700;
-                            }
-
-                            Text {
-                                text: "Choose the active controller.";
-                                color: #97a3ba;
-                                font-size: 11px;
-                                wrap: word-wrap;
-                            }
-
-                            if root.device-options.length > 0: ComboBox {
-                                horizontal-stretch: 1;
-                                height: 30px;
-                                model: root.device-options;
-                                current-index: root.selected-device-index;
-                                selected(value) => { root.device-selected(value); }
-                            }
-
-                            if root.device-options.length == 0: Rectangle {
-                                horizontal-stretch: 1;
-                                height: 36px;
-                                border-radius: 8px;
-                                background: #0a101b;
-                                border-width: 1px;
-                                border-color: #1f3149;
-
-                                Text {
-                                    width: parent.width;
-                                    height: parent.height;
-                                    text: "No controllers detected";
-                                    color: #9eb0ca;
-                                    font-size: 11px;
-                                    vertical-alignment: center;
-                                    horizontal-alignment: center;
-                                }
-                            }
-                        }
-                    }
-
-                    wide-profile-card := ProfileCard {
-                        width: (parent.width - 24px) * 0.34;
-                        height: parent.height;
-                        profile-options: root.profile-options;
-                        selected-profile-index: root.selected-profile-index;
-                        profile-hint-text: root.profile-hint-text;
-                        profile-draft-name <=> root.profile-draft-name;
-                        profile-name-changed(name) => { root.profile-name-changed(name); }
-                        new-profile-clicked => { root.new-profile-clicked(); }
-                        import-profile-clicked => { root.import-profile-clicked(); }
-                        load-profile-selected(name) => { root.load-profile-selected(name); }
-                        delete-profile-clicked => { root.delete-profile-clicked(); }
+                    for row in root.tuning-rows: TuningField {
+                        setting: row;
+                        changed(key, value) => { root.tuning-changed(key, value); }
+                        step(key, direction) => { root.tuning-step(key, direction); }
+                        reset(key) => { root.tuning-reset(key); }
                     }
                 }
 
-                stacked-first-row := VerticalLayout {
-                    visible: root.stack-first-row;
-                    height: root.stack-first-row ? self.preferred-height : 0px;
-                    spacing: 12px;
+                Card {
+                    title: "System Pointer";
 
-                    Rectangle {
-                        horizontal-stretch: 1;
-                        height: 136px;
-                        border-radius: 16px;
-                        background: @linear-gradient(135deg, #1a66c2 0%, #0f3e70 55%, #0b223d 100%);
-                        border-width: 1px;
-                        border-color: #ffffff18;
+                    HorizontalLayout {
+                        spacing: 10px;
 
                         VerticalLayout {
-                            horizontal-stretch: 1;
-                            padding-top: 14px;
-                            padding-right: 14px;
-                            padding-bottom: 14px;
-                            padding-left: 14px;
-                            spacing: 8px;
+                            alignment: start;
 
-                            Text {
-                                text: "Gamepad Control";
-                                color: white;
-                                font-size: 18px;
-                                font-weight: 800;
+                            ToggleChip {
+                                checked: root.pointer-control;
+                                label: "System pointer control";
+                                toggled(value) => { root.pointer-control-toggled(value); }
                             }
-
-                            Text {
-                                text: "Map controller input to viewport navigation and workspace actions.";
-                                color: #d8e6ff;
-                                font-size: 11px;
-                                wrap: word-wrap;
-                            }
-
-                            HorizontalLayout {
-                                spacing: 10px;
-
-                                ToggleChip {
-                                    checked: root.controller-enabled;
-                                    toggled(value) => { root.enabled-changed(value); }
-                                }
-
-                                Text {
-                                    horizontal-stretch: 1;
-                                    text: root.status-text;
-                                    color: #eff6ff;
-                                    font-size: 11px;
-                                    vertical-alignment: center;
-                                    wrap: word-wrap;
-                                }
-                            }
-                        }
-                    }
-
-                    Rectangle {
-                        horizontal-stretch: 1;
-                        height: 136px;
-                        border-radius: 12px;
-                        background: #0f1726;
-                        border-width: 1px;
-                        border-color: #ffffff10;
-
-                        VerticalLayout {
-                            horizontal-stretch: 1;
-                            padding-top: 12px;
-                            padding-right: 12px;
-                            padding-bottom: 12px;
-                            padding-left: 12px;
-                            spacing: 8px;
-
-                            Text {
-                                text: "Device";
-                                color: #f5f7fb;
-                                font-size: 14px;
-                                font-weight: 700;
-                            }
-
-                            Text {
-                                text: "Choose the active controller.";
-                                color: #97a3ba;
-                                font-size: 11px;
-                                wrap: word-wrap;
-                            }
-
-                            if root.device-options.length > 0: ComboBox {
-                                horizontal-stretch: 1;
-                                height: 30px;
-                                model: root.device-options;
-                                current-index: root.selected-device-index;
-                                selected(value) => { root.device-selected(value); }
-                            }
-
-                            if root.device-options.length == 0: Rectangle {
-                                horizontal-stretch: 1;
-                                height: 36px;
-                                border-radius: 8px;
-                                background: #0a101b;
-                                border-width: 1px;
-                                border-color: #1f3149;
-
-                                Text {
-                                    width: parent.width;
-                                    height: parent.height;
-                                    text: "No controllers detected";
-                                    color: #9eb0ca;
-                                    font-size: 11px;
-                                    vertical-alignment: center;
-                                    horizontal-alignment: center;
-                                }
-                            }
-                        }
-                    }
-
-                    stacked-profile-card := ProfileCard {
-                        horizontal-stretch: 1;
-                        height: 168px;
-                        profile-options: root.profile-options;
-                        selected-profile-index: root.selected-profile-index;
-                        profile-hint-text: root.profile-hint-text;
-                        profile-draft-name <=> root.profile-draft-name;
-                        profile-name-changed(name) => { root.profile-name-changed(name); }
-                        new-profile-clicked => { root.new-profile-clicked(); }
-                        import-profile-clicked => { root.import-profile-clicked(); }
-                        load-profile-selected(name) => { root.load-profile-selected(name); }
-                        delete-profile-clicked => { root.delete-profile-clicked(); }
-                    }
-                }
-
-                Rectangle {
-                    horizontal-stretch: 1;
-                    height: 304px;
-                    border-radius: 12px;
-                    background: #0f1726;
-                    border-width: 1px;
-                    border-color: #ffffff10;
-
-                    VerticalLayout {
-                        horizontal-stretch: 1;
-                        padding-top: 12px;
-                        padding-right: 12px;
-                        padding-bottom: 12px;
-                        padding-left: 12px;
-                        spacing: 8px;
-
-                        Text {
-                            text: "Tuning";
-                            color: #f5f7fb;
-                            font-size: 14px;
-                            font-weight: 700;
                         }
 
                         Text {
-                            text: "Dead zones filter stick drift. Sensitivity scales pan and zoom response.";
-                            color: #97a3ba;
+                            horizontal-stretch: 1;
+                            text: root.pointer-note;
+                            color: Palette.muted;
                             font-size: 11px;
                             wrap: word-wrap;
+                            vertical-alignment: center;
                         }
+                    }
 
-                        left-dead-zone-input := TuningField {
-                            horizontal-stretch: 1;
-                            label: "Left Dead Zone";
-                            field-key: "left-dead-zone";
-                            value-text: root.left-dead-zone;
-                            value-number: root.left-dead-zone-value;
-                            min-value: 0.0;
-                            max-value: 1.0;
-                            default-value: 0.16;
-                            text-changed(field, value) => { root.numeric-field-changed(field, value); }
-                            slider-changed(field, value) => { root.numeric-slider-changed(field, value); }
-                        }
-
-                        right-dead-zone-input := TuningField {
-                            horizontal-stretch: 1;
-                            label: "Right Dead Zone";
-                            field-key: "right-dead-zone";
-                            value-text: root.right-dead-zone;
-                            value-number: root.right-dead-zone-value;
-                            min-value: 0.0;
-                            max-value: 1.0;
-                            default-value: 0.12;
-                            text-changed(field, value) => { root.numeric-field-changed(field, value); }
-                            slider-changed(field, value) => { root.numeric-slider-changed(field, value); }
-                        }
-
-                        trigger-dead-zone-input := TuningField {
-                            horizontal-stretch: 1;
-                            label: "Trigger Dead Zone";
-                            field-key: "trigger-dead-zone";
-                            value-text: root.trigger-dead-zone;
-                            value-number: root.trigger-dead-zone-value;
-                            min-value: 0.0;
-                            max-value: 1.0;
-                            default-value: 0.08;
-                            text-changed(field, value) => { root.numeric-field-changed(field, value); }
-                            slider-changed(field, value) => { root.numeric-slider-changed(field, value); }
-                        }
-
-                        pan-sensitivity-input := TuningField {
-                            horizontal-stretch: 1;
-                            label: "Pan Sensitivity";
-                            field-key: "pan-sensitivity";
-                            value-text: root.pan-sensitivity;
-                            value-number: root.pan-sensitivity-value;
-                            min-value: 0.1;
-                            max-value: 2.0;
-                            default-value: 0.95;
-                            text-changed(field, value) => { root.numeric-field-changed(field, value); }
-                            slider-changed(field, value) => { root.numeric-slider-changed(field, value); }
-                        }
-
-                        zoom-sensitivity-input := TuningField {
-                            horizontal-stretch: 1;
-                            label: "Zoom Sensitivity";
-                            field-key: "zoom-sensitivity";
-                            value-text: root.zoom-sensitivity;
-                            value-number: root.zoom-sensitivity-value;
-                            min-value: 0.1;
-                            max-value: 2.0;
-                            default-value: 0.78;
-                            text-changed(field, value) => { root.numeric-field-changed(field, value); }
-                            slider-changed(field, value) => { root.numeric-slider-changed(field, value); }
-                        }
+                    TuningField {
+                        setting: root.pointer-row;
+                        enabled: root.pointer-control;
+                        changed(key, value) => { root.tuning-changed(key, value); }
+                        step(key, direction) => { root.tuning-step(key, direction); }
+                        reset(key) => { root.tuning-reset(key); }
                     }
                 }
 
-                Rectangle {
-                    horizontal-stretch: 1;
-                    height: 108px + root.mapping-rows.length * 58px;
-                    border-radius: 12px;
-                    background: #0f1726;
-                    border-width: 1px;
-                    border-color: #ffffff10;
+                Card {
+                    title: "Mappings";
+                    subtitle: "Defaults: the left stick pans, the right stick and the triggers zoom, the D-pad switches panes and tabs, the shoulder buttons step through the series, Start pauses and Select shows this window.";
 
-                    VerticalLayout {
-                        horizontal-stretch: 1;
-                        padding-top: 12px;
-                        padding-right: 12px;
-                        padding-bottom: 12px;
-                        padding-left: 12px;
-                        spacing: 8px;
+                    MappingList {
+                        heading: "STICKS AND TRIGGERS";
+                        rows: root.axis-mappings;
+                        options: root.axis-action-options;
+                        selected(key, index) => { root.mapping-selected(key, index); }
+                        done => { root.interacted(); }
+                    }
 
-                        Text {
-                            text: "Mappings";
-                            color: #f5f7fb;
-                            font-size: 14px;
-                            font-weight: 700;
-                        }
-
-                        Text {
-                            text: "Defaults: left stick pans, triggers zoom out and in, right stick moves the mouse, D-pad cycles panes and tabs.";
-                            color: #97a3ba;
-                            font-size: 11px;
-                            wrap: word-wrap;
-                        }
-
-                        for row in root.mapping-rows: Rectangle {
-                            horizontal-stretch: 1;
-                            height: 50px;
-                            border-radius: 10px;
-                            background: #0a101b;
-                            border-width: 1px;
-                            border-color: #1c2d43;
-
-                            HorizontalLayout {
-                                width: parent.width;
-                                height: parent.height;
-                                padding-left: 10px;
-                                padding-right: 10px;
-                                spacing: 10px;
-
-                                Rectangle {
-                                    width: 124px;
-                                    height: parent.height;
-                                    background: transparent;
-
-                                    Text {
-                                        width: parent.width;
-                                        height: parent.height;
-                                        x: 0px;
-                                        y: 0px;
-                                        text: row.control-label;
-                                        color: #f2f6ff;
-                                        font-size: 11px;
-                                        font-weight: 700;
-                                        wrap: word-wrap;
-                                        horizontal-alignment: left;
-                                        vertical-alignment: center;
-                                    }
-                                }
-
-                                Rectangle {
-                                    horizontal-stretch: 1;
-                                    height: parent.height;
-                                    background: transparent;
-
-                                    mapping-action-combo := ComboBox {
-                                        y: 10px;
-                                        width: parent.width;
-                                        height: 30px;
-                                        model: row.axis-control ? root.axis-action-options : root.button-action-options;
-                                        current-index: row.current-index;
-                                        selected(value) => {
-                                            if row.axis-control {
-                                                root.axis-mapping-selected(row.control-key, value);
-                                            } else {
-                                                root.button-mapping-selected(row.control-key, value);
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
+                    MappingList {
+                        heading: "BUTTONS";
+                        rows: root.button-mappings;
+                        options: root.button-action-options;
+                        selected(key, index) => { root.mapping-selected(key, index); }
+                        done => { root.interacted(); }
                     }
                 }
             }
