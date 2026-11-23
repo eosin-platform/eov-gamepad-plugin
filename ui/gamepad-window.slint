@@ -670,8 +670,8 @@ export component GamepadWindow inherits Window {
         }
 
         Flickable {
-            viewport-height: content.preferred-height + 28px;
-            viewport-width: self.width;
+            content-height: content.preferred-height + 28px;
+            content-width: self.width;
             interactive: content.preferred-height + 28px > self.height;
 
             content := VerticalLayout {

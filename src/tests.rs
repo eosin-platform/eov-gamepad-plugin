@@ -38,13 +38,18 @@ mod contract {
     }
 
     /// Compiles the window the way the host does (same Slint version, the
-    /// plugin root as include path).
+    /// plugin root as include path). Notes are not problems: the host sets
+    /// no edition, so Slint always notes that none is set.
     fn compile() -> slint_interpreter::ComponentDefinition {
         let root = Path::new(env!("CARGO_MANIFEST_DIR"));
         let mut compiler = slint_interpreter::Compiler::default();
         compiler.set_include_paths(vec![root.to_path_buf()]);
         let result = spin_on(compiler.build_from_path(root.join(ui::UI_PATH)));
-        let problems: Vec<String> = result.diagnostics().map(|d| d.to_string()).collect();
+        let problems: Vec<String> = result
+            .diagnostics()
+            .filter(|d| d.level() != slint_interpreter::DiagnosticLevel::Info)
+            .map(|d| d.to_string())
+            .collect();
         assert!(problems.is_empty(), "{}", problems.join("\n"));
         result
             .component(ui::COMPONENT)
