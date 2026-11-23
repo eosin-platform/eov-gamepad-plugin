@@ -2,7 +2,7 @@
 name = "gamepad"
 version = "1.0.0"
 edition = "2024"
-rust-version = "1.88"
+rust-version = "1.100"
 description = "Game controller navigation for eov, the whole-slide image viewer"
 license = "MIT OR Apache-2.0 OR GPL-3.0"
 repository = "https://github.com/eosin-platform/eov-gamepad-plugin"
