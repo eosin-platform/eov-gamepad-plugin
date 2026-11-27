@@ -1,6 +1,6 @@
 id = "gamepad"
 name = "Gamepad"
-version = "1.0.0"
+version = "1.1.0"
 description = "Provides support for using gamepads as input devices: pan, zoom and switch panes, tabs and series items with a game controller."
 repository = "https://github.com/eosin-platform/eov-gamepad-plugin"
 api = ">=1.0, <2"

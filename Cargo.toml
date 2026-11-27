@@ -1,6 +1,6 @@
 [package]
 name = "gamepad"
-version = "1.0.0"
+version = "1.1.0"
 edition = "2024"
 rust-version = "1.100"
 description = "Game controller navigation for eov, the whole-slide image viewer"
@@ -11,7 +11,7 @@ publish = false
 [package.metadata.eov]
 # The eov release whose `plugin_api` crate CI and release builds compile
 # against (checked out next to this repository as `../../plugin_api`).
-ref = "v1.0.0"
+ref = "v1.1.0"
 
 [lib]
 # The library file must be named after the plugin id in plugin.toml.
