@@ -172,8 +172,9 @@ Linux builds need `libudev-dev` and `pkg-config`.
 ## Packaging
 
 An `.eop` is a tar archive with `plugin.toml`, the library (named after the
-plugin id: `libgamepad.so`, `libgamepad.dylib` or `gamepad.dll`) and the
-`ui/` directory:
+plugin id: `libgamepad.so`, `libgamepad.dylib` or `gamepad.dll`), the `ui/`
+directory and the translations (`translations/<tag>/LC_MESSAGES/*.po`, not
+the `.pot` template):
 
 ```bash
 cargo build --release
@@ -183,6 +184,26 @@ python3 scripts/package_eop.py --output dist/gamepad.eop
 Without `--library` the script uses the release build for the current
 platform; `--library` takes any other build. The archive is reproducible
 (sorted entries, fixed owners and modes, `SOURCE_DATE_EPOCH` timestamps).
+
+## Translations
+
+The plugin speaks the language of eov's interface and switches with it.
+Its texts are written in English and translated with gettext catalogs, one
+per language, in `translations/<tag>/LC_MESSAGES/gamepad.po` (`<tag>` as eov
+names the language: `de`, `pt-BR`, `zh-Hant`). A text a catalog lacks is
+shown in English. The catalogs are extracted from the sources (`tr!` in
+Rust, `@tr` in `ui/gamepad-window.slint`) and updated with
+`tools/i18n/i18n.py` of the eov repository.
+
+The window makes room for long translations: buttons and label columns
+take the width of their texts, and the profile buttons move onto two rows
+in a narrow window. In right-to-left languages (Arabic, Persian, Hebrew)
+text starts at the right, while the layout is not mirrored: sliders, step
+buttons and switches stay where they are. Slint's combo box draws its text
+at the left in every language, so the window draws its own there.
+
+Corrections and new translations are welcome: edit your language's `.po`
+file with any gettext editor and open a pull request.
 
 ## Development
 
@@ -201,7 +222,12 @@ The tests need no controller and never touch the home directory:
   controller input;
 - a contract test compiles `ui/gamepad-window.slint` with the Slint version
   eov uses and checks every property the plugin pushes and every callback it
-  handles. Building it needs `libfontconfig1-dev` on Linux.
+  handles. Building it needs `libfontconfig1-dev` on Linux;
+- `tests/translations.rs` runs the plugin with a German catalog and switches
+  languages while it runs;
+- `src/window_tests.rs` runs the window on Slint's testing backend: what the
+  combo boxes show and how they take the keyboard, in both writing
+  directions, and when the window reports itself active.
 
 Source layout:
 
@@ -218,6 +244,7 @@ Source layout:
 | `src/environment.rs` | Explanations when controllers cannot be read (Flatpak, permissions) |
 | `src/legacy.rs` | One-time import of 0.x settings |
 | `ui/gamepad-window.slint` | The settings window |
+| `translations/` | Translations: gettext catalogs, one per language |
 | `scripts/` | Packaging and release tooling |
 
 The input thread blocks until the controller reports something or a timer is

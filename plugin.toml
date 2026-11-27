@@ -14,3 +14,6 @@ data = """<svg width=\"800px\" height=\"800px\" viewBox=\"0 0 24 24\" fill=\"non
 
 [ui]
 slint = ">=1.19, <2"
+
+[i18n]
+catalogs = "translations"

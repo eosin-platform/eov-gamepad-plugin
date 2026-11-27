@@ -16,6 +16,7 @@
 //!   works while paused (GPD-2, GPD-4).
 
 use crate::config::{Action, Config, Control};
+use eov_plugin_api::i18n::tr;
 use eov_plugin_api::protocol::SeriesAction;
 use std::collections::BTreeMap;
 use std::sync::Arc;
@@ -63,13 +64,19 @@ pub enum Power {
 }
 
 impl Power {
-    /// Text for the device label, if there is something worth showing.
+    /// Text for the device label, if there is something worth showing (in
+    /// the language of the interface).
     pub fn describe(self) -> Option<String> {
         match self {
             Power::Unknown | Power::Wired => None,
-            Power::Discharging(level) => Some(format!("battery {level}%")),
-            Power::Charging(level) => Some(format!("charging, {level}%")),
-            Power::Charged => Some("charged".to_string()),
+            // Translators: shown after the name of a controller; {level} is the
+            // charge of its battery in percent
+            Power::Discharging(level) => Some(tr!("battery {level}%", level = level)),
+            // Translators: shown after the name of a controller; {level} is the
+            // charge of its battery in percent
+            Power::Charging(level) => Some(tr!("charging, {level}%", level = level)),
+            // Translators: shown after the name of a controller: its battery is full
+            Power::Charged => Some(tr!("charged")),
         }
     }
 }

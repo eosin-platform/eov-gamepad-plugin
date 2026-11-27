@@ -7,7 +7,7 @@ use crate::engine::{DeviceInfo, InputEvent, Power};
 use crate::plugin::{BUTTON_ID, GamepadPlugin};
 use crate::shared::{BackendState, Status, TOKEN_TOGGLE_WINDOW};
 use crate::ui::{self, Focus};
-use crate::worker::PAUSED_STATUS;
+use crate::worker::{CHECK_WAIT, paused_status};
 use eov_plugin_api::prelude::*;
 use eov_plugin_api::testing::{MockHost, TestHarness, test_init};
 use std::path::PathBuf;
@@ -113,6 +113,8 @@ mod contract {
         // The plugin handles exactly the declared callbacks.
         let handled: BTreeSet<String> = ui::CALLBACKS.iter().map(|s| s.to_string()).collect();
         assert_eq!(callbacks, handled);
+        // eov tells the window the writing direction of the interface.
+        assert_eq!(properties.get("eov-rtl"), Some(&Type::Bool));
     }
 }
 
@@ -425,15 +427,30 @@ fn a_stale_focus_is_checked_before_acting() {
 fn switching_back_without_an_event_is_noticed() {
     let rig = rig();
     rig.set_focus(false);
+    // The input thread notices the event when it next wakes (up to
+    // IDLE_WAIT later) and believes "unfocused" from then on: let it notice
+    // first, or the press below can still fall in that time and be dropped.
+    rig.settle();
     // Back in eov, which has not rendered (so no event), but would report
     // "focused" after a frame.
     std::thread::sleep(Duration::from_millis(600));
     rig.harness.state().snapshot.window_focused = true;
+    // The press itself, without `press`'s pause after it.
     let started = Instant::now();
-    rig.press(Control::DPadDown);
+    for pressed in [true, false] {
+        rig.input
+            .send(InputEvent::Button {
+                device: PAD,
+                control: Control::DPadDown,
+                pressed,
+            })
+            .unwrap();
+    }
     eventually("the tab change", || !rig.calls("app.cycle_tab").is_empty());
-    // The press waited for the check instead of being dropped.
-    assert!(started.elapsed() >= Duration::from_millis(60));
+    // The press waited for the check (a frame, then the focus read again)
+    // instead of being dropped or run at once.
+    let waited = started.elapsed();
+    assert!(waited >= CHECK_WAIT, "the press ran after {waited:?}");
     assert!(!rig.calls("render.request").is_empty());
 }
 
@@ -479,7 +496,10 @@ fn pausing_blocks_every_action_but_resume() {
     let rig = rig();
     let id = rig.open_window();
     rig.callback(&id, "enabled-toggled", vec![json!(false)]);
-    assert_eq!(rig.harness.state().status.as_deref(), Some(PAUSED_STATUS));
+    assert_eq!(
+        rig.harness.state().status.as_deref(),
+        Some(paused_status().as_str())
+    );
     assert_eq!(rig.property(&id, "controller-enabled"), json!(false));
     rig.press(Control::DPadDown);
     rig.axis(Control::LeftStickX, 1.0);
@@ -812,7 +832,10 @@ fn stored_settings_are_restored() {
     );
     let rig = rig_with(init, true);
     // Paused at start-up, shown in the status bar.
-    assert_eq!(rig.harness.state().status.as_deref(), Some(PAUSED_STATUS));
+    assert_eq!(
+        rig.harness.state().status.as_deref(),
+        Some(paused_status().as_str())
+    );
     // The unreadable field was reported once.
     let notices = rig.harness.state().notifications.clone();
     assert_eq!(notices.len(), 1);
@@ -875,6 +898,47 @@ fn settings_of_the_previous_version_are_imported_once() {
         .find(|row| row["key"] == "pan-sensitivity")
         .unwrap();
     assert_eq!(pan["value"], json!(0.5));
+}
+
+#[test]
+fn a_language_change_hands_the_texts_over_again() {
+    let rig = rig();
+    let id = rig.open_window();
+    rig.callback(&id, "enabled-toggled", vec![json!(false)]);
+    let pushes = rig.calls("surface.set").len();
+    let statuses = rig.calls("status").len();
+    // English again: the tests run in English (`tr!` has one language per
+    // process; tests/translations.rs switches languages in its own).
+    rig.harness
+        .send(HostEvent::LanguageChanged {
+            language: "en".into(),
+        })
+        .unwrap();
+    let updates = rig.calls("toolbar.update");
+    let update = updates.last().expect("the button was updated");
+    assert_eq!(update["button_id"], BUTTON_ID);
+    assert_eq!(update["tooltip"], "Gamepad");
+    // Paused: the status-bar text is set again.
+    let calls = rig.calls("status");
+    assert_eq!(calls.len(), statuses + 1);
+    assert_eq!(calls[statuses]["text"], json!(paused_status()));
+    // The window's properties are pushed again.
+    assert!(rig.calls("surface.set").len() > pushes);
+    assert_eq!(rig.property(&id, "profile-options")[0], "No profile");
+    // With the window closed, only the button and status texts are sent.
+    rig.harness
+        .send(HostEvent::ToolbarButtonClicked {
+            button_id: BUTTON_ID.into(),
+        })
+        .unwrap();
+    let pushes = rig.calls("surface.set").len();
+    rig.harness
+        .send(HostEvent::LanguageChanged {
+            language: "en".into(),
+        })
+        .unwrap();
+    assert_eq!(rig.calls("surface.set").len(), pushes);
+    assert_eq!(rig.calls("toolbar.update").len(), updates.len() + 2);
 }
 
 #[test]

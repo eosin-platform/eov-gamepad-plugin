@@ -1,0 +1,963 @@
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: gamepad\n"
+"Report-Msgid-Bugs-To: https://github.com/eosin-platform/eov-gamepad-plugin/"
+"issues\n"
+"Language-Team: Arabic\n"
+"Language: ar\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=6; plural=(n==0 ? 0 : n==1 ? 1 : n==2 ? 2 : n%100>=3 "
+"&& n%100<=10 ? 3 : n%100>=11 ? 4 : 5);\n"
+"X-Review-Status: machine-translated; not yet reviewed by a native speaker\n"
+
+#: plugin.toml
+msgctxt "plugin.toml"
+msgid "Gamepad"
+msgstr "لوحة الألعاب"
+
+#: plugin.toml
+msgctxt "plugin.toml"
+msgid ""
+"Provides support for using gamepads as input devices: pan, zoom and switch "
+"panes, tabs and series items with a game controller."
+msgstr ""
+"يتيح استخدام لوحات الألعاب كأجهزة إدخال: تحريك العرض والتكبير والتصغير "
+"والتبديل بين الأجزاء وعلامات التبويب وعناصر السلسلة باستخدام وحدة تحكم ألعاب."
+
+#. Translators: the horizontal (X) axis of the left stick of a game
+#. controller; keep the letter X
+#: src/config.rs:136
+msgid "Left Stick X"
+msgstr "العصا اليسرى X"
+
+#. Translators: the vertical (Y) axis of the left stick
+#: src/config.rs:138
+msgid "Left Stick Y"
+msgstr "العصا اليسرى Y"
+
+#. Translators: the horizontal (X) axis of the right stick
+#: src/config.rs:140
+msgid "Right Stick X"
+msgstr "العصا اليمنى X"
+
+#. Translators: the vertical (Y) axis of the right stick
+#: src/config.rs:142
+msgid "Right Stick Y"
+msgstr "العصا اليمنى Y"
+
+#. Translators: the analog trigger under the left shoulder (LT, L2)
+#: src/config.rs:144
+msgid "Left Trigger"
+msgstr "الزناد الأيسر"
+
+#. Translators: the analog trigger under the right shoulder (RT, R2)
+#: src/config.rs:146
+msgid "Right Trigger"
+msgstr "الزناد الأيمن"
+
+#. Translators: D-Pad is the directional pad, the cross of four
+#. buttons on the left of a game controller
+#: src/config.rs:149
+msgid "D-Pad Left"
+msgstr "لوحة الاتجاهات: يسار"
+
+#: src/config.rs:150
+msgid "D-Pad Right"
+msgstr "لوحة الاتجاهات: يمين"
+
+#: src/config.rs:151
+msgid "D-Pad Up"
+msgstr "لوحة الاتجاهات: أعلى"
+
+#: src/config.rs:152
+msgid "D-Pad Down"
+msgstr "لوحة الاتجاهات: أسفل"
+
+#. Translators: the four face buttons are named by their position:
+#. the bottom one (A on Xbox, Cross on PlayStation, B on Nintendo)
+#: src/config.rs:155
+msgid "South Button"
+msgstr "الزر السفلي"
+
+#. Translators: the right face button (B on Xbox, Circle on PlayStation)
+#: src/config.rs:157
+msgid "East Button"
+msgstr "الزر الأيمن"
+
+#. Translators: the top face button (Y on Xbox, Triangle on PlayStation)
+#: src/config.rs:159
+msgid "North Button"
+msgstr "الزر العلوي"
+
+#. Translators: the left face button (X on Xbox, Square on PlayStation)
+#: src/config.rs:161
+msgid "West Button"
+msgstr "الزر الأيسر"
+
+#. Translators: the left shoulder button, or bumper (LB, L1)
+#: src/config.rs:163
+msgid "Left Shoulder"
+msgstr "زر الكتف الأيسر"
+
+#. Translators: the right shoulder button, or bumper (RB, R1)
+#: src/config.rs:165
+msgid "Right Shoulder"
+msgstr "زر الكتف الأيمن"
+
+#. Translators: pressing the left stick down like a button (LS, L3)
+#: src/config.rs:167
+msgid "Left Stick Click"
+msgstr "ضغط العصا اليسرى"
+
+#. Translators: pressing the right stick down like a button (RS, R3)
+#: src/config.rs:169
+msgid "Right Stick Click"
+msgstr "ضغط العصا اليمنى"
+
+#. Translators: a control that does nothing
+#: src/config.rs:293
+msgid "Unassigned"
+msgstr "غير معيَّن"
+
+#. Translators: an action of a game controller; to pan is to move
+#. the view of the slide sideways
+#: src/config.rs:296
+msgid "Pan Horizontally"
+msgstr "تحريك أفقي"
+
+#: src/config.rs:297
+msgid "Pan Vertically"
+msgstr "تحريك رأسي"
+
+#. Translators: for a stick or trigger: pushing it up or to the
+#. right zooms in, the other way zooms out
+#: src/config.rs:300
+msgid "Zoom (Up / Right Zooms In)"
+msgstr "التكبير/التصغير (للأعلى/لليمين للتكبير)"
+
+#: src/config.rs:301
+msgid "Zoom In"
+msgstr "تكبير"
+
+#: src/config.rs:302
+msgid "Zoom Out"
+msgstr "تصغير"
+
+#. Translators: moves the mouse pointer of the operating system
+#: src/config.rs:304
+msgid "Move Pointer Horizontally"
+msgstr "تحريك المؤشر أفقيًا"
+
+#: src/config.rs:305
+msgid "Move Pointer Vertically"
+msgstr "تحريك المؤشر رأسيًا"
+
+#. Translators: a pane is one of the views side by side in eov
+#: src/config.rs:307
+msgid "Previous Pane"
+msgstr "الجزء السابق"
+
+#: src/config.rs:308
+msgid "Next Pane"
+msgstr "الجزء التالي"
+
+#: src/config.rs:309
+msgid "Previous Tab"
+msgstr "علامة التبويب السابقة"
+
+#: src/config.rs:310
+msgid "Next Tab"
+msgstr "علامة التبويب التالية"
+
+#. Translators: the series bar lists the slides of a series
+#: src/config.rs:312
+msgid "Toggle Series Bar"
+msgstr "إظهار/إخفاء شريط السلسلة"
+
+#: src/config.rs:313
+msgid "Previous Series Item"
+msgstr "عنصر السلسلة السابق"
+
+#: src/config.rs:314
+msgid "Next Series Item"
+msgstr "عنصر السلسلة التالي"
+
+#: src/config.rs:315
+msgid "Open Selected Series Item"
+msgstr "فتح عنصر السلسلة المحدد"
+
+#. Translators: fits the whole slide into the view
+#: src/config.rs:317
+msgid "Fit View"
+msgstr "ملاءمة العرض"
+
+#. Translators: this window is the gamepad settings window
+#: src/config.rs:319
+msgid "Show / Hide This Window"
+msgstr "إظهار/إخفاء هذه النافذة"
+
+#. Translators: turns gamepad input back on, or pauses it
+#: src/config.rs:321
+msgid "Enable / Pause"
+msgstr "تمكين/إيقاف مؤقت"
+
+#. Translators: a dead zone is how far a stick may move before it
+#. counts as input (it hides stick drift); shown in a narrow column
+#: src/config.rs:459
+msgid "Left Dead Zone"
+msgstr "المنطقة الميتة اليسرى"
+
+#: src/config.rs:460
+msgid "Right Dead Zone"
+msgstr "المنطقة الميتة اليمنى"
+
+#: src/config.rs:461
+msgid "Trigger Dead Zone"
+msgstr "المنطقة الميتة للزناد"
+
+#: src/config.rs:462
+msgid "Pan Speed"
+msgstr "سرعة التحريك"
+
+#: src/config.rs:463
+msgid "Zoom Speed"
+msgstr "سرعة التكبير"
+
+#. Translators: how input grows with the deflection of a stick: a
+#. higher curve gives finer control near the centre
+#: src/config.rs:466
+msgid "Response Curve"
+msgstr "منحنى الاستجابة"
+
+#. Translators: the speed of the mouse pointer of the operating system
+#: src/config.rs:468
+msgid "Pointer Speed"
+msgstr "سرعة المؤشر"
+
+#: src/config.rs:684
+msgid "not a profile object"
+msgstr "ليس كائن ملف تعريف"
+
+#. Translators: {} is the value of the "version" field of a profile
+#: src/config.rs:694
+msgid "ignoring the version {}"
+msgstr "يُتجاهل الإصدار {}"
+
+#. Translators: {key} is a field of a profile file, such as
+#. 'pan_sensitivity'; {value} is what the field holds
+#: src/config.rs:712
+msgid "ignoring '{key}': {value} is not a number"
+msgstr "يُتجاهل «{key}»: {value} ليس رقمًا"
+
+#. Translators: 'mappings' is a field of a profile file: keep the name
+#: src/config.rs:730
+msgid "ignoring 'mappings': not an object"
+msgstr "يُتجاهل «mappings»: ليس كائنًا"
+
+#: src/config.rs:745
+msgid "the file is not a gamepad profile"
+msgstr "الملف ليس ملف تعريف للوحة الألعاب"
+
+#: src/config.rs:794
+msgid "the stored gamepad settings are not an object"
+msgstr "إعدادات لوحة الألعاب المخزّنة ليست كائنًا"
+
+#. Translators: {key} is a stored setting, such as 'enabled'; {error}
+#. says why it cannot be read
+#: src/config.rs:809
+msgid "ignoring the stored '{key}': {error}"
+msgstr "يُتجاهل الإعداد المخزّن «{key}»: {error}"
+
+#. Translators: {} is a problem with the current settings (not a profile)
+#: src/config.rs:840
+msgid "settings: {}"
+msgstr "الإعدادات: {}"
+
+#: src/config.rs:843
+msgid "ignoring the stored settings: {}"
+msgstr "تُتجاهل الإعدادات المخزّنة: {}"
+
+#: src/config.rs:854
+msgid "ignoring the profile with the name {}"
+msgstr "يُتجاهل ملف التعريف ذو الاسم {}"
+
+#: src/config.rs:859
+msgid "ignoring the profile {name}: at most {n} profile is kept"
+msgid_plural "ignoring the profile {name}: at most {n} profiles are kept"
+msgstr[0] "يُتجاهل ملف التعريف {name}: يُحتفظ بـ{n} ملف تعريف على الأكثر"
+msgstr[1] "يُتجاهل ملف التعريف {name}: يُحتفظ بملف تعريف واحد على الأكثر"
+msgstr[2] "يُتجاهل ملف التعريف {name}: يُحتفظ بـ{n} ملفي تعريف على الأكثر"
+msgstr[3] "يُتجاهل ملف التعريف {name}: يُحتفظ بـ{n} ملفات تعريف على الأكثر"
+msgstr[4] "يُتجاهل ملف التعريف {name}: يُحتفظ بـ{n} ملف تعريف على الأكثر"
+msgstr[5] "يُتجاهل ملف التعريف {name}: يُحتفظ بـ{n} ملف تعريف على الأكثر"
+
+#. Translators: {name} is the name of a profile,
+#. {problem} what is wrong with it
+#: src/config.rs:873
+msgid "{name}: {problem}"
+msgstr "‏{name}: {problem}"
+
+#. Translators: the name of a profile, then why it cannot be read
+#: src/config.rs:881
+msgid "ignoring the profile {}: {}"
+msgstr "يُتجاهل ملف التعريف {}: {}"
+
+#: src/config.rs:983
+msgid "Enter a name for the profile."
+msgstr "أدخل اسمًا لملف التعريف."
+
+#: src/config.rs:986
+msgid "Profile names are limited to {n} character."
+msgid_plural "Profile names are limited to {n} characters."
+msgstr[0] "يقتصر طول أسماء ملفات التعريف على {n} حرف."
+msgstr[1] "يقتصر طول أسماء ملفات التعريف على حرف واحد."
+msgstr[2] "يقتصر طول أسماء ملفات التعريف على {n} حرفين."
+msgstr[3] "يقتصر طول أسماء ملفات التعريف على {n} أحرف."
+msgstr[4] "يقتصر طول أسماء ملفات التعريف على {n} حرفًا."
+msgstr[5] "يقتصر طول أسماء ملفات التعريف على {n} حرف."
+
+#: src/config.rs:991
+msgid "Profile names cannot contain control characters."
+msgstr "لا يمكن أن تحتوي أسماء ملفات التعريف على أحرف تحكم."
+
+#. Translators: the name given to a profile whose name would be empty
+#: src/config.rs:1003
+msgctxt "Profile name"
+msgid "Profile"
+msgstr "ملف تعريف"
+
+#. Translators: shown after the name of a controller; {level} is the
+#. charge of its battery in percent
+#: src/engine.rs:74
+msgid "battery {level}%"
+msgstr "البطارية ⁨{level}%⁩"
+
+#. Translators: shown after the name of a controller; {level} is the
+#. charge of its battery in percent
+#: src/engine.rs:77
+msgid "charging, {level}%"
+msgstr "قيد الشحن، ⁨{level}%⁩"
+
+#. Translators: shown after the name of a controller: its battery is full
+#: src/engine.rs:79
+msgid "charged"
+msgstr "مشحونة"
+
+#. Translators: {} is a folder of the system, such as /dev/input
+#: src/environment.rs:88
+msgid "{} is not available, so no controller can be opened."
+msgstr "‏{} غير متاح، لذا يتعذّر فتح أي وحدة تحكم."
+
+#. Translators: udev is the Linux device manager and uaccess the name
+#. of its tag: keep both
+#: src/environment.rs:112
+msgid ""
+"A game controller is connected, but eov is not allowed to read it. udev "
+"normally gives the logged-in user access to controllers (the uaccess tag); "
+"if yours is not recognised as a joystick, add a udev rule that tags it with "
+"uaccess, then reconnect it."
+msgstr ""
+"وحدة تحكم ألعاب متصلة، لكن لا يُسمح لـ eov بقراءتها. يمنح udev عادةً المستخدمَ "
+"المسجَّل دخوله حق الوصول إلى وحدات التحكم (الوسم uaccess)؛ إذا لم يُتعرَّف على "
+"وحدتك كذراع تحكم (joystick)، فأضف قاعدة udev تَسِمها بـ uaccess، ثم أعد "
+"توصيلها."
+
+#. Translators: {command} is a command to type and {option} one of
+#. its options: they stay as they are
+#: src/environment.rs:124
+msgid ""
+"eov runs as a Flatpak without access to input devices. Allow it by running "
+"{command} (Flatpak 1.15.6 or newer; older versions need {option}), then "
+"restart eov."
+msgstr ""
+"يعمل eov كحزمة Flatpak دون صلاحية الوصول إلى أجهزة الإدخال. اسمح بذلك بتشغيل "
+"{command} (Flatpak 1.15.6 أو أحدث؛ تحتاج الإصدارات الأقدم إلى {option})، ثم "
+"أعد تشغيل eov."
+
+#. Translators: the type of file in the file dialog
+#: src/plugin.rs:91
+msgid "Gamepad profile"
+msgstr "ملف تعريف لوحة الألعاب"
+
+#. Translators: the tooltip of the toolbar button, and the title of
+#. the gamepad settings window
+#: src/plugin.rs:100 src/ui.rs:26
+msgid "Gamepad"
+msgstr "لوحة الألعاب"
+
+#: src/plugin.rs:108
+msgid "the path has no file name"
+msgstr "لا يحتوي المسار على اسم ملف"
+
+#: src/plugin.rs:123
+msgid "the file is too large to be a gamepad profile"
+msgstr "الملف أكبر من أن يكون ملف تعريف للوحة الألعاب"
+
+#: src/plugin.rs:212
+msgid "Cannot open the gamepad window"
+msgstr "يتعذّر فتح نافذة لوحة الألعاب"
+
+#. Translators: {} is the name of a profile
+#: src/plugin.rs:272
+msgid "The profile “{}” no longer exists."
+msgstr "لم يعد ملف التعريف «{}» موجودًا."
+
+#. Translators: the name of a new profile when none was typed
+#: src/plugin.rs:280
+msgctxt "Profile name"
+msgid "Untitled"
+msgstr "بلا عنوان"
+
+#. Translators: {} is the name of a profile
+#: src/plugin.rs:310
+msgid ""
+"A profile named “{}” already exists. Replace it with the default settings?"
+msgstr ""
+"يوجد ملف تعريف باسم «{}» بالفعل. هل تريد استبداله بالإعدادات الافتراضية؟"
+
+#. Translators: {} is the name of a profile
+#: src/plugin.rs:316
+msgid ""
+"A profile named “{}” already exists. Replace it with the current settings?"
+msgstr "يوجد ملف تعريف باسم «{}» بالفعل. هل تريد استبداله بالإعدادات الحالية؟"
+
+#: src/plugin.rs:321
+msgid "Replace profile?"
+msgstr "هل تريد استبدال ملف التعريف؟"
+
+#. Translators: a button: replaces the profile
+#: src/plugin.rs:324
+msgid "Replace"
+msgstr "استبدال"
+
+#: src/plugin.rs:325 src/plugin.rs:370
+msgid "Cancel"
+msgstr "إلغاء"
+
+#: src/plugin.rs:338
+msgid "You already have {n} profile. Delete one to save another."
+msgid_plural "You already have {n} profiles. Delete one to save another."
+msgstr[0] "لديك بالفعل {n} ملف تعريف. احذف واحدًا لحفظ ملف آخر."
+msgstr[1] "لديك بالفعل ملف تعريف واحد. احذفه لحفظ ملف آخر."
+msgstr[2] "لديك بالفعل {n} ملفا تعريف. احذف واحدًا لحفظ ملف آخر."
+msgstr[3] "لديك بالفعل {n} ملفات تعريف. احذف واحدًا لحفظ ملف آخر."
+msgstr[4] "لديك بالفعل {n} ملف تعريف. احذف واحدًا لحفظ ملف آخر."
+msgstr[5] "لديك بالفعل {n} ملف تعريف. احذف واحدًا لحفظ ملف آخر."
+
+#: src/plugin.rs:358
+msgid "Choose a saved profile to delete."
+msgstr "اختر ملف تعريف محفوظًا لحذفه."
+
+#: src/plugin.rs:362
+msgid "Delete profile?"
+msgstr "هل تريد حذف ملف التعريف؟"
+
+#. Translators: {} is the name of a profile
+#: src/plugin.rs:365
+msgid "Delete the profile “{}”? This cannot be undone."
+msgstr "هل تريد حذف ملف التعريف «{}»؟ لا يمكن التراجع عن ذلك."
+
+#. Translators: a button: deletes the profile
+#: src/plugin.rs:369
+msgid "Delete"
+msgstr "حذف"
+
+#: src/plugin.rs:384
+msgid "Import a gamepad profile"
+msgstr "استيراد ملف تعريف للوحة الألعاب"
+
+#. Translators: the name of an exported profile when none is selected
+#: src/plugin.rs:401
+msgctxt "Profile name"
+msgid "Gamepad profile"
+msgstr "ملف تعريف لوحة الألعاب"
+
+#: src/plugin.rs:407
+msgid "Export the gamepad profile"
+msgstr "تصدير ملف تعريف لوحة الألعاب"
+
+#. Translators: {} is the path of a file
+#: src/plugin.rs:465
+msgid "Cannot import {}"
+msgstr "يتعذّر استيراد {}"
+
+#. Translators: the name of an imported profile when its file name
+#. cannot be used
+#: src/plugin.rs:478
+msgctxt "Profile name"
+msgid "Imported"
+msgstr "مستورد"
+
+#. Translators: {} is the name of a profile
+#: src/plugin.rs:496
+msgid "Imported the profile “{}”"
+msgstr "تم استيراد ملف التعريف «{}»"
+
+#: src/plugin.rs:502
+msgid "You already have {n} profile. Delete one to import another."
+msgid_plural "You already have {n} profiles. Delete one to import another."
+msgstr[0] "لديك بالفعل {n} ملف تعريف. احذف واحدًا لاستيراد ملف آخر."
+msgstr[1] "لديك بالفعل ملف تعريف واحد. احذفه لاستيراد ملف آخر."
+msgstr[2] "لديك بالفعل {n} ملفا تعريف. احذف واحدًا لاستيراد ملف آخر."
+msgstr[3] "لديك بالفعل {n} ملفات تعريف. احذف واحدًا لاستيراد ملف آخر."
+msgstr[4] "لديك بالفعل {n} ملف تعريف. احذف واحدًا لاستيراد ملف آخر."
+msgstr[5] "لديك بالفعل {n} ملف تعريف. احذف واحدًا لاستيراد ملف آخر."
+
+#: src/plugin.rs:527
+msgid "Cannot export the profile"
+msgstr "يتعذّر تصدير ملف التعريف"
+
+#. Translators: {name} is the name of a profile, {path} a file
+#: src/plugin.rs:536
+msgid "Exported “{name}” to {path}"
+msgstr "تم تصدير «{name}» إلى {path}"
+
+#. Translators: {} is the path of a file
+#: src/plugin.rs:543
+msgid "Cannot write {}"
+msgstr "تتعذّر كتابة {}"
+
+#: src/plugin.rs:640
+msgid "Imported the gamepad settings of the previous plugin version"
+msgstr "تم استيراد إعدادات لوحة الألعاب من الإصدار السابق للمكوّن الإضافي"
+
+#: src/plugin.rs:642
+msgid ""
+"Imported the gamepad settings and {n} profile of the previous plugin version"
+msgid_plural ""
+"Imported the gamepad settings and {n} profiles of the previous plugin version"
+msgstr[0] ""
+"تم استيراد إعدادات لوحة الألعاب و{n} ملف تعريف من الإصدار السابق للمكوّن "
+"الإضافي"
+msgstr[1] ""
+"تم استيراد إعدادات لوحة الألعاب وملف تعريف واحد من الإصدار السابق للمكوّن "
+"الإضافي"
+msgstr[2] ""
+"تم استيراد إعدادات لوحة الألعاب و{n} ملفي تعريف من الإصدار السابق للمكوّن "
+"الإضافي"
+msgstr[3] ""
+"تم استيراد إعدادات لوحة الألعاب و{n} ملفات تعريف من الإصدار السابق للمكوّن "
+"الإضافي"
+msgstr[4] ""
+"تم استيراد إعدادات لوحة الألعاب و{n} ملف تعريف من الإصدار السابق للمكوّن "
+"الإضافي"
+msgstr[5] ""
+"تم استيراد إعدادات لوحة الألعاب و{n} ملف تعريف من الإصدار السابق للمكوّن "
+"الإضافي"
+
+#: src/plugin.rs:653
+msgid "Some gamepad settings could not be read and use their defaults"
+msgstr "تعذّرت قراءة بعض إعدادات لوحة الألعاب، فتُستخدم قيمها الافتراضية"
+
+#. Translators: how eov moves the pointer on Wayland: the desktop portal for
+#. remote desktop control; name it as Linux desktops in your language do
+#: src/pointer.rs:44
+msgid "Remote Desktop portal"
+msgstr "بوابة سطح المكتب البعيد"
+
+#. Translators: how eov moves the pointer on macOS and Windows
+#: src/pointer.rs:46
+msgid "system events"
+msgstr "أحداث النظام"
+
+#. Translators: {} is the reason
+#: src/pointer.rs:208
+msgid "System pointer control was turned off: {}"
+msgstr "أُوقف التحكم في مؤشر النظام: {}"
+
+#: src/pointer.rs:221
+msgid "System pointer control is not available"
+msgstr "التحكم في مؤشر النظام غير متاح"
+
+#. Translators: the Remote Desktop portal as in "Remote Desktop portal"; {} is the
+#. portal's own error, often in English
+#: src/pointer.rs:312
+msgid "the Remote Desktop portal is not available ({})"
+msgstr "بوابة سطح المكتب البعيد غير متاحة ({})"
+
+#: src/pointer.rs:316
+msgid "cannot create a portal session ({})"
+msgstr "يتعذّر إنشاء جلسة البوابة ({})"
+
+#: src/pointer.rs:325
+msgid "cannot request pointer access ({})"
+msgstr "يتعذّر طلب الوصول إلى المؤشر ({})"
+
+#: src/pointer.rs:331
+msgid "cannot start the portal session ({})"
+msgstr "يتعذّر بدء جلسة البوابة ({})"
+
+#: src/pointer.rs:335
+msgid "pointer access was declined"
+msgstr "رُفض الوصول إلى المؤشر"
+
+#: src/pointer.rs:338
+msgid "pointer access was not granted ({})"
+msgstr "لم يُمنح الوصول إلى المؤشر ({})"
+
+#: src/pointer.rs:342
+msgid "pointer access was not granted"
+msgstr "لم يُمنح الوصول إلى المؤشر"
+
+#: src/pointer.rs:361
+msgid "no display server to send pointer motion to"
+msgstr "لا يوجد خادم عرض لإرسال حركة المؤشر إليه"
+
+#. Translators: System Settings › Privacy & Security › Accessibility
+#. is where macOS grants the permission: use the names macOS shows
+#. in your language
+#: src/pointer.rs:403
+msgid ""
+"allow eov under System Settings › Privacy & Security › Accessibility; eov "
+"keeps trying"
+msgstr ""
+"اسمح لـ eov في إعدادات النظام › الخصوصية والأمن › تسهيلات الاستخدام؛ يواصل "
+"eov المحاولة"
+
+#: src/pointer.rs:424
+msgid "not supported on this platform"
+msgstr "غير مدعوم على هذا النظام"
+
+#: src/shared.rs:267
+msgid "Gamepad settings could not be saved"
+msgstr "تعذّر حفظ إعدادات لوحة الألعاب"
+
+#. Translators: a notification: what happened, then why
+#: src/shared.rs:394
+msgid "{message}: {detail}"
+msgstr "‏{message}: {detail}"
+
+#. Translators: the first entry of the list of profiles (changes are
+#. then saved, but not to a profile)
+#: src/ui.rs:94
+msgid "No profile"
+msgstr "بلا ملف تعريف"
+
+#: src/ui.rs:156
+msgid "Starting…"
+msgstr "جارٍ البدء…"
+
+#. Translators: {} is the reason, from the system (often in English)
+#: src/ui.rs:159
+msgid "Controllers are unavailable: {}"
+msgstr "وحدات التحكم غير متاحة: {}"
+
+#. Translators: "Enable / Pause" is an action in the list of mappings
+#: src/ui.rs:164
+msgid ""
+"Paused. Turn it on here or press the controller button mapped to Enable / "
+"Pause."
+msgstr ""
+"متوقف مؤقتًا. شغّله من هنا أو اضغط زر وحدة التحكم المعيَّن لـ «تمكين/إيقاف مؤقت»."
+
+#: src/ui.rs:168
+msgid "Waiting for a controller"
+msgstr "في انتظار وحدة تحكم"
+
+#: src/ui.rs:171
+msgid "Ready. Input is ignored while eov is in the background."
+msgstr "جاهز. يُتجاهل الإدخال عندما يعمل eov في الخلفية."
+
+#. Translators: {} is the name of the controller in use
+#: src/ui.rs:189
+msgid "Ready: {}"
+msgstr "جاهز: {}"
+
+#: src/ui.rs:191
+msgid "Ready: {n} controller"
+msgid_plural "Ready: {n} controllers"
+msgstr[0] "جاهز: {n} وحدة تحكم"
+msgstr[1] "جاهز: وحدة تحكم واحدة"
+msgstr[2] "جاهز: {n} وحدتا تحكم"
+msgstr[3] "جاهز: {n} وحدات تحكم"
+msgstr[4] "جاهز: {n} وحدة تحكم"
+msgstr[5] "جاهز: {n} وحدة تحكم"
+
+#. Translators: {} is the reason, from the system (often in English)
+#: src/ui.rs:203
+msgid "The controller subsystem could not start: {}"
+msgstr "تعذّر بدء النظام الفرعي لوحدات التحكم: {}"
+
+#: src/ui.rs:210
+msgid "No controllers detected. Connect one by USB or Bluetooth."
+msgstr "لم تُكتشف أي وحدة تحكم. وصّل واحدة عبر USB أو Bluetooth."
+
+#: src/ui.rs:214
+msgid "The chosen controller is not connected, so every controller is used."
+msgstr "وحدة التحكم المختارة غير متصلة، لذا تُستخدم جميع وحدات التحكم."
+
+#: src/ui.rs:216
+msgid "Every connected controller drives eov."
+msgstr "تتحكم كل وحدات التحكم المتصلة في eov."
+
+#. Translators: "Move Pointer" stands for the actions "Move Pointer
+#. Horizontally" and "Move Pointer Vertically" of the mappings
+#: src/ui.rs:228
+msgid ""
+"Your mappings include Move Pointer. Turn this on to let them move the system "
+"pointer while eov has focus."
+msgstr ""
+"تتضمن تعييناتك «تحريك المؤشر». شغّل هذا الخيار لتتمكن من تحريك مؤشر النظام "
+"عندما يكون eov في المقدمة."
+
+#. Translators: "Move Pointer" stands for the actions "Move Pointer
+#. Horizontally" and "Move Pointer Vertically"; Remote Desktop and
+#. Accessibility are the names of system permissions: write them as
+#. the system shows them in your language
+#: src/ui.rs:237
+msgid ""
+"Off. When on, Move Pointer mappings move the system pointer while eov has "
+"focus. Wayland asks for Remote Desktop permission and macOS for "
+"Accessibility access."
+msgstr ""
+"متوقف. عند تشغيله، تحرّك تعيينات «تحريك المؤشر» مؤشر النظام عندما يكون eov في "
+"المقدمة. يطلب Wayland إذن «سطح المكتب البعيد»، ويطلب macOS إذن «تسهيلات "
+"الاستخدام»."
+
+#: src/ui.rs:246
+msgid "On. Starts when a mapped stick moves."
+msgstr "قيد التشغيل. يبدأ عند تحريك عصا معيَّنة."
+
+#: src/ui.rs:248
+msgid ""
+"On. Starts when a mapped stick moves. Map a stick to Move Pointer to use it."
+msgstr ""
+"قيد التشغيل. يبدأ عند تحريك عصا معيَّنة. عيّن عصا لـ «تحريك المؤشر» لاستخدامه."
+
+#: src/ui.rs:250
+msgid "Connecting. The system may ask for permission."
+msgstr "جارٍ الاتصال. قد يطلب النظام الإذن."
+
+#: src/ui.rs:252
+msgid ""
+"Connecting. The system may ask for permission. Map a stick to Move Pointer "
+"to use it."
+msgstr ""
+"جارٍ الاتصال. قد يطلب النظام الإذن. عيّن عصا لـ «تحريك المؤشر» لاستخدامه."
+
+#. Translators: {} is how the pointer is moved, such as "XTest" or
+#. "Remote Desktop portal"
+#: src/ui.rs:257
+msgid "Active ({})."
+msgstr "نشط ({})."
+
+#: src/ui.rs:259
+msgid "Active ({}). Map a stick to Move Pointer to use it."
+msgstr "نشط ({}). عيّن عصا لـ «تحريك المؤشر» لاستخدامه."
+
+#. Translators: {} is the reason
+#: src/ui.rs:263
+msgid "Not available: {}"
+msgstr "غير متاح: {}"
+
+#. Translators: {} is the reason, a phrase without a full stop
+#: src/ui.rs:267
+msgid "Not available: {}. Map a stick to Move Pointer to use it."
+msgstr "غير متاح: {}. عيّن عصا لـ «تحريك المؤشر» لاستخدامه."
+
+#. Translators: the first entry of the list of controllers
+#: src/ui.rs:279
+msgid "All controllers"
+msgstr "جميع وحدات التحكم"
+
+#. Translators: {} is the name of the selected profile
+#: src/ui.rs:304
+msgid "Changes are saved to “{}”."
+msgstr "تُحفظ التغييرات في «{}»."
+
+#: src/ui.rs:306
+msgid ""
+"Changes are saved automatically. Save them as a profile to keep several "
+"layouts."
+msgstr "تُحفظ التغييرات تلقائيًا. احفظها كملف تعريف للاحتفاظ بعدة تخطيطات."
+
+#: src/ui.rs:309
+msgid "Changes are saved automatically but not to a profile."
+msgstr "تُحفظ التغييرات تلقائيًا، لكن ليس في ملف تعريف."
+
+#. Translators: shown in eov's status bar while gamepad input is paused
+#: src/worker.rs:46
+msgid "Gamepad paused"
+msgstr "لوحة الألعاب متوقفة مؤقتًا"
+
+#: src/worker.rs:87
+msgid "Gamepad input resumed"
+msgstr "استُؤنف إدخال لوحة الألعاب"
+
+#: src/worker.rs:89
+msgid "Gamepad input paused"
+msgstr "أُوقف إدخال لوحة الألعاب مؤقتًا"
+
+#: src/worker.rs:138
+msgid "Game controllers are not available"
+msgstr "وحدات تحكم الألعاب غير متاحة"
+
+#. Translators: the state of a small switch; keep it very short
+#: ui/gamepad-window.slint:441
+msgctxt "ToggleChip"
+msgid "Off"
+msgstr "إيقاف"
+
+#. Translators: the state of a small switch; keep it very short
+#: ui/gamepad-window.slint:441
+msgctxt "ToggleChip"
+msgid "On"
+msgstr "تشغيل"
+
+#. Translators: for screen readers; {} is a setting, such as Pan Speed
+#: ui/gamepad-window.slint:594
+msgctxt "TuningField"
+msgid "Decrease {}"
+msgstr "إنقاص {}"
+
+#. Translators: for screen readers; {} is a setting, such as Pan Speed
+#: ui/gamepad-window.slint:615
+msgctxt "TuningField"
+msgid "Increase {}"
+msgstr "زيادة {}"
+
+#: ui/gamepad-window.slint:641
+msgctxt "HeaderCard"
+msgid "Gamepad Control"
+msgstr "التحكم بلوحة الألعاب"
+
+#: ui/gamepad-window.slint:649
+msgctxt "HeaderCard"
+msgid ""
+"Pan, zoom and move between panes, tabs and series items with a game "
+"controller. Input only acts while eov has focus."
+msgstr ""
+"حرّك العرض وكبّره أو صغّره وتنقّل بين الأجزاء وعلامات التبويب وعناصر السلسلة "
+"باستخدام وحدة تحكم ألعاب. لا يعمل الإدخال إلا عندما يكون eov في المقدمة."
+
+#. Translators: the name of the on/off switch, read out by screen readers
+#: ui/gamepad-window.slint:662
+msgctxt "HeaderCard"
+msgid "Gamepad input"
+msgstr "إدخال لوحة الألعاب"
+
+#. Translators: the title of the section where the game controller is chosen
+#: ui/gamepad-window.slint:700
+msgctxt "DeviceCard"
+msgid "Device"
+msgstr "الجهاز"
+
+#: ui/gamepad-window.slint:701
+msgctxt "DeviceCard"
+msgid "Choose the controller that drives eov."
+msgstr "اختر وحدة التحكم التي تتحكم في eov."
+
+#. Translators: a profile is a saved set of gamepad settings
+#: ui/gamepad-window.slint:739
+msgctxt "ProfileCard"
+msgid "Profiles"
+msgstr "ملفات التعريف"
+
+#: ui/gamepad-window.slint:772
+msgctxt "ProfileCard"
+msgid "Profile name"
+msgstr "اسم ملف التعريف"
+
+#. Translators: placeholder of the empty name field
+#: ui/gamepad-window.slint:781
+msgctxt "ProfileCard"
+msgid "Name for a new profile"
+msgstr "اسم ملف التعريف الجديد"
+
+#. Translators: saves the settings as a profile with the name typed
+#: ui/gamepad-window.slint:794
+msgctxt "ProfileCard"
+msgid "Save As"
+msgstr "حفظ باسم"
+
+#. Translators: saves the default settings as a new profile
+#: ui/gamepad-window.slint:824
+msgctxt "ProfileCard"
+msgid "New"
+msgstr "جديد"
+
+#. Translators: imports a profile from a file
+#: ui/gamepad-window.slint:834
+msgctxt "ProfileCard"
+msgid "Import"
+msgstr "استيراد"
+
+#. Translators: exports the settings to a profile file
+#: ui/gamepad-window.slint:846
+msgctxt "ProfileCard"
+msgid "Export"
+msgstr "تصدير"
+
+#. Translators: deletes the selected profile
+#: ui/gamepad-window.slint:858
+msgctxt "ProfileCard"
+msgid "Delete"
+msgstr "حذف"
+
+#. Translators: the title of the gamepad settings window
+#: ui/gamepad-window.slint:987
+msgctxt "GamepadWindow"
+msgid "Gamepad"
+msgstr "لوحة الألعاب"
+
+#. Translators: the section with dead zones, speeds and response curve
+#: ui/gamepad-window.slint:1149
+msgctxt "GamepadWindow"
+msgid "Tuning"
+msgstr "الضبط"
+
+#: ui/gamepad-window.slint:1150
+msgctxt "GamepadWindow"
+msgid ""
+"Dead zones ignore stick drift. Speeds scale panning and zooming, and a "
+"higher response curve gives finer control near the centre. Double-click a "
+"slider to reset it."
+msgstr ""
+"تتجاهل المناطق الميتة انحراف العصا. تتحكم السرعات في مقدار التحريك والتكبير، "
+"ويمنح منحنى الاستجابة الأعلى تحكمًا أدق قرب المركز. انقر نقرًا مزدوجًا على شريط "
+"تمرير لإعادة تعيينه."
+
+#. Translators: the mouse pointer of the system, which sticks can move
+#: ui/gamepad-window.slint:1163
+msgctxt "GamepadWindow"
+msgid "System Pointer"
+msgstr "مؤشر النظام"
+
+#. Translators: the name of the on/off switch, read out by screen readers
+#: ui/gamepad-window.slint:1174
+msgctxt "GamepadWindow"
+msgid "System pointer control"
+msgstr "التحكم في مؤشر النظام"
+
+#. Translators: the section that assigns actions to the controls
+#: ui/gamepad-window.slint:1202
+msgctxt "GamepadWindow"
+msgid "Mappings"
+msgstr "التعيينات"
+
+#. Translators: Start and Select are names printed on controller buttons
+#: ui/gamepad-window.slint:1204
+msgctxt "GamepadWindow"
+msgid ""
+"Defaults: the left stick pans, the right stick and the triggers zoom, the D-"
+"pad switches panes and tabs, the shoulder buttons step through the series, "
+"Start pauses and Select shows this window."
+msgstr ""
+"الإعدادات الافتراضية: العصا اليسرى للتحريك، والعصا اليمنى والزنادان للتكبير "
+"والتصغير، ولوحة الاتجاهات للتبديل بين الأجزاء وعلامات التبويب، وأزرار الكتف "
+"للتنقل في السلسلة، وStart للإيقاف المؤقت، وSelect لإظهار هذه النافذة."
+
+#. Translators: a heading (in capitals in English: use your own style)
+#: ui/gamepad-window.slint:1208
+msgctxt "GamepadWindow"
+msgid "STICKS AND TRIGGERS"
+msgstr "العصي والزنادات"
+
+#. Translators: a heading (in capitals in English: use your own style)
+#: ui/gamepad-window.slint:1218
+msgctxt "GamepadWindow"
+msgid "BUTTONS"
+msgstr "الأزرار"

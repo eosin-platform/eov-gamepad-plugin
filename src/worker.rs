@@ -34,14 +34,17 @@ const TRUST_FOCUSED: Duration = Duration::from_secs(1);
 /// bounds how often a background eov is asked to render.
 const TRUST_UNFOCUSED: Duration = Duration::from_millis(500);
 /// Time for eov to render the requested frame and republish its focus.
-const CHECK_WAIT: Duration = Duration::from_millis(70);
+pub(crate) const CHECK_WAIT: Duration = Duration::from_millis(70);
 /// Commands kept while a focus check runs.
 const MAX_HELD: usize = 16;
 const RETRY_FIRST: Duration = Duration::from_secs(5);
 const RETRY_MAX: Duration = Duration::from_secs(60);
 
 /// Status-bar text while input is paused.
-pub const PAUSED_STATUS: &str = "Gamepad paused";
+pub fn paused_status() -> String {
+    // Translators: shown in eov's status bar while gamepad input is paused
+    tr!("Gamepad paused")
+}
 
 /// The running input thread.
 pub struct Worker {
@@ -76,14 +79,14 @@ impl Worker {
 pub fn set_enabled(shared: &Shared, enabled: bool, from_controller: bool) {
     shared.update(Persist::Now, |p| p.enabled = enabled);
     let host = &shared.host;
-    host.set_status((!enabled).then_some(PAUSED_STATUS));
+    host.set_status((!enabled).then(paused_status).as_deref());
     if from_controller {
         host.notify(
             NotifyLevel::Info,
             if enabled {
-                "Gamepad input resumed"
+                tr!("Gamepad input resumed")
             } else {
-                "Gamepad input paused"
+                tr!("Gamepad input paused")
             },
         );
     }
@@ -132,7 +135,7 @@ impl<B: InputBackend> Input<B> {
                 shared.notify_once(
                     "backend",
                     NotifyLevel::Warning,
-                    "Game controllers are not available",
+                    &tr!("Game controllers are not available"),
                     Some(hint.unwrap_or(error.message)),
                 );
             }
@@ -409,6 +412,9 @@ fn run<B: InputBackend>(shared: Arc<Shared>, context: BackendContext) {
             next_refresh = now + DEVICE_REFRESH;
             backend.refresh(&mut events);
         }
+        // After a language change the access hint is made again, in the new
+        // language (a failed backend makes it again when it retries).
+        devices_changed |= shared.take_stale_texts();
         if devices_changed {
             devices_changed = false;
             let devices = engine.devices();

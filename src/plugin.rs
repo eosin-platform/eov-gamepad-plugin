@@ -5,6 +5,9 @@
 //! memory; file reads and writes run on short-lived threads, settings are
 //! written by the input thread (debounced), and no lock is held while calling
 //! the host (GPD-1, GPD-5).
+//!
+//! Every text the user reads is made with `tr!`, in the language of the
+//! interface; after a language change the plugin hands eov its texts again.
 
 use crate::backend::{BackendContext, GilrsBackend, InputBackend};
 use crate::config::{
@@ -14,7 +17,8 @@ use crate::config::{
 use crate::legacy;
 use crate::shared::{Persist, Shared, TOKEN_REFRESH, TOKEN_TOGGLE_WINDOW, lock};
 use crate::ui::{self, Focus};
-use crate::worker::{self, PAUSED_STATUS, Worker};
+use crate::worker::{self, Worker, paused_status};
+use eov_plugin_api::i18n::isolate;
 use eov_plugin_api::prelude::*;
 use eov_plugin_api::protocol::{FileDialogArgs, FileFilter, event_names};
 use std::collections::HashMap;
@@ -83,9 +87,17 @@ fn arg_index(args: &[Value], index: usize) -> Option<usize> {
 
 fn json_filter() -> Vec<FileFilter> {
     vec![FileFilter {
-        name: "Gamepad profile".to_string(),
+        // Translators: the type of file in the file dialog
+        name: tr!("Gamepad profile"),
         extensions: vec!["json".to_string()],
     }]
+}
+
+/// The toolbar button's tooltip.
+fn button_tooltip() -> String {
+    // Translators: the tooltip of the toolbar button, and the title of
+    // the gamepad settings window
+    tr!("Gamepad")
 }
 
 /// Writes through a temporary file in the same directory, so an interrupted
@@ -93,7 +105,7 @@ fn json_filter() -> Vec<FileFilter> {
 fn write_atomically(path: &Path, bytes: &[u8]) -> std::io::Result<()> {
     let name = path
         .file_name()
-        .ok_or_else(|| std::io::Error::other("the path has no file name"))?;
+        .ok_or_else(|| std::io::Error::other(tr!("the path has no file name")))?;
     let temp = path.with_file_name(format!(".{}.tmp", name.to_string_lossy()));
     std::fs::write(&temp, bytes)?;
     std::fs::rename(&temp, path).inspect_err(|_| {
@@ -108,7 +120,7 @@ fn read_profile(path: &Path) -> Result<ProfileFile, String> {
         .read_to_string(&mut text)
         .map_err(|e| e.to_string())?;
     if text.len() as u64 > IMPORT_LIMIT {
-        return Err("the file is too large to be a gamepad profile".to_string());
+        return Err(tr!("the file is too large to be a gamepad profile"));
     }
     ProfileFile::parse(&text)
 }
@@ -179,7 +191,7 @@ impl<B: InputBackend> GamepadPlugin<B> {
         self.shared.set_window_open(true);
         let model = self.model();
         let mut spec = SurfaceSpec::new(SurfaceKind::Window, ui::UI_PATH, ui::COMPONENT)
-            .with_title(ui::TITLE)
+            .with_title(ui::title())
             .with_size(ui::WIDTH, Some(ui::HEIGHT));
         spec.min_width = Some(380.0);
         spec.min_height = Some(360.0);
@@ -197,7 +209,7 @@ impl<B: InputBackend> GamepadPlugin<B> {
             Err(error) => {
                 self.shared.set_window_open(false);
                 self.host
-                    .notify_error("Cannot open the gamepad window", error.message);
+                    .notify_error(tr!("Cannot open the gamepad window"), error.message);
             }
         }
     }
@@ -206,6 +218,28 @@ impl<B: InputBackend> GamepadPlugin<B> {
         lock(&self.ui).window = None;
         self.shared.set_window_open(false);
         let _ = self.host.set_toolbar_button_active(BUTTON_ID, false);
+    }
+
+    /// The user chose another language and the SDK switched `tr!` to it:
+    /// hands eov the texts it keeps showing again. The window's own texts
+    /// (`@tr`) follow by themselves; its properties carry texts made here.
+    fn language_changed(&self) {
+        let _ = self.host.update_toolbar_button(ButtonUpdate {
+            button_id: BUTTON_ID.to_string(),
+            tooltip: Some(button_tooltip()),
+            ..Default::default()
+        });
+        if !self.shared.gate().enabled {
+            self.host.set_status(Some(&paused_status()));
+            // The controller may have resumed (and cleared the text) since.
+            if self.shared.gate().enabled {
+                self.host.set_status(None);
+            }
+        }
+        // The access hint the input thread keeps is made again, and pushed
+        // when it is ready.
+        self.shared.language_changed();
+        self.push_ui();
     }
 
     fn warn(&self, message: impl Into<String>) {
@@ -234,15 +268,18 @@ impl<B: InputBackend> GamepadPlugin<B> {
             true
         });
         if !loaded {
-            self.warn(format!("The profile “{name}” no longer exists."));
+            // Translators: {} is the name of a profile
+            self.warn(tr!("The profile “{}” no longer exists.", isolate(&name)));
         }
     }
 
     /// Saves the current settings (or the defaults) as a profile.
     fn save_profile_as(&self, entered: &str, defaults: bool) {
         let name = if entered.trim().is_empty() {
+            // Translators: the name of a new profile when none was typed
+            let untitled = tr!("Profile name" => "Untitled");
             self.shared
-                .read_prefs(|p| unique_profile_name("Untitled", |n| p.profiles.contains_key(n)))
+                .read_prefs(|p| unique_profile_name(&untitled, |n| p.profiles.contains_key(n)))
         } else {
             match normalize_profile_name(entered) {
                 Ok(name) => name,
@@ -266,18 +303,26 @@ impl<B: InputBackend> GamepadPlugin<B> {
         if exists {
             // Never overwrite a profile just because its name was typed
             // (GPD-8).
+            let quoted = isolate(&name);
+            let message = if defaults {
+                // Translators: {} is the name of a profile
+                tr!(
+                    "A profile named “{}” already exists. Replace it with the default settings?",
+                    quoted
+                )
+            } else {
+                // Translators: {} is the name of a profile
+                tr!(
+                    "A profile named “{}” already exists. Replace it with the current settings?",
+                    quoted
+                )
+            };
             let request = self.host.confirm(ConfirmArgs {
-                title: "Replace profile?".to_string(),
-                message: format!(
-                    "A profile named “{name}” already exists. Replace it with {}?",
-                    if defaults {
-                        "the default settings"
-                    } else {
-                        "the current settings"
-                    }
-                ),
-                confirm_label: "Replace".to_string(),
-                cancel_label: "Cancel".to_string(),
+                title: tr!("Replace profile?"),
+                message,
+                // Translators: a button: replaces the profile
+                confirm_label: tr!("Replace"),
+                cancel_label: tr!("Cancel"),
                 destructive: true,
             });
             match request {
@@ -289,8 +334,9 @@ impl<B: InputBackend> GamepadPlugin<B> {
                 Err(error) => self.warn(error.message),
             }
         } else if full {
-            self.warn(format!(
-                "You already have {MAX_PROFILES} profiles. Delete one to save another."
+            self.warn(tr!(
+                "You already have {n} profile. Delete one to save another."
+                    | "You already have {n} profiles. Delete one to save another." % MAX_PROFILES
             ));
             return;
         } else {
@@ -309,14 +355,19 @@ impl<B: InputBackend> GamepadPlugin<B> {
 
     fn delete_profile(&self) {
         let Some(name) = self.shared.read_prefs(|p| p.active_profile.clone()) else {
-            self.warn("Choose a saved profile to delete.");
+            self.warn(tr!("Choose a saved profile to delete."));
             return;
         };
         match self.host.confirm(ConfirmArgs {
-            title: "Delete profile?".to_string(),
-            message: format!("Delete the profile “{name}”? This cannot be undone."),
-            confirm_label: "Delete".to_string(),
-            cancel_label: "Cancel".to_string(),
+            title: tr!("Delete profile?"),
+            // Translators: {} is the name of a profile
+            message: tr!(
+                "Delete the profile “{}”? This cannot be undone.",
+                isolate(&name)
+            ),
+            // Translators: a button: deletes the profile
+            confirm_label: tr!("Delete"),
+            cancel_label: tr!("Cancel"),
             destructive: true,
         }) {
             Ok(id) => {
@@ -330,7 +381,7 @@ impl<B: InputBackend> GamepadPlugin<B> {
 
     fn import_profile(&self) {
         let request = self.host.open_file_dialog(FileDialogArgs {
-            title: Some("Import a gamepad profile".to_string()),
+            title: Some(tr!("Import a gamepad profile")),
             filters: json_filter(),
             ..Default::default()
         });
@@ -345,14 +396,15 @@ impl<B: InputBackend> GamepadPlugin<B> {
     fn export_profile(&self) {
         let (name, config) = self.shared.read_prefs(|p| {
             (
-                p.active_profile
-                    .clone()
-                    .unwrap_or_else(|| "Gamepad profile".to_string()),
+                p.active_profile.clone().unwrap_or_else(|| {
+                    // Translators: the name of an exported profile when none is selected
+                    tr!("Profile name" => "Gamepad profile")
+                }),
                 p.config.clone(),
             )
         });
         let request = self.host.save_file_dialog(FileDialogArgs {
-            title: Some("Export the gamepad profile".to_string()),
+            title: Some(tr!("Export the gamepad profile")),
             filters: json_filter(),
             default_name: Some(export_file_name(&name)),
             ..Default::default()
@@ -409,7 +461,8 @@ impl<B: InputBackend> GamepadPlugin<B> {
                     Ok(profile) => profile,
                     Err(error) => {
                         host.notify_error(
-                            format!("Cannot import {}", path.display()),
+                            // Translators: {} is the path of a file
+                            tr!("Cannot import {}", isolate(path.display())),
                             error,
                         );
                         return;
@@ -419,7 +472,11 @@ impl<B: InputBackend> GamepadPlugin<B> {
                     .file_stem()
                     .map(|s| s.to_string_lossy().into_owned())
                     .and_then(|s| normalize_profile_name(&s).ok())
-                    .unwrap_or_else(|| "Imported".to_string());
+                    .unwrap_or_else(|| {
+                        // Translators: the name of an imported profile when its file name
+                        // cannot be used
+                        tr!("Profile name" => "Imported")
+                    });
                 let config = profile.to_config();
                 let name = shared.update(Persist::Now, |prefs| {
                     if prefs.profiles.len() >= MAX_PROFILES {
@@ -433,11 +490,19 @@ impl<B: InputBackend> GamepadPlugin<B> {
                 });
                 match name {
                     Some(name) => {
-                        host.notify(NotifyLevel::Success, format!("Imported the profile “{name}”"));
+                        host.notify(
+                            NotifyLevel::Success,
+                            // Translators: {} is the name of a profile
+                            tr!("Imported the profile “{}”", isolate(&name)),
+                        );
                     }
                     None => host.notify(
                         NotifyLevel::Warning,
-                        format!("You already have {MAX_PROFILES} profiles. Delete one to import another."),
+                        tr!(
+                            "You already have {n} profile. Delete one to import another."
+                                | "You already have {n} profiles. Delete one to import another."
+                                    % MAX_PROFILES
+                        ),
                     ),
                 }
                 shared.request_refresh();
@@ -459,17 +524,23 @@ impl<B: InputBackend> GamepadPlugin<B> {
                 let text = match serde_json::to_string_pretty(&ProfileFile::from(&config)) {
                     Ok(text) => text,
                     Err(error) => {
-                        host.notify_error("Cannot export the profile", error.to_string());
+                        host.notify_error(tr!("Cannot export the profile"), error.to_string());
                         return;
                     }
                 };
                 match write_atomically(&path, text.as_bytes()) {
                     Ok(()) => host.notify(
                         NotifyLevel::Success,
-                        format!("Exported “{name}” to {}", path.display()),
+                        // Translators: {name} is the name of a profile, {path} a file
+                        tr!(
+                            "Exported “{name}” to {path}",
+                            name = isolate(&name),
+                            path = isolate(path.display())
+                        ),
                     ),
                     Err(error) => host.notify_error(
-                        format!("Cannot write {}", path.display()),
+                        // Translators: {} is the path of a file
+                        tr!("Cannot write {}", isolate(path.display())),
                         error.to_string(),
                     ),
                 }
@@ -565,36 +636,40 @@ impl<B: InputBackend> Plugin for GamepadPlugin<B> {
             shared.update(Persist::Now, |_| {});
             host.notify(
                 NotifyLevel::Info,
-                format!(
-                    "Imported the gamepad settings{} of the previous plugin version",
-                    match profiles {
-                        0 => String::new(),
-                        1 => " and 1 profile".to_string(),
-                        n => format!(" and {n} profiles"),
-                    }
-                ),
+                match profiles {
+                    0 => tr!("Imported the gamepad settings of the previous plugin version"),
+                    n => tr!(
+                        "Imported the gamepad settings and {n} profile of the previous plugin version"
+                            | "Imported the gamepad settings and {n} profiles of the previous plugin version"
+                            % n
+                    ),
+                },
             );
         }
         if !warnings.is_empty() {
             shared.notify_once(
                 "settings",
                 NotifyLevel::Warning,
-                "Some gamepad settings could not be read and use their defaults",
+                &tr!("Some gamepad settings could not be read and use their defaults"),
                 Some(warnings.join("; ")),
             );
         }
         host.add_toolbar_button(ToolbarButtonSpec {
             button_id: BUTTON_ID.to_string(),
-            tooltip: "Gamepad".to_string(),
+            tooltip: button_tooltip(),
             icon_svg: ICON.to_string(),
             ..Default::default()
         })
         .map_err(String::from)?;
-        // The only optional event the plugin needs.
+        // The only optional event the plugin needs (LanguageChanged needs no
+        // subscription).
         let _ = host.subscribe(&[event_names::WINDOW_FOCUS_CHANGED]);
         if !enabled {
-            host.set_status(Some(PAUSED_STATUS));
+            host.set_status(Some(&paused_status()));
         }
+        // The errors `create` returns are in English: eov logs them and
+        // writes them to the audit log as they are, and shows them to the
+        // user inside its own translated message.
         let persister = {
             let shared = Arc::clone(&shared);
             std::thread::Builder::new()
@@ -649,6 +724,7 @@ impl<B: InputBackend> Plugin for GamepadPlugin<B> {
                 confirmed,
             } => self.answered(&request_id, confirmed),
             HostEvent::DialogResult { request_id, paths } => self.files_chosen(&request_id, paths),
+            HostEvent::LanguageChanged { .. } => self.language_changed(),
             HostEvent::Shutdown => self.stop_threads(),
             _ => {}
         }

@@ -17,6 +17,7 @@
 //!   off instead of asking again.
 
 use crate::shared::{Persist, PointerState, Shared};
+use eov_plugin_api::i18n::tr;
 use eov_plugin_api::prelude::NotifyLevel;
 use std::sync::Arc;
 use std::sync::mpsc::{Receiver, RecvTimeoutError, Sender, channel};
@@ -28,6 +29,25 @@ use std::time::{Duration, Instant};
 const STALE_MOVE: Duration = Duration::from_millis(100);
 const FIRST_RETRY: Duration = Duration::from_secs(2);
 const MAX_RETRY: Duration = Duration::from_secs(120);
+
+/// Mechanisms that move the pointer, as [`PointerState::Active`] names them
+/// (and `XTest` on X11); [`mechanism_label`] gives the name to show.
+pub const PORTAL: &str = "Remote Desktop portal";
+pub const SYSTEM_EVENTS: &str = "system events";
+
+/// The name of a mechanism in the language of the interface. It is made
+/// when it is shown, so that it follows a change of language.
+pub fn mechanism_label(mechanism: &str) -> String {
+    match mechanism {
+        // Translators: how eov moves the pointer on Wayland: the desktop portal for
+        // remote desktop control; name it as Linux desktops in your language do
+        PORTAL => tr!("Remote Desktop portal"),
+        // Translators: how eov moves the pointer on macOS and Windows
+        SYSTEM_EVENTS => tr!("system events"),
+        // XTest is a name; tests use names of their own.
+        other => other.to_string(),
+    }
+}
 
 enum Message {
     Move { dx: i32, dy: i32, at: Instant },
@@ -184,7 +204,8 @@ fn run(shared: Arc<Shared>, receiver: Receiver<Message>, connector: Connector) {
                     shared.update_status(|s| s.pointer = PointerState::Off);
                     shared.host.notify(
                         NotifyLevel::Warning,
-                        format!("System pointer control was turned off: {}", error.message),
+                        // Translators: {} is the reason
+                        tr!("System pointer control was turned off: {}", error.message),
                     );
                     break;
                 }
@@ -197,7 +218,7 @@ fn run(shared: Arc<Shared>, receiver: Receiver<Message>, connector: Connector) {
                     shared.notify_once(
                         "pointer",
                         NotifyLevel::Warning,
-                        "System pointer control is not available",
+                        &tr!("System pointer control is not available"),
                         Some(error.message.clone()),
                     );
                     shared.update_status(|s| s.pointer = PointerState::Failed(error.message));
@@ -281,14 +302,18 @@ mod platform {
             message,
             declined: false,
         };
+        // The reasons are shown to the user: in the language of the
+        // interface, with the portal's own error in parentheses.
         let (sink, new_token) = futures_lite::future::block_on(async {
             let portal = RemoteDesktop::new()
                 .await
-                .map_err(|e| failed(format!("the Remote Desktop portal is not available ({e})")))?;
+                // Translators: the Remote Desktop portal as in "Remote Desktop portal"; {} is the
+                // portal's own error, often in English
+                .map_err(|e| failed(tr!("the Remote Desktop portal is not available ({})", e)))?;
             let session = portal
                 .create_session()
                 .await
-                .map_err(|e| failed(format!("cannot create a portal session ({e})")))?;
+                .map_err(|e| failed(tr!("cannot create a portal session ({})", e)))?;
             portal
                 .select_devices(
                     &session,
@@ -297,24 +322,24 @@ mod platform {
                     PersistMode::ExplicitlyRevoked,
                 )
                 .await
-                .map_err(|e| failed(format!("cannot request pointer access ({e})")))?;
+                .map_err(|e| failed(tr!("cannot request pointer access ({})", e)))?;
             // No parent window: the plugin API does not expose the eov
             // window handle the portal would need.
             let response = portal
                 .start(&session, None)
                 .await
-                .map_err(|e| failed(format!("cannot start the portal session ({e})")))?
+                .map_err(|e| failed(tr!("cannot start the portal session ({})", e)))?
                 .response()
                 .map_err(|e| match e {
                     ashpd::Error::Response(ResponseError::Cancelled) => ConnectError {
-                        message: "pointer access was declined".to_string(),
+                        message: tr!("pointer access was declined"),
                         declined: true,
                     },
-                    other => failed(format!("pointer access was not granted ({other})")),
+                    other => failed(tr!("pointer access was not granted ({})", other)),
                 })?;
             if !response.devices().contains(DeviceType::Pointer) {
                 return Err(ConnectError {
-                    message: "pointer access was not granted".to_string(),
+                    message: tr!("pointer access was not granted"),
                     declined: true,
                 });
             }
@@ -325,7 +350,7 @@ mod platform {
             // Restore tokens are single-use; keep the newest one.
             shared.update(Persist::Now, |p| p.portal_restore_token = Some(new_token));
         }
-        Ok((Box::new(sink), "Remote Desktop portal".to_string()))
+        Ok((Box::new(sink), PORTAL.to_string()))
     }
 
     fn x11() -> Result<(Box<dyn PointerSink>, String), ConnectError> {
@@ -333,7 +358,7 @@ mod platform {
             .ok()
             .filter(|d| !d.is_empty())
             .ok_or_else(|| ConnectError {
-                message: "no display server to send pointer motion to".to_string(),
+                message: tr!("no display server to send pointer motion to"),
                 declined: false,
             })?;
         let settings = enigo::Settings {
@@ -370,11 +395,13 @@ mod platform {
             ..Default::default()
         };
         match enigo::Enigo::new(&settings) {
-            Ok(enigo) => Ok((Box::new(EnigoSink(Box::new(enigo))), "system events".into())),
+            Ok(enigo) => Ok((Box::new(EnigoSink(Box::new(enigo))), SYSTEM_EVENTS.into())),
             Err(enigo::NewConError::NoPermission) => Err(ConnectError {
-                message: "allow eov under System Settings › Privacy & Security › \
-                          Accessibility; eov keeps trying"
-                    .to_string(),
+                // Translators: System Settings › Privacy & Security › Accessibility
+                // is where macOS grants the permission: use the names macOS shows
+                // in your language
+                message: tr!("allow eov under System Settings › Privacy & Security › \
+                     Accessibility; eov keeps trying"),
                 declined: false,
             }),
             Err(error) => Err(ConnectError {
@@ -394,7 +421,7 @@ mod platform {
         _attempt: u32,
     ) -> Result<(Box<dyn PointerSink>, String), ConnectError> {
         Err(ConnectError {
-            message: "not supported on this platform".to_string(),
+            message: tr!("not supported on this platform"),
             declined: false,
         })
     }

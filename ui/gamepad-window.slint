@@ -3,8 +3,11 @@
 // Every value is pushed by the plugin (`Surface::set_many`); callbacks go back
 // to it (`Plugin::ui_callback`). Ranges, labels and defaults come from the
 // plugin, so the sliders always match its clamps.
+//
+// Texts written here are translated with `@tr` (eov compiles the window with
+// the plugin's catalogs); texts pushed by the plugin arrive translated.
 
-import { ComboBox, Palette } from "std-widgets.slint";
+import { ComboBox, Palette, ScrollView } from "std-widgets.slint";
 
 export struct MappingRow {
     control-key: string,
@@ -40,6 +43,295 @@ global Theme {
     out property <color> track: #18283d;
 }
 
+// The writing direction of the interface, which eov sets through the
+// window's `eov-rtl`. Arabic, Persian and Hebrew are written from right to
+// left: text starts at the right edge there. Sliders, step buttons and the
+// controller's directions are physical and are not mirrored.
+global Direction {
+    in property <bool> rtl;
+    out property <TextHorizontalAlignment> start: root.rtl ? TextHorizontalAlignment.right : TextHorizontalAlignment.left;
+}
+
+// The language of the interface beyond its texts and direction, from the
+// panel's `eov-language` (a tag such as "pt-BR").
+global Script {
+    in property <string> language;
+    /// The size for small text (`font-size: Script.text-size(11px)`): at
+    /// least 12 px in Hindi, other languages keep `size`. Below 12 px eov's
+    /// GPU renderer draws Devanagari with overlapping and missing pieces at
+    /// a scale factor of 1.
+    public pure function text-size(size: length) -> length {
+        return root.language == "hi" ? max(size, 12px) : size;
+    }
+}
+
+// Slint's ComboBox draws its text at the left in every language. In
+// right-to-left languages the window uses this one instead: the same box
+// and behaviour (click or Return opens the list, arrow keys and the wheel
+// step through it, Escape closes it), with the text at the start of the
+// line. The arrow stays at the right: layouts are not mirrored.
+component RtlComboBox {
+    in property <[string]> model;
+    in property <bool> enabled: true;
+    in-out property <int> current-index: 0;
+    in-out property <string> current-value: root.model[root.current-index];
+    out property <bool> has-focus: (focus.has-focus || root.popup-has-focus) && root.enabled;
+    callback selected(string);
+
+    private property <bool> popup-has-focus;
+    // As Slint's (Fluent) list: 40 px rows, opened over the box.
+    private property <length> item-height: 40px;
+    private property <int> visible-items: min(6, root.model.length);
+
+    min-width: max(160px, layout.min-width);
+    min-height: max(32px, layout.min-height);
+    horizontal-stretch: 1;
+    vertical-stretch: 0;
+    forward-focus: focus;
+    accessible-role: combobox;
+    accessible-enabled: root.enabled;
+    accessible-expandable: true;
+    accessible-expanded: root.popup-has-focus;
+    accessible-value: root.current-value;
+    accessible-action-expand => { popup.show(); }
+
+    function select(index: int) {
+        if !root.enabled || index < 0 || index >= root.model.length {
+            return;
+        }
+        root.current-index = index;
+        root.current-value = root.model[index];
+        root.selected(root.current-value);
+    }
+
+    function step(event: KeyEvent) -> EventResult {
+        if event.text == Key.UpArrow {
+            root.select(max(root.current-index - 1, 0));
+            return accept;
+        }
+        if event.text == Key.DownArrow {
+            root.select(min(root.current-index + 1, root.model.length - 1));
+            return accept;
+        }
+        return reject;
+    }
+
+    // Shades close to Slint's box in the window's dark scheme: a faint
+    // edge, a clearer one and a fainter fill when disabled.
+    Rectangle {
+        border-radius: 4px;
+        border-width: 1px;
+        border-color: root.has-focus ? Palette.foreground : root.enabled ? Palette.border.transparentize(0.6) : Palette.border.transparentize(0.15);
+        background: root.enabled ? Palette.control-background : Palette.control-background.transparentize(0.35);
+
+        layout := HorizontalLayout {
+            padding-left: 11px;
+            padding-right: 11px;
+            spacing: 8px;
+
+            Text {
+                horizontal-stretch: 1;
+                horizontal-alignment: Direction.start;
+                vertical-alignment: center;
+                color: root.enabled ? Palette.control-foreground : Palette.control-foreground.transparentize(0.55);
+                text: root.current-value;
+                overflow: elide;
+                accessible-role: none;
+            }
+
+            // The arrow, centred without limiting the box's height.
+            Rectangle {
+                width: 12px;
+
+                Path {
+                    x: 0px;
+                    y: (parent.height - self.height) / 2;
+                    width: 12px;
+                    height: 7px;
+                    viewbox-width: 12;
+                    viewbox-height: 7;
+                    commands: "M 0.5 0.5 L 6 6 L 11.5 0.5";
+                    stroke: Palette.control-foreground.transparentize(root.enabled ? 0.25 : 0.6);
+                    stroke-width: 1px;
+                    fill: transparent;
+                    accessible-role: none;
+                }
+            }
+        }
+    }
+
+    focus := FocusScope {
+        enabled: root.enabled;
+        // The list closed and gave the focus back.
+        changed has-focus => {
+            if self.has-focus {
+                root.popup-has-focus = false;
+            }
+        }
+        key-pressed(event) => {
+            if event.text == Key.Return {
+                popup.show();
+                return accept;
+            }
+            return root.step(event);
+        }
+
+        TouchArea {
+            enabled: root.enabled;
+            clicked => {
+                focus.focus();
+                popup.show();
+            }
+            scroll-event(event) => {
+                if !root.has-focus {
+                    return reject;
+                }
+                if event.delta-y < -2px {
+                    root.select(min(root.current-index + 1, root.model.length - 1));
+                    return accept;
+                }
+                if event.delta-y > 2px {
+                    root.select(max(root.current-index - 1, 0));
+                    return accept;
+                }
+                return reject;
+            }
+        }
+    }
+
+    popup := PopupWindow {
+        x: 0px;
+        y: -4px;
+        width: root.width;
+        height: root.visible-items * root.item-height + 8px;
+        close-policy: close-on-click-outside;
+        forward-focus: list-focus;
+
+        list-focus := FocusScope {
+            // In the focus event itself, as Slint's box does: a change
+            // handler would run later, and has-focus would be false for a
+            // moment after the list took the focus from the box.
+            focus-changed-event => {
+                root.popup-has-focus = self.has-focus;
+            }
+            key-pressed(event) => {
+                if event.text == Key.Return || event.text == Key.Escape {
+                    popup.close();
+                    return accept;
+                }
+                return root.step(event);
+            }
+
+            Rectangle {
+                border-radius: 6px;
+                border-width: 1px;
+                border-color: Palette.border;
+                background: Palette.alternate-background;
+                drop-shadow-blur: 12px;
+                drop-shadow-offset-y: 6px;
+                drop-shadow-color: #00000080;
+
+                ScrollView {
+                    x: 4px;
+                    y: 4px;
+                    width: parent.width - 8px;
+                    height: parent.height - 8px;
+                    content-y: -max(0, root.current-index - root.visible-items + 1) * root.item-height;
+
+                    VerticalLayout {
+                        alignment: start;
+
+                        for value[index] in root.model: Rectangle {
+                            height: root.item-height;
+                            border-radius: 4px;
+                            background: index == root.current-index || item-touch.has-hover ? Palette.foreground.transparentize(0.92) : transparent;
+                            accessible-role: list-item;
+                            accessible-label: value;
+                            accessible-item-selectable: true;
+                            accessible-item-selected: index == root.current-index;
+                            accessible-item-index: index;
+
+                            if index == root.current-index: Rectangle {
+                                x: 0px;
+                                y: (parent.height - self.height) / 2;
+                                width: 3px;
+                                height: 16px;
+                                border-radius: 1.5px;
+                                background: Palette.accent-background;
+                            }
+
+                            // Clear of the scroll bar at the right.
+                            Text {
+                                x: 12px;
+                                width: parent.width - 32px;
+                                height: parent.height;
+                                text: value;
+                                color: Palette.control-foreground;
+                                horizontal-alignment: Direction.start;
+                                vertical-alignment: center;
+                                overflow: elide;
+                                accessible-role: none;
+                            }
+
+                            item-touch := TouchArea {
+                                clicked => {
+                                    root.select(index);
+                                    popup.close();
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+// The window's combo boxes: Slint's in left-to-right languages, RtlComboBox
+// in right-to-left ones. Both always exist; the other direction's box is
+// hidden and disabled, so it never takes the focus.
+component Choice inherits Rectangle {
+    in property <[string]> model;
+    in property <bool> enabled: true;
+    in-out property <int> current-index;
+    in-out property <string> current-value;
+    // The box or its list has the keyboard focus. Bound to the box, not
+    // copied in a change handler: a copy would come a round of handlers
+    // late, and the window would report itself inactive for a moment when a
+    // box takes the focus from it.
+    out property <bool> has-focus: root.rtl ? rtl-box.has-focus : ltr-box.has-focus;
+    callback selected(int);
+
+    private property <bool> rtl: Direction.rtl;
+
+    // Slint's box gives the choice its size in both directions: the two
+    // boxes measure alike.
+    HorizontalLayout {
+        ltr-box := ComboBox {
+            visible: !root.rtl;
+            enabled: root.enabled && !root.rtl;
+            model: root.model;
+            current-index <=> root.current-index;
+            current-value <=> root.current-value;
+            selected => { root.selected(self.current-index); }
+        }
+    }
+
+    // Over Slint's box.
+    rtl-box := RtlComboBox {
+        x: 0px;
+        y: 0px;
+        width: parent.width;
+        height: parent.height;
+        visible: root.rtl;
+        enabled: root.enabled && root.rtl;
+        model: root.model;
+        current-index <=> root.current-index;
+        current-value <=> root.current-value;
+        selected => { root.selected(self.current-index); }
+    }
+}
+
 component Card inherits Rectangle {
     in property <string> title;
     in property <string> subtitle;
@@ -58,13 +350,15 @@ component Card inherits Rectangle {
             color: Theme.text;
             font-size: 14px;
             font-weight: 700;
+            horizontal-alignment: Direction.start;
         }
 
         if root.subtitle != "": Text {
             text: root.subtitle;
             color: Theme.muted;
-            font-size: 11px;
+            font-size: Script.text-size(11px);
             wrap: word-wrap;
+            horizontal-alignment: Direction.start;
         }
 
         @children
@@ -76,9 +370,13 @@ component ActionButton inherits Rectangle {
     in property <bool> enabled: true;
     in property <color> base-color: #1f4d84;
     in property <color> hover-color: #2562a8;
+    // The width the text needs, padding included.
+    out property <length> text-width: label.preferred-width + 16px;
     callback clicked();
 
-    min-width: 64px;
+    // As wide as its text: a long translation widens the button instead of
+    // being cut.
+    min-width: max(64px, root.text-width);
     height: 30px;
     border-radius: 8px;
     background: !root.enabled ? #1b2433 : touch.pressed ? root.base-color.darker(0.15) : touch.has-hover ? root.hover-color : root.base-color;
@@ -92,12 +390,12 @@ component ActionButton inherits Rectangle {
         clicked => { root.clicked(); }
     }
 
-    Text {
+    label := Text {
         width: parent.width;
         height: parent.height;
         text: root.text;
         color: root.enabled ? white : #6b7a90;
-        font-size: 11px;
+        font-size: Script.text-size(11px);
         font-weight: 700;
         horizontal-alignment: center;
         vertical-alignment: center;
@@ -133,14 +431,16 @@ component ToggleChip inherits Rectangle {
         animate x { duration: 120ms; }
     }
 
+    // All the room beside the knob, centred where the text always was.
     Text {
-        x: root.checked ? 10px : 30px;
+        x: root.checked ? 6px : 26px;
         y: 0px;
-        width: 32px;
+        width: 40px;
         height: parent.height;
-        text: root.checked ? "On" : "Off";
+        // Translators: the state of a small switch; keep it very short
+        text: root.checked ? @tr("On") : @tr("Off");
         color: white;
-        font-size: 10px;
+        font-size: Script.text-size(10px);
         font-weight: 700;
         vertical-alignment: center;
         horizontal-alignment: center;
@@ -186,6 +486,8 @@ component StepButton inherits Rectangle {
 component TuningField inherits Rectangle {
     in property <TuningRow> setting;
     in property <bool> enabled: true;
+    // The labels' column, shared by the rows so that the sliders line up.
+    in property <length> label-width: 118px;
     callback changed(string, float);
     callback step(string, int);
     callback reset(string);
@@ -194,18 +496,29 @@ component TuningField inherits Rectangle {
     private property <float> fraction: max(0, min(1, (root.setting.value - root.setting.min) / root.span));
 
     height: 34px;
+    // No stretch, as when its row still sized it.
+    vertical-stretch: 0;
     opacity: root.enabled ? 1 : 0.45;
 
+    // Placed rather than sizing the row: the labels' column follows the
+    // window's width, which must not depend on it.
     HorizontalLayout {
+        x: 0px;
+        y: 0px;
+        width: parent.width;
+        height: parent.height;
         spacing: 8px;
 
         Text {
-            width: 118px;
+            width: root.label-width;
             text: root.setting.label;
             color: Theme.label;
-            font-size: 11px;
+            font-size: Script.text-size(11px);
             font-weight: 700;
             vertical-alignment: center;
+            horizontal-alignment: Direction.start;
+            // Only a narrow window makes the column narrower than a label.
+            wrap: word-wrap;
             overflow: elide;
         }
 
@@ -277,7 +590,8 @@ component TuningField inherits Rectangle {
 
             StepButton {
                 text: "−";
-                label: "Decrease " + root.setting.label;
+                // Translators: for screen readers; {} is a setting, such as Pan Speed
+                label: @tr("Decrease {}", root.setting.label);
                 enabled: root.enabled;
                 clicked => { root.step(root.setting.key, -1); }
             }
@@ -287,7 +601,7 @@ component TuningField inherits Rectangle {
             width: 38px;
             text: root.setting.text;
             color: #edf3ff;
-            font-size: 11px;
+            font-size: Script.text-size(11px);
             horizontal-alignment: center;
             vertical-alignment: center;
         }
@@ -297,7 +611,8 @@ component TuningField inherits Rectangle {
 
             StepButton {
                 text: "+";
-                label: "Increase " + root.setting.label;
+                // Translators: for screen readers; {} is a setting, such as Pan Speed
+                label: @tr("Increase {}", root.setting.label);
                 enabled: root.enabled;
                 clicked => { root.step(root.setting.key, 1); }
             }
@@ -323,17 +638,19 @@ component HeaderCard inherits Rectangle {
         spacing: 8px;
 
         Text {
-            text: "Gamepad Control";
+            text: @tr("Gamepad Control");
             color: white;
             font-size: 18px;
             font-weight: 800;
+            horizontal-alignment: Direction.start;
         }
 
         Text {
-            text: "Pan, zoom and move between panes, tabs and series items with a game controller. Input only acts while eov has focus.";
+            text: @tr("Pan, zoom and move between panes, tabs and series items with a game controller. Input only acts while eov has focus.");
             color: #d8e6ff;
-            font-size: 11px;
+            font-size: Script.text-size(11px);
             wrap: word-wrap;
+            horizontal-alignment: Direction.start;
         }
 
         HorizontalLayout {
@@ -341,7 +658,8 @@ component HeaderCard inherits Rectangle {
 
             ToggleChip {
                 checked: root.enabled;
-                label: "Gamepad input";
+                // Translators: the name of the on/off switch, read out by screen readers
+                label: @tr("Gamepad input");
                 toggled(value) => { root.toggled(value); }
             }
 
@@ -360,8 +678,9 @@ component HeaderCard inherits Rectangle {
                 horizontal-stretch: 1;
                 text: root.status;
                 color: #eff6ff;
-                font-size: 11px;
+                font-size: Script.text-size(11px);
                 vertical-alignment: center;
+                horizontal-alignment: Direction.start;
                 wrap: word-wrap;
             }
         }
@@ -377,11 +696,12 @@ component DeviceCard inherits Card {
     callback selected(int);
     callback editing-changed(bool);
 
-    title: "Device";
-    subtitle: "Choose the controller that drives eov.";
+    // Translators: the title of the section where the game controller is chosen
+    title: @tr("Device");
+    subtitle: @tr("Choose the controller that drives eov.");
     changed editing => { root.editing-changed(self.editing); }
 
-    combo := ComboBox {
+    combo := Choice {
         model: root.options;
         current-index <=> root.selected-index;
         // The shown text is pushed too: the combo box does not re-read its
@@ -394,8 +714,9 @@ component DeviceCard inherits Card {
     if root.note != "": Text {
         text: root.note;
         color: Theme.muted;
-        font-size: 10px;
+        font-size: Script.text-size(10px);
         wrap: word-wrap;
+        horizontal-alignment: Direction.start;
     }
 }
 
@@ -414,11 +735,12 @@ component ProfileCard inherits Card {
     callback delete-profile();
     callback editing-changed(bool);
 
-    title: "Profiles";
+    // Translators: a profile is a saved set of gamepad settings
+    title: @tr("Profiles");
     subtitle: root.note;
     changed editing => { root.editing-changed(self.editing); }
 
-    combo := ComboBox {
+    combo := Choice {
         model: root.options;
         current-index <=> root.selected-index;
         current-value <=> root.selected-label;
@@ -443,63 +765,103 @@ component ProfileCard inherits Card {
                 height: parent.height;
                 text <=> root.name;
                 color: #edf3ff;
-                font-size: 11px;
+                font-size: Script.text-size(11px);
                 vertical-alignment: center;
+                horizontal-alignment: Direction.start;
                 single-line: true;
-                accessible-label: "Profile name";
+                accessible-label: @tr("Profile name");
                 accepted => { root.save-as(self.text); }
             }
 
             if root.name == "": Text {
                 x: 10px;
+                width: parent.width - 20px;
                 height: parent.height;
-                text: "Name for a new profile";
+                // Translators: placeholder of the empty name field
+                text: @tr("Name for a new profile");
                 color: Theme.faint;
-                font-size: 11px;
+                font-size: Script.text-size(11px);
                 vertical-alignment: center;
+                horizontal-alignment: Direction.start;
             }
         }
 
         ActionButton {
-            width: 84px;
-            text: "Save As";
+            // 84 px, or what a longer text needs.
+            preferred-width: 84px;
+            horizontal-stretch: 0;
+            // Translators: saves the settings as a profile with the name typed
+            text: @tr("Save As");
             clicked => { root.save-as(root.name); }
         }
     }
 
-    HorizontalLayout {
-        spacing: 8px;
+    // The four buttons are equally wide, as wide as the longest text needs.
+    // They share a row while they fit in the card (padding 12 px), and take
+    // two rows in a narrow window.
+    private property <length> button-width: max(64px, new-button.text-width, import-button.text-width, export-button.text-width, delete-button.text-width);
+    private property <bool> two-rows: 4 * root.button-width + 3 * 8px > root.width - 24px;
 
-        ActionButton {
-            horizontal-stretch: 1;
-            text: "New";
-            clicked => { root.new-profile(root.name); }
-        }
+    // Placed rather than sizing the card, whose width decides the rows.
+    Rectangle {
+        height: buttons.preferred-height;
+        // No stretch, as when the buttons' row still sized the card.
+        vertical-stretch: 0;
 
-        ActionButton {
-            horizontal-stretch: 1;
-            text: "Import";
-            base-color: #1e5678;
-            hover-color: #29719d;
-            clicked => { root.import-profile(); }
-        }
+        buttons := GridLayout {
+            x: 0px;
+            y: 0px;
+            width: parent.width;
+            height: parent.height;
+            spacing: 8px;
 
-        ActionButton {
-            horizontal-stretch: 1;
-            text: "Export";
-            base-color: #1e5678;
-            hover-color: #29719d;
-            clicked => { root.export-profile(); }
-        }
+            new-button := ActionButton {
+                row: 0;
+                col: 0;
+                min-width: root.button-width;
+                horizontal-stretch: 1;
+                // Translators: saves the default settings as a new profile
+                text: @tr("New");
+                clicked => { root.new-profile(root.name); }
+            }
 
-        ActionButton {
-            horizontal-stretch: 1;
-            text: "Delete";
-            // Entry 0 is "No profile".
-            enabled: root.selected-index > 0;
-            base-color: #65404a;
-            hover-color: #7f4c59;
-            clicked => { root.delete-profile(); }
+            import-button := ActionButton {
+                row: 0;
+                col: 1;
+                min-width: root.button-width;
+                horizontal-stretch: 1;
+                // Translators: imports a profile from a file
+                text: @tr("Import");
+                base-color: #1e5678;
+                hover-color: #29719d;
+                clicked => { root.import-profile(); }
+            }
+
+            export-button := ActionButton {
+                row: root.two-rows ? 1 : 0;
+                col: root.two-rows ? 0 : 2;
+                min-width: root.button-width;
+                horizontal-stretch: 1;
+                // Translators: exports the settings to a profile file
+                text: @tr("Export");
+                base-color: #1e5678;
+                hover-color: #29719d;
+                clicked => { root.export-profile(); }
+            }
+
+            delete-button := ActionButton {
+                row: root.two-rows ? 1 : 0;
+                col: root.two-rows ? 1 : 3;
+                min-width: root.button-width;
+                horizontal-stretch: 1;
+                // Translators: deletes the selected profile
+                text: @tr("Delete");
+                // Entry 0 is "No profile".
+                enabled: root.selected-index > 0;
+                base-color: #65404a;
+                hover-color: #7f4c59;
+                clicked => { root.delete-profile(); }
+            }
         }
     }
 }
@@ -508,6 +870,8 @@ component MappingList inherits Rectangle {
     in property <string> heading;
     in property <[MappingRow]> rows;
     in property <[string]> options;
+    // The controls' column, shared by both lists.
+    in property <length> label-width: 122px;
     callback selected(string, int);
     // A row's combo box gained (true) or lost (false) the keyboard focus.
     callback focus-moved(bool);
@@ -518,29 +882,39 @@ component MappingList inherits Rectangle {
         Text {
             text: root.heading;
             color: #9eb0ca;
-            font-size: 10px;
+            font-size: Script.text-size(10px);
             font-weight: 700;
+            horizontal-alignment: Direction.start;
         }
 
         for row in root.rows: Rectangle {
             height: 44px;
+            // No stretch, as when its row still sized it.
+            vertical-stretch: 0;
             border-radius: 10px;
             background: Theme.field;
             border-width: 1px;
             border-color: #1c2d43;
 
+            // Placed rather than sizing the row: the labels' column follows
+            // the window's width, which must not depend on it.
             HorizontalLayout {
+                x: 0px;
+                y: 0px;
+                width: parent.width;
+                height: parent.height;
                 padding-left: 10px;
                 padding-right: 8px;
                 spacing: 10px;
 
                 Text {
-                    width: 122px;
+                    width: root.label-width;
                     text: row.control-label;
                     color: #f2f6ff;
-                    font-size: 11px;
+                    font-size: Script.text-size(11px);
                     font-weight: 700;
                     vertical-alignment: center;
+                    horizontal-alignment: Direction.start;
                     wrap: word-wrap;
                 }
 
@@ -548,7 +922,7 @@ component MappingList inherits Rectangle {
                     alignment: center;
                     horizontal-stretch: 1;
 
-                    ComboBox {
+                    Choice {
                         model: root.options;
                         // Two-way, so mappings pushed later (e.g. a loaded
                         // profile) still show after the user picked one.
@@ -564,7 +938,13 @@ component MappingList inherits Rectangle {
 }
 
 export component GamepadWindow inherits Window {
+    // Set by eov: the interface is written from right to left.
+    in property <bool> eov-rtl <=> Direction.rtl;
+    // Set by eov: the language of the interface (see Script).
+    in property <string> eov-language <=> Script.language;
     in property <bool> controller-enabled: true;
+    // The texts below are placeholders: the plugin pushes every property,
+    // translated, before the window is shown.
     in property <string> status-text: "Starting…";
     in property <int> status-tone: 0;
     in property <[string]> device-options: ["All controllers"];
@@ -603,7 +983,8 @@ export component GamepadWindow inherits Window {
     // activated or used, and off whenever it may not be active.
     callback window-active-changed(bool);
 
-    title: "Gamepad";
+    // Translators: the title of the gamepad settings window
+    title: @tr("Gamepad");
     background: Theme.window;
     min-width: 380px;
     min-height: 360px;
@@ -632,6 +1013,58 @@ export component GamepadWindow inherits Window {
     // user clicked elsewhere): disarm and give the focus back to the root
     // scope, so that the next activation reaches it.
     changed editing => { settle.running = !self.editing; }
+
+    // The labels' columns are as wide as their widest label (the English
+    // widths at least), so long translations are not cut and the rows still
+    // line up. Only a window too narrow for them wraps the labels: a tuning
+    // row keeps 182 px for its slider, step buttons and value, a mapping row
+    // 188 px for its padding and combo box.
+    private property <length> card-row-width: content.width - 24px;
+    private property <length> tuning-label-width: min(max(118px, tuning-labels.preferred-width), max(118px, root.card-row-width - 182px));
+    private property <length> mapping-label-width: min(max(122px, mapping-labels.preferred-width), max(122px, root.card-row-width - 188px));
+
+    // Measure the labels; outside the window's layout, never drawn.
+    tuning-labels := VerticalLayout {
+        x: 0px;
+        y: 0px;
+
+        for row in root.tuning-rows: Text {
+            visible: false;
+            accessible-role: none;
+            text: row.label;
+            font-size: Script.text-size(11px);
+            font-weight: 700;
+        }
+
+        Text {
+            visible: false;
+            accessible-role: none;
+            text: root.pointer-row.label;
+            font-size: Script.text-size(11px);
+            font-weight: 700;
+        }
+    }
+
+    mapping-labels := VerticalLayout {
+        x: 0px;
+        y: 0px;
+
+        for row in root.axis-mappings: Text {
+            visible: false;
+            accessible-role: none;
+            text: row.control-label;
+            font-size: Script.text-size(11px);
+            font-weight: 700;
+        }
+
+        for row in root.button-mappings: Text {
+            visible: false;
+            accessible-role: none;
+            text: row.control-label;
+            font-size: Script.text-size(11px);
+            font-weight: 700;
+        }
+    }
 
     settle := Timer {
         interval: 150ms;
@@ -712,11 +1145,13 @@ export component GamepadWindow inherits Window {
                 }
 
                 Card {
-                    title: "Tuning";
-                    subtitle: "Dead zones ignore stick drift. Speeds scale panning and zooming, and a higher response curve gives finer control near the centre. Double-click a slider to reset it.";
+                    // Translators: the section with dead zones, speeds and response curve
+                    title: @tr("Tuning");
+                    subtitle: @tr("Dead zones ignore stick drift. Speeds scale panning and zooming, and a higher response curve gives finer control near the centre. Double-click a slider to reset it.");
 
                     for row in root.tuning-rows: TuningField {
                         setting: row;
+                        label-width: root.tuning-label-width;
                         changed(key, value) => { root.tuning-changed(key, value); }
                         step(key, direction) => { root.tuning-step(key, direction); }
                         reset(key) => { root.tuning-reset(key); }
@@ -724,7 +1159,8 @@ export component GamepadWindow inherits Window {
                 }
 
                 Card {
-                    title: "System Pointer";
+                    // Translators: the mouse pointer of the system, which sticks can move
+                    title: @tr("System Pointer");
 
                     HorizontalLayout {
                         spacing: 10px;
@@ -734,7 +1170,8 @@ export component GamepadWindow inherits Window {
 
                             ToggleChip {
                                 checked: root.pointer-control;
-                                label: "System pointer control";
+                                // Translators: the name of the on/off switch, read out by screen readers
+                                label: @tr("System pointer control");
                                 toggled(value) => { root.pointer-control-toggled(value); }
                             }
                         }
@@ -743,15 +1180,17 @@ export component GamepadWindow inherits Window {
                             horizontal-stretch: 1;
                             text: root.pointer-note;
                             color: Theme.muted;
-                            font-size: 11px;
+                            font-size: Script.text-size(11px);
                             wrap: word-wrap;
                             vertical-alignment: center;
+                            horizontal-alignment: Direction.start;
                         }
                     }
 
                     TuningField {
                         setting: root.pointer-row;
                         enabled: root.pointer-control;
+                        label-width: root.tuning-label-width;
                         changed(key, value) => { root.tuning-changed(key, value); }
                         step(key, direction) => { root.tuning-step(key, direction); }
                         reset(key) => { root.tuning-reset(key); }
@@ -759,11 +1198,15 @@ export component GamepadWindow inherits Window {
                 }
 
                 Card {
-                    title: "Mappings";
-                    subtitle: "Defaults: the left stick pans, the right stick and the triggers zoom, the D-pad switches panes and tabs, the shoulder buttons step through the series, Start pauses and Select shows this window.";
+                    // Translators: the section that assigns actions to the controls
+                    title: @tr("Mappings");
+                    // Translators: Start and Select are names printed on controller buttons
+                    subtitle: @tr("Defaults: the left stick pans, the right stick and the triggers zoom, the D-pad switches panes and tabs, the shoulder buttons step through the series, Start pauses and Select shows this window.");
 
                     MappingList {
-                        heading: "STICKS AND TRIGGERS";
+                        // Translators: a heading (in capitals in English: use your own style)
+                        heading: @tr("STICKS AND TRIGGERS");
+                        label-width: root.mapping-label-width;
                         rows: root.axis-mappings;
                         options: root.axis-action-options;
                         selected(key, index) => { root.mapping-selected(key, index); }
@@ -771,7 +1214,9 @@ export component GamepadWindow inherits Window {
                     }
 
                     MappingList {
-                        heading: "BUTTONS";
+                        // Translators: a heading (in capitals in English: use your own style)
+                        heading: @tr("BUTTONS");
+                        label-width: root.mapping-label-width;
                         rows: root.button-mappings;
                         options: root.button-action-options;
                         selected(key, index) => { root.mapping-selected(key, index); }

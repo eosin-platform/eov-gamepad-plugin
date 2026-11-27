@@ -3,8 +3,9 @@
 //! The eov Flatpak used to grant only `--device=dri`, which hides
 //! `/dev/input` inside the sandbox, so gilrs cannot open any controller.
 //! Instead of a generic "unavailable", the plugin tells the user what to
-//! change.
+//! change, in the language of the interface (commands stay as they are).
 
+use eov_plugin_api::i18n::{isolate, tr};
 use std::path::Path;
 
 /// The Flatpak application id when running inside a Flatpak sandbox.
@@ -82,9 +83,10 @@ pub fn access_hint_at(input_dir: &Path, flatpak: Option<&str>) -> Option<String>
         Err(_) => {
             return Some(match flatpak {
                 Some(app) => flatpak_message(app),
-                None => format!(
+                // Translators: {} is a folder of the system, such as /dev/input
+                None => tr!(
                     "{} is not available, so no controller can be opened.",
-                    input_dir.display()
+                    isolate(input_dir.display())
                 ),
             });
         }
@@ -104,19 +106,26 @@ pub fn access_hint_at(input_dir: &Path, flatpak: Option<&str>) -> Option<String>
     }
     Some(match flatpak {
         Some(app) => flatpak_message(app),
-        None => "A game controller is connected, but eov may not read it. udev normally \
-                 gives the logged-in user access to controllers (the uaccess tag); if \
-                 yours is not recognised as a joystick, add a udev rule that tags it \
-                 with uaccess, then reconnect it."
-            .to_string(),
+        // Translators: udev is the Linux device manager and uaccess the name
+        // of its tag: keep both
+        None => tr!(
+            "A game controller is connected, but eov is not allowed to read it. udev normally \
+             gives the logged-in user access to controllers (the uaccess tag); if \
+             yours is not recognised as a joystick, add a udev rule that tags it \
+             with uaccess, then reconnect it."
+        ),
     })
 }
 
 fn flatpak_message(app: &str) -> String {
-    format!(
+    tr!(
+        // Translators: {command} is a command to type and {option} one of
+        // its options: they stay as they are
         "eov runs as a Flatpak without access to input devices. Allow it by running \
-         flatpak override --user --device=input {app} (Flatpak 1.15.6 or newer; \
-         older versions need --device=all), then restart eov."
+         {command} (Flatpak 1.15.6 or newer; older versions need {option}), then \
+         restart eov.",
+        command = isolate(format!("flatpak override --user --device=input {app}")),
+        option = isolate("--device=all")
     )
 }
 

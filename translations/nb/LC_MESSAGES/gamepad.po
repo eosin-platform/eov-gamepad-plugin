@@ -1,0 +1,943 @@
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: gamepad\n"
+"Report-Msgid-Bugs-To: https://github.com/eosin-platform/eov-gamepad-plugin/"
+"issues\n"
+"Language-Team: Norwegian Bokmål\n"
+"Language: nb\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"X-Review-Status: machine-translated; not yet reviewed by a native speaker\n"
+
+#: plugin.toml
+msgctxt "plugin.toml"
+msgid "Gamepad"
+msgstr "Spillkontroller"
+
+#: plugin.toml
+msgctxt "plugin.toml"
+msgid ""
+"Provides support for using gamepads as input devices: pan, zoom and switch "
+"panes, tabs and series items with a game controller."
+msgstr ""
+"Gir støtte for spillkontrollere som inndataenheter: panorer, zoom og bytt "
+"mellom ruter, faner og elementer i serien med en spillkontroller."
+
+#. Translators: the horizontal (X) axis of the left stick of a game
+#. controller; keep the letter X
+#: src/config.rs:136
+msgid "Left Stick X"
+msgstr "Venstre styrespak X"
+
+#. Translators: the vertical (Y) axis of the left stick
+#: src/config.rs:138
+msgid "Left Stick Y"
+msgstr "Venstre styrespak Y"
+
+#. Translators: the horizontal (X) axis of the right stick
+#: src/config.rs:140
+msgid "Right Stick X"
+msgstr "Høyre styrespak X"
+
+#. Translators: the vertical (Y) axis of the right stick
+#: src/config.rs:142
+msgid "Right Stick Y"
+msgstr "Høyre styrespak Y"
+
+#. Translators: the analog trigger under the left shoulder (LT, L2)
+#: src/config.rs:144
+msgid "Left Trigger"
+msgstr "Venstre utløser"
+
+#. Translators: the analog trigger under the right shoulder (RT, R2)
+#: src/config.rs:146
+msgid "Right Trigger"
+msgstr "Høyre utløser"
+
+#. Translators: D-Pad is the directional pad, the cross of four
+#. buttons on the left of a game controller
+#: src/config.rs:149
+msgid "D-Pad Left"
+msgstr "Styrekors venstre"
+
+#: src/config.rs:150
+msgid "D-Pad Right"
+msgstr "Styrekors høyre"
+
+#: src/config.rs:151
+msgid "D-Pad Up"
+msgstr "Styrekors opp"
+
+#: src/config.rs:152
+msgid "D-Pad Down"
+msgstr "Styrekors ned"
+
+#. Translators: the four face buttons are named by their position:
+#. the bottom one (A on Xbox, Cross on PlayStation, B on Nintendo)
+#: src/config.rs:155
+msgid "South Button"
+msgstr "Sørknapp"
+
+#. Translators: the right face button (B on Xbox, Circle on PlayStation)
+#: src/config.rs:157
+msgid "East Button"
+msgstr "Østknapp"
+
+#. Translators: the top face button (Y on Xbox, Triangle on PlayStation)
+#: src/config.rs:159
+msgid "North Button"
+msgstr "Nordknapp"
+
+#. Translators: the left face button (X on Xbox, Square on PlayStation)
+#: src/config.rs:161
+msgid "West Button"
+msgstr "Vestknapp"
+
+#. Translators: the left shoulder button, or bumper (LB, L1)
+#: src/config.rs:163
+msgid "Left Shoulder"
+msgstr "Venstre skulderknapp"
+
+#. Translators: the right shoulder button, or bumper (RB, R1)
+#: src/config.rs:165
+msgid "Right Shoulder"
+msgstr "Høyre skulderknapp"
+
+#. Translators: pressing the left stick down like a button (LS, L3)
+#: src/config.rs:167
+msgid "Left Stick Click"
+msgstr "Venstre styrespak (trykk)"
+
+#. Translators: pressing the right stick down like a button (RS, R3)
+#: src/config.rs:169
+msgid "Right Stick Click"
+msgstr "Høyre styrespak (trykk)"
+
+#. Translators: a control that does nothing
+#: src/config.rs:293
+msgid "Unassigned"
+msgstr "Ikke tilordnet"
+
+#. Translators: an action of a game controller; to pan is to move
+#. the view of the slide sideways
+#: src/config.rs:296
+msgid "Pan Horizontally"
+msgstr "Panorer vannrett"
+
+#: src/config.rs:297
+msgid "Pan Vertically"
+msgstr "Panorer loddrett"
+
+#. Translators: for a stick or trigger: pushing it up or to the
+#. right zooms in, the other way zooms out
+#: src/config.rs:300
+msgid "Zoom (Up / Right Zooms In)"
+msgstr "Zoom (opp / høyre zoomer inn)"
+
+#: src/config.rs:301
+msgid "Zoom In"
+msgstr "Zoom inn"
+
+#: src/config.rs:302
+msgid "Zoom Out"
+msgstr "Zoom ut"
+
+#. Translators: moves the mouse pointer of the operating system
+#: src/config.rs:304
+msgid "Move Pointer Horizontally"
+msgstr "Flytt pekeren vannrett"
+
+#: src/config.rs:305
+msgid "Move Pointer Vertically"
+msgstr "Flytt pekeren loddrett"
+
+#. Translators: a pane is one of the views side by side in eov
+#: src/config.rs:307
+msgid "Previous Pane"
+msgstr "Forrige rute"
+
+#: src/config.rs:308
+msgid "Next Pane"
+msgstr "Neste rute"
+
+#: src/config.rs:309
+msgid "Previous Tab"
+msgstr "Forrige fane"
+
+#: src/config.rs:310
+msgid "Next Tab"
+msgstr "Neste fane"
+
+#. Translators: the series bar lists the slides of a series
+#: src/config.rs:312
+msgid "Toggle Series Bar"
+msgstr "Vis/skjul serielinjen"
+
+#: src/config.rs:313
+msgid "Previous Series Item"
+msgstr "Forrige element i serien"
+
+#: src/config.rs:314
+msgid "Next Series Item"
+msgstr "Neste element i serien"
+
+#: src/config.rs:315
+msgid "Open Selected Series Item"
+msgstr "Åpne valgt element i serien"
+
+#. Translators: fits the whole slide into the view
+#: src/config.rs:317
+msgid "Fit View"
+msgstr "Tilpass visningen"
+
+#. Translators: this window is the gamepad settings window
+#: src/config.rs:319
+msgid "Show / Hide This Window"
+msgstr "Vis / skjul dette vinduet"
+
+#. Translators: turns gamepad input back on, or pauses it
+#: src/config.rs:321
+msgid "Enable / Pause"
+msgstr "Aktiver / pause"
+
+#. Translators: a dead zone is how far a stick may move before it
+#. counts as input (it hides stick drift); shown in a narrow column
+#: src/config.rs:459
+msgid "Left Dead Zone"
+msgstr "Venstre dødsone"
+
+#: src/config.rs:460
+msgid "Right Dead Zone"
+msgstr "Høyre dødsone"
+
+#: src/config.rs:461
+msgid "Trigger Dead Zone"
+msgstr "Utløserdødsone"
+
+#: src/config.rs:462
+msgid "Pan Speed"
+msgstr "Panoreringsfart"
+
+#: src/config.rs:463
+msgid "Zoom Speed"
+msgstr "Zoomfart"
+
+#. Translators: how input grows with the deflection of a stick: a
+#. higher curve gives finer control near the centre
+#: src/config.rs:466
+msgid "Response Curve"
+msgstr "Responskurve"
+
+#. Translators: the speed of the mouse pointer of the operating system
+#: src/config.rs:468
+msgid "Pointer Speed"
+msgstr "Pekerhastighet"
+
+#: src/config.rs:684
+msgid "not a profile object"
+msgstr "ikke et profilobjekt"
+
+#. Translators: {} is the value of the "version" field of a profile
+#: src/config.rs:694
+msgid "ignoring the version {}"
+msgstr "ignorerer versjonen {}"
+
+#. Translators: {key} is a field of a profile file, such as
+#. 'pan_sensitivity'; {value} is what the field holds
+#: src/config.rs:712
+msgid "ignoring '{key}': {value} is not a number"
+msgstr "ignorerer «{key}»: {value} er ikke et tall"
+
+#. Translators: 'mappings' is a field of a profile file: keep the name
+#: src/config.rs:730
+msgid "ignoring 'mappings': not an object"
+msgstr "ignorerer «mappings»: ikke et objekt"
+
+#: src/config.rs:745
+msgid "the file is not a gamepad profile"
+msgstr "filen er ikke en spillkontrollerprofil"
+
+#: src/config.rs:794
+msgid "the stored gamepad settings are not an object"
+msgstr "de lagrede spillkontrollerinnstillingene er ikke et objekt"
+
+#. Translators: {key} is a stored setting, such as 'enabled'; {error}
+#. says why it cannot be read
+#: src/config.rs:809
+msgid "ignoring the stored '{key}': {error}"
+msgstr "ignorerer den lagrede innstillingen «{key}»: {error}"
+
+#. Translators: {} is a problem with the current settings (not a profile)
+#: src/config.rs:840
+msgid "settings: {}"
+msgstr "innstillinger: {}"
+
+#: src/config.rs:843
+msgid "ignoring the stored settings: {}"
+msgstr "ignorerer de lagrede innstillingene: {}"
+
+#: src/config.rs:854
+msgid "ignoring the profile with the name {}"
+msgstr "ignorerer profilen med navnet {}"
+
+#: src/config.rs:859
+msgid "ignoring the profile {name}: at most {n} profile is kept"
+msgid_plural "ignoring the profile {name}: at most {n} profiles are kept"
+msgstr[0] "ignorerer profilen {name}: høyst {n} profil beholdes"
+msgstr[1] "ignorerer profilen {name}: høyst {n} profiler beholdes"
+
+#. Translators: {name} is the name of a profile,
+#. {problem} what is wrong with it
+#: src/config.rs:873
+msgid "{name}: {problem}"
+msgstr "{name}: {problem}"
+
+#. Translators: the name of a profile, then why it cannot be read
+#: src/config.rs:881
+msgid "ignoring the profile {}: {}"
+msgstr "ignorerer profilen {}: {}"
+
+#: src/config.rs:983
+msgid "Enter a name for the profile."
+msgstr "Skriv inn et navn på profilen."
+
+#: src/config.rs:986
+msgid "Profile names are limited to {n} character."
+msgid_plural "Profile names are limited to {n} characters."
+msgstr[0] "Profilnavn kan være på høyst {n} tegn."
+msgstr[1] "Profilnavn kan være på høyst {n} tegn."
+
+#: src/config.rs:991
+msgid "Profile names cannot contain control characters."
+msgstr "Profilnavn kan ikke inneholde kontrolltegn."
+
+#. Translators: the name given to a profile whose name would be empty
+#: src/config.rs:1003
+msgctxt "Profile name"
+msgid "Profile"
+msgstr "Profil"
+
+#. Translators: shown after the name of a controller; {level} is the
+#. charge of its battery in percent
+#: src/engine.rs:74
+msgid "battery {level}%"
+msgstr "batteri {level} %"
+
+#. Translators: shown after the name of a controller; {level} is the
+#. charge of its battery in percent
+#: src/engine.rs:77
+msgid "charging, {level}%"
+msgstr "lader, {level} %"
+
+#. Translators: shown after the name of a controller: its battery is full
+#: src/engine.rs:79
+msgid "charged"
+msgstr "fulladet"
+
+#. Translators: {} is a folder of the system, such as /dev/input
+#: src/environment.rs:88
+msgid "{} is not available, so no controller can be opened."
+msgstr "{} er ikke tilgjengelig, så ingen kontrollere kan åpnes."
+
+#. Translators: udev is the Linux device manager and uaccess the name
+#. of its tag: keep both
+#: src/environment.rs:112
+msgid ""
+"A game controller is connected, but eov is not allowed to read it. udev "
+"normally gives the logged-in user access to controllers (the uaccess tag); "
+"if yours is not recognised as a joystick, add a udev rule that tags it with "
+"uaccess, then reconnect it."
+msgstr ""
+"En spillkontroller er koblet til, men eov har ikke tillatelse til å lese "
+"den. udev gir vanligvis den innloggede brukeren tilgang til kontrollere "
+"(uaccess-taggen); hvis din ikke gjenkjennes som en joystick, legger du til "
+"en udev-regel som merker den med uaccess, og kobler den deretter til på nytt."
+
+#. Translators: {command} is a command to type and {option} one of
+#. its options: they stay as they are
+#: src/environment.rs:124
+msgid ""
+"eov runs as a Flatpak without access to input devices. Allow it by running "
+"{command} (Flatpak 1.15.6 or newer; older versions need {option}), then "
+"restart eov."
+msgstr ""
+"eov kjører som Flatpak uten tilgang til inndataenheter. Gi tilgang ved å "
+"kjøre {command} (Flatpak 1.15.6 eller nyere; eldre versjoner trenger "
+"{option}), og start deretter eov på nytt."
+
+#. Translators: the type of file in the file dialog
+#: src/plugin.rs:91
+msgid "Gamepad profile"
+msgstr "Spillkontrollerprofil"
+
+#. Translators: the tooltip of the toolbar button, and the title of
+#. the gamepad settings window
+#: src/plugin.rs:100 src/ui.rs:26
+msgid "Gamepad"
+msgstr "Spillkontroller"
+
+#: src/plugin.rs:108
+msgid "the path has no file name"
+msgstr "banen har ikke noe filnavn"
+
+#: src/plugin.rs:123
+msgid "the file is too large to be a gamepad profile"
+msgstr "filen er for stor til å være en spillkontrollerprofil"
+
+#: src/plugin.rs:212
+msgid "Cannot open the gamepad window"
+msgstr "Kan ikke åpne spillkontrollervinduet"
+
+#. Translators: {} is the name of a profile
+#: src/plugin.rs:272
+msgid "The profile “{}” no longer exists."
+msgstr "Profilen «{}» finnes ikke lenger."
+
+#. Translators: the name of a new profile when none was typed
+#: src/plugin.rs:280
+msgctxt "Profile name"
+msgid "Untitled"
+msgstr "Uten navn"
+
+#. Translators: {} is the name of a profile
+#: src/plugin.rs:310
+msgid ""
+"A profile named “{}” already exists. Replace it with the default settings?"
+msgstr ""
+"Det finnes allerede en profil med navnet «{}». Vil du erstatte den med "
+"standardinnstillingene?"
+
+#. Translators: {} is the name of a profile
+#: src/plugin.rs:316
+msgid ""
+"A profile named “{}” already exists. Replace it with the current settings?"
+msgstr ""
+"Det finnes allerede en profil med navnet «{}». Vil du erstatte den med de "
+"gjeldende innstillingene?"
+
+#: src/plugin.rs:321
+msgid "Replace profile?"
+msgstr "Vil du erstatte profilen?"
+
+#. Translators: a button: replaces the profile
+#: src/plugin.rs:324
+msgid "Replace"
+msgstr "Erstatt"
+
+#: src/plugin.rs:325 src/plugin.rs:370
+msgid "Cancel"
+msgstr "Avbryt"
+
+#: src/plugin.rs:338
+msgid "You already have {n} profile. Delete one to save another."
+msgid_plural "You already have {n} profiles. Delete one to save another."
+msgstr[0] "Du har allerede {n} profil. Slett én for å lagre en ny."
+msgstr[1] "Du har allerede {n} profiler. Slett én for å lagre en ny."
+
+#: src/plugin.rs:358
+msgid "Choose a saved profile to delete."
+msgstr "Velg en lagret profil som skal slettes."
+
+#: src/plugin.rs:362
+msgid "Delete profile?"
+msgstr "Vil du slette profilen?"
+
+#. Translators: {} is the name of a profile
+#: src/plugin.rs:365
+msgid "Delete the profile “{}”? This cannot be undone."
+msgstr "Vil du slette profilen «{}»? Dette kan ikke angres."
+
+#. Translators: a button: deletes the profile
+#: src/plugin.rs:369
+msgid "Delete"
+msgstr "Slett"
+
+#: src/plugin.rs:384
+msgid "Import a gamepad profile"
+msgstr "Importer en spillkontrollerprofil"
+
+#. Translators: the name of an exported profile when none is selected
+#: src/plugin.rs:401
+msgctxt "Profile name"
+msgid "Gamepad profile"
+msgstr "Spillkontrollerprofil"
+
+#: src/plugin.rs:407
+msgid "Export the gamepad profile"
+msgstr "Eksporter spillkontrollerprofilen"
+
+#. Translators: {} is the path of a file
+#: src/plugin.rs:465
+msgid "Cannot import {}"
+msgstr "Kan ikke importere {}"
+
+#. Translators: the name of an imported profile when its file name
+#. cannot be used
+#: src/plugin.rs:478
+msgctxt "Profile name"
+msgid "Imported"
+msgstr "Importert"
+
+#. Translators: {} is the name of a profile
+#: src/plugin.rs:496
+msgid "Imported the profile “{}”"
+msgstr "Importerte profilen «{}»"
+
+#: src/plugin.rs:502
+msgid "You already have {n} profile. Delete one to import another."
+msgid_plural "You already have {n} profiles. Delete one to import another."
+msgstr[0] "Du har allerede {n} profil. Slett én for å importere en ny."
+msgstr[1] "Du har allerede {n} profiler. Slett én for å importere en ny."
+
+#: src/plugin.rs:527
+msgid "Cannot export the profile"
+msgstr "Kan ikke eksportere profilen"
+
+#. Translators: {name} is the name of a profile, {path} a file
+#: src/plugin.rs:536
+msgid "Exported “{name}” to {path}"
+msgstr "Eksporterte «{name}» til {path}"
+
+#. Translators: {} is the path of a file
+#: src/plugin.rs:543
+msgid "Cannot write {}"
+msgstr "Kan ikke skrive {}"
+
+#: src/plugin.rs:640
+msgid "Imported the gamepad settings of the previous plugin version"
+msgstr ""
+"Importerte spillkontrollerinnstillingene fra forrige versjon av "
+"programtillegget"
+
+#: src/plugin.rs:642
+msgid ""
+"Imported the gamepad settings and {n} profile of the previous plugin version"
+msgid_plural ""
+"Imported the gamepad settings and {n} profiles of the previous plugin version"
+msgstr[0] ""
+"Importerte spillkontrollerinnstillingene og {n} profil fra forrige versjon "
+"av programtillegget"
+msgstr[1] ""
+"Importerte spillkontrollerinnstillingene og {n} profiler fra forrige versjon "
+"av programtillegget"
+
+#: src/plugin.rs:653
+msgid "Some gamepad settings could not be read and use their defaults"
+msgstr ""
+"Noen spillkontrollerinnstillinger kunne ikke leses og bruker standardverdiene"
+
+#. Translators: how eov moves the pointer on Wayland: the desktop portal for
+#. remote desktop control; name it as Linux desktops in your language do
+#: src/pointer.rs:44
+msgid "Remote Desktop portal"
+msgstr "portalen for eksternt skrivebord"
+
+#. Translators: how eov moves the pointer on macOS and Windows
+#: src/pointer.rs:46
+msgid "system events"
+msgstr "systemhendelser"
+
+#. Translators: {} is the reason
+#: src/pointer.rs:208
+msgid "System pointer control was turned off: {}"
+msgstr "Styring av systempekeren ble slått av: {}"
+
+#: src/pointer.rs:221
+msgid "System pointer control is not available"
+msgstr "Styring av systempekeren er ikke tilgjengelig"
+
+#. Translators: the Remote Desktop portal as in "Remote Desktop portal"; {} is the
+#. portal's own error, often in English
+#: src/pointer.rs:312
+msgid "the Remote Desktop portal is not available ({})"
+msgstr "portalen for eksternt skrivebord er ikke tilgjengelig ({})"
+
+#: src/pointer.rs:316
+msgid "cannot create a portal session ({})"
+msgstr "kan ikke opprette en portaløkt ({})"
+
+#: src/pointer.rs:325
+msgid "cannot request pointer access ({})"
+msgstr "kan ikke be om pekertilgang ({})"
+
+#: src/pointer.rs:331
+msgid "cannot start the portal session ({})"
+msgstr "kan ikke starte portaløkten ({})"
+
+#: src/pointer.rs:335
+msgid "pointer access was declined"
+msgstr "pekertilgang ble avslått"
+
+#: src/pointer.rs:338
+msgid "pointer access was not granted ({})"
+msgstr "pekertilgang ble ikke gitt ({})"
+
+#: src/pointer.rs:342
+msgid "pointer access was not granted"
+msgstr "pekertilgang ble ikke gitt"
+
+#: src/pointer.rs:361
+msgid "no display server to send pointer motion to"
+msgstr "ingen skjermtjener å sende pekerbevegelser til"
+
+#. Translators: System Settings › Privacy & Security › Accessibility
+#. is where macOS grants the permission: use the names macOS shows
+#. in your language
+#: src/pointer.rs:403
+msgid ""
+"allow eov under System Settings › Privacy & Security › Accessibility; eov "
+"keeps trying"
+msgstr ""
+"tillat eov under Systeminnstillinger › Personvern og sikkerhet › "
+"Tilgjengelighet; eov fortsetter å prøve"
+
+#: src/pointer.rs:424
+msgid "not supported on this platform"
+msgstr "støttes ikke på denne plattformen"
+
+#: src/shared.rs:267
+msgid "Gamepad settings could not be saved"
+msgstr "Spillkontrollerinnstillingene kunne ikke lagres"
+
+#. Translators: a notification: what happened, then why
+#: src/shared.rs:394
+msgid "{message}: {detail}"
+msgstr "{message}: {detail}"
+
+#. Translators: the first entry of the list of profiles (changes are
+#. then saved, but not to a profile)
+#: src/ui.rs:94
+msgid "No profile"
+msgstr "Ingen profil"
+
+#: src/ui.rs:156
+msgid "Starting…"
+msgstr "Starter…"
+
+#. Translators: {} is the reason, from the system (often in English)
+#: src/ui.rs:159
+msgid "Controllers are unavailable: {}"
+msgstr "Kontrollere er utilgjengelige: {}"
+
+#. Translators: "Enable / Pause" is an action in the list of mappings
+#: src/ui.rs:164
+msgid ""
+"Paused. Turn it on here or press the controller button mapped to Enable / "
+"Pause."
+msgstr ""
+"Satt på pause. Slå på her, eller trykk på kontrollerknappen som er tilordnet "
+"Aktiver / pause."
+
+#: src/ui.rs:168
+msgid "Waiting for a controller"
+msgstr "Venter på en kontroller"
+
+#: src/ui.rs:171
+msgid "Ready. Input is ignored while eov is in the background."
+msgstr "Klar. Inndata ignoreres mens eov er i bakgrunnen."
+
+#. Translators: {} is the name of the controller in use
+#: src/ui.rs:189
+msgid "Ready: {}"
+msgstr "Klar: {}"
+
+#: src/ui.rs:191
+msgid "Ready: {n} controller"
+msgid_plural "Ready: {n} controllers"
+msgstr[0] "Klar: {n} kontroller"
+msgstr[1] "Klar: {n} kontrollere"
+
+#. Translators: {} is the reason, from the system (often in English)
+#: src/ui.rs:203
+msgid "The controller subsystem could not start: {}"
+msgstr "Delsystemet for kontrollere kunne ikke starte: {}"
+
+#: src/ui.rs:210
+msgid "No controllers detected. Connect one by USB or Bluetooth."
+msgstr "Ingen kontrollere funnet. Koble til en via USB eller Bluetooth."
+
+#: src/ui.rs:214
+msgid "The chosen controller is not connected, so every controller is used."
+msgstr "Den valgte kontrolleren er ikke tilkoblet, så alle kontrollere brukes."
+
+#: src/ui.rs:216
+msgid "Every connected controller drives eov."
+msgstr "Alle tilkoblede kontrollere styrer eov."
+
+#. Translators: "Move Pointer" stands for the actions "Move Pointer
+#. Horizontally" and "Move Pointer Vertically" of the mappings
+#: src/ui.rs:228
+msgid ""
+"Your mappings include Move Pointer. Turn this on to let them move the system "
+"pointer while eov has focus."
+msgstr ""
+"Tilordningene dine inkluderer Flytt pekeren. Slå på dette for at de skal "
+"kunne flytte systempekeren mens eov har fokus."
+
+#. Translators: "Move Pointer" stands for the actions "Move Pointer
+#. Horizontally" and "Move Pointer Vertically"; Remote Desktop and
+#. Accessibility are the names of system permissions: write them as
+#. the system shows them in your language
+#: src/ui.rs:237
+msgid ""
+"Off. When on, Move Pointer mappings move the system pointer while eov has "
+"focus. Wayland asks for Remote Desktop permission and macOS for "
+"Accessibility access."
+msgstr ""
+"Av. Når dette er slått på, flytter tilordninger til Flytt pekeren "
+"systempekeren mens eov har fokus. Wayland ber om tillatelse til Eksternt "
+"skrivebord, og macOS om tilgang under Tilgjengelighet."
+
+#: src/ui.rs:246
+msgid "On. Starts when a mapped stick moves."
+msgstr "På. Starter når en tilordnet styrespak beveges."
+
+#: src/ui.rs:248
+msgid ""
+"On. Starts when a mapped stick moves. Map a stick to Move Pointer to use it."
+msgstr ""
+"På. Starter når en tilordnet styrespak beveges. Tilordne en styrespak til "
+"Flytt pekeren for å bruke dette."
+
+#: src/ui.rs:250
+msgid "Connecting. The system may ask for permission."
+msgstr "Kobler til. Systemet kan be om tillatelse."
+
+#: src/ui.rs:252
+msgid ""
+"Connecting. The system may ask for permission. Map a stick to Move Pointer "
+"to use it."
+msgstr ""
+"Kobler til. Systemet kan be om tillatelse. Tilordne en styrespak til Flytt "
+"pekeren for å bruke dette."
+
+#. Translators: {} is how the pointer is moved, such as "XTest" or
+#. "Remote Desktop portal"
+#: src/ui.rs:257
+msgid "Active ({})."
+msgstr "Aktiv ({})."
+
+#: src/ui.rs:259
+msgid "Active ({}). Map a stick to Move Pointer to use it."
+msgstr "Aktiv ({}). Tilordne en styrespak til Flytt pekeren for å bruke dette."
+
+#. Translators: {} is the reason
+#: src/ui.rs:263
+msgid "Not available: {}"
+msgstr "Ikke tilgjengelig: {}"
+
+#. Translators: {} is the reason, a phrase without a full stop
+#: src/ui.rs:267
+msgid "Not available: {}. Map a stick to Move Pointer to use it."
+msgstr ""
+"Ikke tilgjengelig: {}. Tilordne en styrespak til Flytt pekeren for å bruke "
+"dette."
+
+#. Translators: the first entry of the list of controllers
+#: src/ui.rs:279
+msgid "All controllers"
+msgstr "Alle kontrollere"
+
+#. Translators: {} is the name of the selected profile
+#: src/ui.rs:304
+msgid "Changes are saved to “{}”."
+msgstr "Endringer lagres i «{}»."
+
+#: src/ui.rs:306
+msgid ""
+"Changes are saved automatically. Save them as a profile to keep several "
+"layouts."
+msgstr ""
+"Endringer lagres automatisk. Lagre dem som en profil for å beholde flere "
+"oppsett."
+
+#: src/ui.rs:309
+msgid "Changes are saved automatically but not to a profile."
+msgstr "Endringer lagres automatisk, men ikke i en profil."
+
+#. Translators: shown in eov's status bar while gamepad input is paused
+#: src/worker.rs:46
+msgid "Gamepad paused"
+msgstr "Spillkontroller satt på pause"
+
+#: src/worker.rs:87
+msgid "Gamepad input resumed"
+msgstr "Inndata fra spillkontroller gjenopptatt"
+
+#: src/worker.rs:89
+msgid "Gamepad input paused"
+msgstr "Inndata fra spillkontroller satt på pause"
+
+#: src/worker.rs:138
+msgid "Game controllers are not available"
+msgstr "Spillkontrollere er ikke tilgjengelige"
+
+#. Translators: the state of a small switch; keep it very short
+#: ui/gamepad-window.slint:441
+msgctxt "ToggleChip"
+msgid "Off"
+msgstr "Av"
+
+#. Translators: the state of a small switch; keep it very short
+#: ui/gamepad-window.slint:441
+msgctxt "ToggleChip"
+msgid "On"
+msgstr "På"
+
+#. Translators: for screen readers; {} is a setting, such as Pan Speed
+#: ui/gamepad-window.slint:594
+msgctxt "TuningField"
+msgid "Decrease {}"
+msgstr "Reduser {}"
+
+#. Translators: for screen readers; {} is a setting, such as Pan Speed
+#: ui/gamepad-window.slint:615
+msgctxt "TuningField"
+msgid "Increase {}"
+msgstr "Øk {}"
+
+#: ui/gamepad-window.slint:641
+msgctxt "HeaderCard"
+msgid "Gamepad Control"
+msgstr "Styring med spillkontroller"
+
+#: ui/gamepad-window.slint:649
+msgctxt "HeaderCard"
+msgid ""
+"Pan, zoom and move between panes, tabs and series items with a game "
+"controller. Input only acts while eov has focus."
+msgstr ""
+"Panorer, zoom og flytt mellom ruter, faner og elementer i serien med en "
+"spillkontroller. Inndata virker bare mens eov har fokus."
+
+#. Translators: the name of the on/off switch, read out by screen readers
+#: ui/gamepad-window.slint:662
+msgctxt "HeaderCard"
+msgid "Gamepad input"
+msgstr "Inndata fra spillkontroller"
+
+#. Translators: the title of the section where the game controller is chosen
+#: ui/gamepad-window.slint:700
+msgctxt "DeviceCard"
+msgid "Device"
+msgstr "Enhet"
+
+#: ui/gamepad-window.slint:701
+msgctxt "DeviceCard"
+msgid "Choose the controller that drives eov."
+msgstr "Velg kontrolleren som styrer eov."
+
+#. Translators: a profile is a saved set of gamepad settings
+#: ui/gamepad-window.slint:739
+msgctxt "ProfileCard"
+msgid "Profiles"
+msgstr "Profiler"
+
+#: ui/gamepad-window.slint:772
+msgctxt "ProfileCard"
+msgid "Profile name"
+msgstr "Profilnavn"
+
+#. Translators: placeholder of the empty name field
+#: ui/gamepad-window.slint:781
+msgctxt "ProfileCard"
+msgid "Name for a new profile"
+msgstr "Navn på en ny profil"
+
+#. Translators: saves the settings as a profile with the name typed
+#: ui/gamepad-window.slint:794
+msgctxt "ProfileCard"
+msgid "Save As"
+msgstr "Lagre som"
+
+#. Translators: saves the default settings as a new profile
+#: ui/gamepad-window.slint:824
+msgctxt "ProfileCard"
+msgid "New"
+msgstr "Ny"
+
+#. Translators: imports a profile from a file
+#: ui/gamepad-window.slint:834
+msgctxt "ProfileCard"
+msgid "Import"
+msgstr "Importer"
+
+#. Translators: exports the settings to a profile file
+#: ui/gamepad-window.slint:846
+msgctxt "ProfileCard"
+msgid "Export"
+msgstr "Eksporter"
+
+#. Translators: deletes the selected profile
+#: ui/gamepad-window.slint:858
+msgctxt "ProfileCard"
+msgid "Delete"
+msgstr "Slett"
+
+#. Translators: the title of the gamepad settings window
+#: ui/gamepad-window.slint:987
+msgctxt "GamepadWindow"
+msgid "Gamepad"
+msgstr "Spillkontroller"
+
+#. Translators: the section with dead zones, speeds and response curve
+#: ui/gamepad-window.slint:1149
+msgctxt "GamepadWindow"
+msgid "Tuning"
+msgstr "Finjustering"
+
+#: ui/gamepad-window.slint:1150
+msgctxt "GamepadWindow"
+msgid ""
+"Dead zones ignore stick drift. Speeds scale panning and zooming, and a "
+"higher response curve gives finer control near the centre. Double-click a "
+"slider to reset it."
+msgstr ""
+"Dødsoner ignorerer drift i styrespakene. Hastighetene skalerer panorering og "
+"zooming, og en høyere responskurve gir finere kontroll nær midten. "
+"Dobbeltklikk på en glidebryter for å tilbakestille den."
+
+#. Translators: the mouse pointer of the system, which sticks can move
+#: ui/gamepad-window.slint:1163
+msgctxt "GamepadWindow"
+msgid "System Pointer"
+msgstr "Systempeker"
+
+#. Translators: the name of the on/off switch, read out by screen readers
+#: ui/gamepad-window.slint:1174
+msgctxt "GamepadWindow"
+msgid "System pointer control"
+msgstr "Styring av systempekeren"
+
+#. Translators: the section that assigns actions to the controls
+#: ui/gamepad-window.slint:1202
+msgctxt "GamepadWindow"
+msgid "Mappings"
+msgstr "Tilordninger"
+
+#. Translators: Start and Select are names printed on controller buttons
+#: ui/gamepad-window.slint:1204
+msgctxt "GamepadWindow"
+msgid ""
+"Defaults: the left stick pans, the right stick and the triggers zoom, the D-"
+"pad switches panes and tabs, the shoulder buttons step through the series, "
+"Start pauses and Select shows this window."
+msgstr ""
+"Standard: venstre styrespak panorerer, høyre styrespak og utløserne zoomer, "
+"styrekorset bytter ruter og faner, skulderknappene blar gjennom serien, "
+"Start setter på pause, og Select viser dette vinduet."
+
+#. Translators: a heading (in capitals in English: use your own style)
+#: ui/gamepad-window.slint:1208
+msgctxt "GamepadWindow"
+msgid "STICKS AND TRIGGERS"
+msgstr "STYRESPAKER OG UTLØSERE"
+
+#. Translators: a heading (in capitals in English: use your own style)
+#: ui/gamepad-window.slint:1218
+msgctxt "GamepadWindow"
+msgid "BUTTONS"
+msgstr "KNAPPER"

@@ -134,6 +134,13 @@ impl Surface {
         ElementHandle::find_by_element_type_name(&self.instance, "ComboBox").collect()
     }
 
+    /// The combo boxes shown: Slint's, or the window's own in right-to-left
+    /// languages.
+    fn boxes(&self, rtl: bool) -> Vec<ElementHandle> {
+        let name = if rtl { "RtlComboBox" } else { "ComboBox" };
+        ElementHandle::find_by_element_type_name(&self.instance, name).collect()
+    }
+
     fn shown(&self, combo: usize) -> String {
         self.combos()[combo]
             .accessible_value()
@@ -319,6 +326,150 @@ fn combo_boxes_keep_the_keyboard_focus() {
     assert!(surface.active());
 }
 
+/// The window's own combo boxes, which right-to-left languages get (Slint's
+/// draw their text at the left): what they show, and that they behave like
+/// Slint's.
+fn right_to_left_combo_boxes_behave_alike() {
+    let mut prefs = Prefs::default();
+    prefs.profiles.insert("Lab".into(), prefs.config.clone());
+    prefs.active_profile = Some("Lab".into());
+    let mut properties = model(&prefs, &status(Power::Unknown));
+    properties.insert("eov-rtl".into(), Json::Bool(true));
+    let mut surface = Surface::new(&properties);
+    fn combos(surface: &Surface) -> Vec<ElementHandle> {
+        ElementHandle::find_by_element_type_name(&surface.instance, "RtlComboBox").collect()
+    }
+    fn shown(surface: &Surface, combo: usize) -> String {
+        combos(surface)[combo]
+            .accessible_value()
+            .unwrap_or_default()
+            .to_string()
+    }
+    assert!(surface.combos().is_empty());
+    assert_eq!(combos(&surface).len(), FIRST_MAPPING + Control::COUNT);
+    assert_eq!(shown(&surface, PROFILE), "Lab");
+    assert_eq!(
+        shown(&surface, FIRST_MAPPING),
+        Action::PanHorizontal.label()
+    );
+
+    // Open a mapping's list, close it again: the box keeps the focus and
+    // arrow keys step through the actions; the window stays active.
+    surface.activate(true);
+    combos(&surface)[FIRST_MAPPING].mock_single_click(PointerEventButton::Left);
+    assert!(surface.active());
+    surface.key(Key::Escape);
+    surface.key(Key::DownArrow);
+    surface.key(Key::DownArrow);
+    let picks = surface.calls("mapping-selected");
+    assert_eq!(picks.len(), 2, "{picks:?}");
+    assert_eq!(picks[0][0], Value::String("left_stick_x".into()));
+    assert_ne!(picks[0][1], picks[1][1]);
+    assert!(surface.active());
+
+    // A click on an action in the list picks it and closes the list.
+    combos(&surface)[FIRST_MAPPING].mock_single_click(PointerEventButton::Left);
+    let item = ElementHandle::find_by_accessible_label(&surface.instance, &Action::Zoom.label())
+        .find(|e| e.accessible_role() == Some(i_slint_backend_testing::AccessibleRole::ListItem))
+        .expect("the list shows the actions");
+    item.mock_single_click(PointerEventButton::Left);
+    let picks = surface.calls("mapping-selected");
+    assert_eq!(picks.len(), 3, "{picks:?}");
+    assert_eq!(shown(&surface, FIRST_MAPPING), Action::Zoom.label());
+    assert!(surface.active());
+
+    // What the plugin pushes shows, also after a pick.
+    prefs.config.mappings.set(Control::LeftStickX, Action::Zoom);
+    surface.set_many(&model(&prefs, &status(Power::Unknown)));
+    assert_eq!(shown(&surface, FIRST_MAPPING), Action::Zoom.label());
+
+    // Back to left to right: Slint's combo boxes again, showing the same.
+    let mut properties = model(&prefs, &status(Power::Unknown));
+    properties.insert("eov-rtl".into(), Json::Bool(false));
+    surface.set_many(&properties);
+    assert!(combos(&surface).is_empty());
+    assert_eq!(surface.combos().len(), FIRST_MAPPING + Control::COUNT);
+    assert_eq!(surface.shown(FIRST_MAPPING), Action::Zoom.label());
+}
+
+/// Clicking or tabbing into a combo box of the active window never reports
+/// the window inactive, not even for a moment within one event (the plugin
+/// would hold controller input meanwhile): in both writing directions, from
+/// the window's background and from the name field.
+fn focusing_a_combo_box_keeps_the_window_active() {
+    for rtl in [false, true] {
+        let mut prefs = Prefs::default();
+        prefs.profiles.insert("Lab".into(), prefs.config.clone());
+        let mut properties = model(&prefs, &status(Power::Unknown));
+        properties.insert("eov-rtl".into(), Json::Bool(rtl));
+        let surface = Surface::new(&properties);
+        let boxes = surface.boxes(rtl);
+        assert_eq!(boxes.len(), FIRST_MAPPING + Control::COUNT, "rtl: {rtl}");
+        // The window activated, with the focus on its background; returns
+        // the number of reports so far.
+        let activate = || {
+            surface.activate(false);
+            advance(200);
+            surface.activate(true);
+            assert!(surface.active(), "rtl: {rtl}");
+            surface.calls("window-active-changed").len()
+        };
+        let reports_since = |from: usize| surface.calls("window-active-changed")[from..].to_vec();
+
+        for combo in [DEVICE, PROFILE, FIRST_MAPPING] {
+            let from = activate();
+            boxes[combo].mock_single_click(PointerEventButton::Left);
+            // The list is open (screen readers hear the box expanded) and
+            // closed again by Escape.
+            assert_eq!(
+                boxes[combo].accessible_expanded(),
+                Some(true),
+                "rtl: {rtl}, box {combo}"
+            );
+            surface.key(Key::Escape);
+            assert_eq!(
+                boxes[combo].accessible_expanded(),
+                Some(false),
+                "rtl: {rtl}, box {combo}"
+            );
+            surface
+                .name_field()
+                .mock_single_click(PointerEventButton::Left);
+            boxes[combo].mock_single_click(PointerEventButton::Left);
+            surface.key(Key::Escape);
+            advance(200);
+            let reports = reports_since(from);
+            assert!(reports.is_empty(), "rtl: {rtl}, box {combo}: {reports:?}");
+            assert!(surface.active(), "rtl: {rtl}, box {combo}");
+        }
+
+        // Tab from the background reaches the device box, Tab from the name
+        // field the first mapping's: the arrow keys then pick there.
+        let from = activate();
+        let devices = surface.calls("device-selected").len();
+        surface.key(Key::Tab);
+        surface.key(Key::DownArrow);
+        assert_eq!(
+            surface.calls("device-selected").len(),
+            devices + 1,
+            "rtl: {rtl}"
+        );
+        let mappings = surface.calls("mapping-selected").len();
+        surface
+            .name_field()
+            .mock_single_click(PointerEventButton::Left);
+        surface.key(Key::Tab);
+        surface.key(Key::DownArrow);
+        let picks = surface.calls("mapping-selected");
+        assert_eq!(picks.len(), mappings + 1, "rtl: {rtl}");
+        assert_eq!(picks[mappings][0], Value::String("left_stick_x".into()));
+        advance(200);
+        let reports = reports_since(from);
+        assert!(reports.is_empty(), "rtl: {rtl}, Tab: {reports:?}");
+        assert!(surface.active(), "rtl: {rtl}");
+    }
+}
+
 /// One test: the testing platform can be installed once per process.
 #[test]
 fn the_window_behaves() {
@@ -326,4 +477,6 @@ fn the_window_behaves() {
     combo_boxes_show_what_the_plugin_pushes();
     the_window_reports_activity_conservatively();
     combo_boxes_keep_the_keyboard_focus();
+    right_to_left_combo_boxes_behave_alike();
+    focusing_a_combo_box_keeps_the_window_active();
 }

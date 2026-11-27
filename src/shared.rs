@@ -110,6 +110,8 @@ pub struct Shared {
     persist: Mutex<PersistState>,
     persist_wake: Condvar,
     refresh_queued: AtomicBool,
+    /// The language changed: the input thread makes its texts again.
+    texts_stale: AtomicBool,
     stop: AtomicBool,
     notified: Mutex<BTreeSet<String>>,
 }
@@ -135,6 +137,7 @@ impl Shared {
             persist: Mutex::new(PersistState::default()),
             persist_wake: Condvar::new(),
             refresh_queued: AtomicBool::new(false),
+            texts_stale: AtomicBool::new(false),
             stop: AtomicBool::new(false),
             notified: Mutex::new(BTreeSet::new()),
         }
@@ -261,7 +264,7 @@ impl Shared {
             self.notify_once(
                 "persist",
                 NotifyLevel::Warning,
-                "Gamepad settings could not be saved",
+                &tr!("Gamepad settings could not be saved"),
                 Some(error.message),
             );
         }
@@ -358,6 +361,18 @@ impl Shared {
         self.refresh_queued.store(false, Ordering::Release);
     }
 
+    /// The language of the interface changed: texts the input thread keeps
+    /// in the status (the access hint) are made again.
+    pub fn language_changed(&self) {
+        self.texts_stale.store(true, Ordering::Release);
+    }
+
+    /// Whether the input thread should make its texts again (once per
+    /// language change).
+    pub fn take_stale_texts(&self) -> bool {
+        self.texts_stale.swap(false, Ordering::AcqRel)
+    }
+
     /// Shows a notification the first time `key` is reported.
     pub fn notify_once(
         &self,
@@ -373,7 +388,11 @@ impl Shared {
             Some(detail) if level == NotifyLevel::Error => {
                 self.host.notify_error(message, detail);
             }
-            Some(detail) => self.host.notify(level, format!("{message}: {detail}")),
+            Some(detail) => self.host.notify(
+                level,
+                // Translators: a notification: what happened, then why
+                tr!("{message}: {detail}", message = message, detail = detail),
+            ),
             None => self.host.notify(level, message),
         }
     }

@@ -1,0 +1,925 @@
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: gamepad\n"
+"Report-Msgid-Bugs-To: https://github.com/eosin-platform/eov-gamepad-plugin/"
+"issues\n"
+"Language-Team: Korean\n"
+"Language: ko\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+"X-Review-Status: machine-translated; not yet reviewed by a native speaker\n"
+
+#: plugin.toml
+msgctxt "plugin.toml"
+msgid "Gamepad"
+msgstr "게임패드"
+
+#: plugin.toml
+msgctxt "plugin.toml"
+msgid ""
+"Provides support for using gamepads as input devices: pan, zoom and switch "
+"panes, tabs and series items with a game controller."
+msgstr ""
+"게임패드를 입력 장치로 사용할 수 있게 합니다. 게임 컨트롤러로 이동, 확대/축소"
+"하고 창, 탭, 시리즈 항목을 전환할 수 있습니다."
+
+#. Translators: the horizontal (X) axis of the left stick of a game
+#. controller; keep the letter X
+#: src/config.rs:136
+msgid "Left Stick X"
+msgstr "왼쪽 스틱 X"
+
+#. Translators: the vertical (Y) axis of the left stick
+#: src/config.rs:138
+msgid "Left Stick Y"
+msgstr "왼쪽 스틱 Y"
+
+#. Translators: the horizontal (X) axis of the right stick
+#: src/config.rs:140
+msgid "Right Stick X"
+msgstr "오른쪽 스틱 X"
+
+#. Translators: the vertical (Y) axis of the right stick
+#: src/config.rs:142
+msgid "Right Stick Y"
+msgstr "오른쪽 스틱 Y"
+
+#. Translators: the analog trigger under the left shoulder (LT, L2)
+#: src/config.rs:144
+msgid "Left Trigger"
+msgstr "왼쪽 트리거"
+
+#. Translators: the analog trigger under the right shoulder (RT, R2)
+#: src/config.rs:146
+msgid "Right Trigger"
+msgstr "오른쪽 트리거"
+
+#. Translators: D-Pad is the directional pad, the cross of four
+#. buttons on the left of a game controller
+#: src/config.rs:149
+msgid "D-Pad Left"
+msgstr "방향 패드 왼쪽"
+
+#: src/config.rs:150
+msgid "D-Pad Right"
+msgstr "방향 패드 오른쪽"
+
+#: src/config.rs:151
+msgid "D-Pad Up"
+msgstr "방향 패드 위"
+
+#: src/config.rs:152
+msgid "D-Pad Down"
+msgstr "방향 패드 아래"
+
+#. Translators: the four face buttons are named by their position:
+#. the bottom one (A on Xbox, Cross on PlayStation, B on Nintendo)
+#: src/config.rs:155
+msgid "South Button"
+msgstr "아래쪽 페이스 버튼"
+
+#. Translators: the right face button (B on Xbox, Circle on PlayStation)
+#: src/config.rs:157
+msgid "East Button"
+msgstr "오른쪽 페이스 버튼"
+
+#. Translators: the top face button (Y on Xbox, Triangle on PlayStation)
+#: src/config.rs:159
+msgid "North Button"
+msgstr "위쪽 페이스 버튼"
+
+#. Translators: the left face button (X on Xbox, Square on PlayStation)
+#: src/config.rs:161
+msgid "West Button"
+msgstr "왼쪽 페이스 버튼"
+
+#. Translators: the left shoulder button, or bumper (LB, L1)
+#: src/config.rs:163
+msgid "Left Shoulder"
+msgstr "왼쪽 숄더 버튼"
+
+#. Translators: the right shoulder button, or bumper (RB, R1)
+#: src/config.rs:165
+msgid "Right Shoulder"
+msgstr "오른쪽 숄더 버튼"
+
+#. Translators: pressing the left stick down like a button (LS, L3)
+#: src/config.rs:167
+msgid "Left Stick Click"
+msgstr "왼쪽 스틱 누르기"
+
+#. Translators: pressing the right stick down like a button (RS, R3)
+#: src/config.rs:169
+msgid "Right Stick Click"
+msgstr "오른쪽 스틱 누르기"
+
+#. Translators: a control that does nothing
+#: src/config.rs:293
+msgid "Unassigned"
+msgstr "할당 안 됨"
+
+#. Translators: an action of a game controller; to pan is to move
+#. the view of the slide sideways
+#: src/config.rs:296
+msgid "Pan Horizontally"
+msgstr "좌우로 이동"
+
+#: src/config.rs:297
+msgid "Pan Vertically"
+msgstr "상하로 이동"
+
+#. Translators: for a stick or trigger: pushing it up or to the
+#. right zooms in, the other way zooms out
+#: src/config.rs:300
+msgid "Zoom (Up / Right Zooms In)"
+msgstr "확대/축소(위/오른쪽: 확대)"
+
+#: src/config.rs:301
+msgid "Zoom In"
+msgstr "확대"
+
+#: src/config.rs:302
+msgid "Zoom Out"
+msgstr "축소"
+
+#. Translators: moves the mouse pointer of the operating system
+#: src/config.rs:304
+msgid "Move Pointer Horizontally"
+msgstr "포인터 좌우 이동"
+
+#: src/config.rs:305
+msgid "Move Pointer Vertically"
+msgstr "포인터 상하 이동"
+
+#. Translators: a pane is one of the views side by side in eov
+#: src/config.rs:307
+msgid "Previous Pane"
+msgstr "이전 창"
+
+#: src/config.rs:308
+msgid "Next Pane"
+msgstr "다음 창"
+
+#: src/config.rs:309
+msgid "Previous Tab"
+msgstr "이전 탭"
+
+#: src/config.rs:310
+msgid "Next Tab"
+msgstr "다음 탭"
+
+#. Translators: the series bar lists the slides of a series
+#: src/config.rs:312
+msgid "Toggle Series Bar"
+msgstr "시리즈 표시줄 표시/숨기기"
+
+#: src/config.rs:313
+msgid "Previous Series Item"
+msgstr "이전 시리즈 항목"
+
+#: src/config.rs:314
+msgid "Next Series Item"
+msgstr "다음 시리즈 항목"
+
+#: src/config.rs:315
+msgid "Open Selected Series Item"
+msgstr "선택한 시리즈 항목 열기"
+
+#. Translators: fits the whole slide into the view
+#: src/config.rs:317
+msgid "Fit View"
+msgstr "화면에 맞춤"
+
+#. Translators: this window is the gamepad settings window
+#: src/config.rs:319
+msgid "Show / Hide This Window"
+msgstr "이 창 표시/숨기기"
+
+#. Translators: turns gamepad input back on, or pauses it
+#: src/config.rs:321
+msgid "Enable / Pause"
+msgstr "활성화/일시 중지"
+
+#. Translators: a dead zone is how far a stick may move before it
+#. counts as input (it hides stick drift); shown in a narrow column
+#: src/config.rs:459
+msgid "Left Dead Zone"
+msgstr "왼쪽 데드존"
+
+#: src/config.rs:460
+msgid "Right Dead Zone"
+msgstr "오른쪽 데드존"
+
+#: src/config.rs:461
+msgid "Trigger Dead Zone"
+msgstr "트리거 데드존"
+
+#: src/config.rs:462
+msgid "Pan Speed"
+msgstr "이동 속도"
+
+#: src/config.rs:463
+msgid "Zoom Speed"
+msgstr "확대/축소 속도"
+
+#. Translators: how input grows with the deflection of a stick: a
+#. higher curve gives finer control near the centre
+#: src/config.rs:466
+msgid "Response Curve"
+msgstr "응답 곡선"
+
+#. Translators: the speed of the mouse pointer of the operating system
+#: src/config.rs:468
+msgid "Pointer Speed"
+msgstr "포인터 속도"
+
+#: src/config.rs:684
+msgid "not a profile object"
+msgstr "프로필 객체가 아닙니다"
+
+#. Translators: {} is the value of the "version" field of a profile
+#: src/config.rs:694
+msgid "ignoring the version {}"
+msgstr "버전 {}을(를) 무시합니다"
+
+#. Translators: {key} is a field of a profile file, such as
+#. 'pan_sensitivity'; {value} is what the field holds
+#: src/config.rs:712
+msgid "ignoring '{key}': {value} is not a number"
+msgstr "'{key}'을(를) 무시합니다: {value}은(는) 숫자가 아닙니다"
+
+#. Translators: 'mappings' is a field of a profile file: keep the name
+#: src/config.rs:730
+msgid "ignoring 'mappings': not an object"
+msgstr "'mappings'를 무시합니다: 객체가 아닙니다"
+
+#: src/config.rs:745
+msgid "the file is not a gamepad profile"
+msgstr "파일이 게임패드 프로필이 아닙니다"
+
+#: src/config.rs:794
+msgid "the stored gamepad settings are not an object"
+msgstr "저장된 게임패드 설정이 객체가 아닙니다"
+
+#. Translators: {key} is a stored setting, such as 'enabled'; {error}
+#. says why it cannot be read
+#: src/config.rs:809
+msgid "ignoring the stored '{key}': {error}"
+msgstr "저장된 '{key}'을(를) 무시합니다: {error}"
+
+#. Translators: {} is a problem with the current settings (not a profile)
+#: src/config.rs:840
+msgid "settings: {}"
+msgstr "설정: {}"
+
+#: src/config.rs:843
+msgid "ignoring the stored settings: {}"
+msgstr "저장된 설정을 무시합니다: {}"
+
+#: src/config.rs:854
+msgid "ignoring the profile with the name {}"
+msgstr "이름이 {}인 프로필을 무시합니다"
+
+#: src/config.rs:859
+msgid "ignoring the profile {name}: at most {n} profile is kept"
+msgid_plural "ignoring the profile {name}: at most {n} profiles are kept"
+msgstr[0] "프로필 {name}을(를) 무시합니다: 프로필은 최대 {n}개까지 보관됩니다"
+
+#. Translators: {name} is the name of a profile,
+#. {problem} what is wrong with it
+#: src/config.rs:873
+msgid "{name}: {problem}"
+msgstr "{name}: {problem}"
+
+#. Translators: the name of a profile, then why it cannot be read
+#: src/config.rs:881
+msgid "ignoring the profile {}: {}"
+msgstr "프로필 {}을(를) 무시합니다: {}"
+
+#: src/config.rs:983
+msgid "Enter a name for the profile."
+msgstr "프로필 이름을 입력하세요."
+
+#: src/config.rs:986
+msgid "Profile names are limited to {n} character."
+msgid_plural "Profile names are limited to {n} characters."
+msgstr[0] "프로필 이름은 최대 {n}자까지 입력할 수 있습니다."
+
+#: src/config.rs:991
+msgid "Profile names cannot contain control characters."
+msgstr "프로필 이름에는 제어 문자를 사용할 수 없습니다."
+
+#. Translators: the name given to a profile whose name would be empty
+#: src/config.rs:1003
+msgctxt "Profile name"
+msgid "Profile"
+msgstr "프로필"
+
+#. Translators: shown after the name of a controller; {level} is the
+#. charge of its battery in percent
+#: src/engine.rs:74
+msgid "battery {level}%"
+msgstr "배터리 {level}%"
+
+#. Translators: shown after the name of a controller; {level} is the
+#. charge of its battery in percent
+#: src/engine.rs:77
+msgid "charging, {level}%"
+msgstr "충전 중, {level}%"
+
+#. Translators: shown after the name of a controller: its battery is full
+#: src/engine.rs:79
+msgid "charged"
+msgstr "충전 완료"
+
+#. Translators: {} is a folder of the system, such as /dev/input
+#: src/environment.rs:88
+msgid "{} is not available, so no controller can be opened."
+msgstr "{}을(를) 사용할 수 없어 컨트롤러를 열 수 없습니다."
+
+#. Translators: udev is the Linux device manager and uaccess the name
+#. of its tag: keep both
+#: src/environment.rs:112
+msgid ""
+"A game controller is connected, but eov is not allowed to read it. udev "
+"normally gives the logged-in user access to controllers (the uaccess tag); "
+"if yours is not recognised as a joystick, add a udev rule that tags it with "
+"uaccess, then reconnect it."
+msgstr ""
+"게임 컨트롤러가 연결되어 있지만 eov에 이 컨트롤러를 읽을 권한이 없습니다. 일"
+"반적으로 udev는 로그인한 사용자에게 컨트롤러 접근 권한을 부여합니다(uaccess "
+"태그). 컨트롤러가 조이스틱으로 인식되지 않으면 uaccess 태그를 붙이는 udev 규"
+"칙을 추가한 다음 컨트롤러를 다시 연결하세요."
+
+#. Translators: {command} is a command to type and {option} one of
+#. its options: they stay as they are
+#: src/environment.rs:124
+msgid ""
+"eov runs as a Flatpak without access to input devices. Allow it by running "
+"{command} (Flatpak 1.15.6 or newer; older versions need {option}), then "
+"restart eov."
+msgstr ""
+"eov가 입력 장치 접근 권한 없이 Flatpak으로 실행되고 있습니다. {command}을"
+"(를) 실행하여 허용한 다음(Flatpak 1.15.6 이상, 이전 버전은 {option} 필요) eov"
+"를 다시 시작하세요."
+
+#. Translators: the type of file in the file dialog
+#: src/plugin.rs:91
+msgid "Gamepad profile"
+msgstr "게임패드 프로필"
+
+#. Translators: the tooltip of the toolbar button, and the title of
+#. the gamepad settings window
+#: src/plugin.rs:100 src/ui.rs:26
+msgid "Gamepad"
+msgstr "게임패드"
+
+#: src/plugin.rs:108
+msgid "the path has no file name"
+msgstr "경로에 파일 이름이 없습니다"
+
+#: src/plugin.rs:123
+msgid "the file is too large to be a gamepad profile"
+msgstr "게임패드 프로필이라기에는 파일이 너무 큽니다"
+
+#: src/plugin.rs:212
+msgid "Cannot open the gamepad window"
+msgstr "게임패드 창을 열 수 없습니다"
+
+#. Translators: {} is the name of a profile
+#: src/plugin.rs:272
+msgid "The profile “{}” no longer exists."
+msgstr "프로필 “{}”이(가) 더 이상 없습니다."
+
+#. Translators: the name of a new profile when none was typed
+#: src/plugin.rs:280
+msgctxt "Profile name"
+msgid "Untitled"
+msgstr "제목 없음"
+
+#. Translators: {} is the name of a profile
+#: src/plugin.rs:310
+msgid ""
+"A profile named “{}” already exists. Replace it with the default settings?"
+msgstr "이름이 “{}”인 프로필이 이미 있습니다. 기본 설정으로 바꾸시겠습니까?"
+
+#. Translators: {} is the name of a profile
+#: src/plugin.rs:316
+msgid ""
+"A profile named “{}” already exists. Replace it with the current settings?"
+msgstr "이름이 “{}”인 프로필이 이미 있습니다. 현재 설정으로 바꾸시겠습니까?"
+
+#: src/plugin.rs:321
+msgid "Replace profile?"
+msgstr "프로필을 바꾸시겠습니까?"
+
+#. Translators: a button: replaces the profile
+#: src/plugin.rs:324
+msgid "Replace"
+msgstr "바꾸기"
+
+#: src/plugin.rs:325 src/plugin.rs:370
+msgid "Cancel"
+msgstr "취소"
+
+#: src/plugin.rs:338
+msgid "You already have {n} profile. Delete one to save another."
+msgid_plural "You already have {n} profiles. Delete one to save another."
+msgstr[0] ""
+"이미 프로필이 {n}개 있습니다. 다른 프로필을 저장하려면 하나를 삭제하세요."
+
+#: src/plugin.rs:358
+msgid "Choose a saved profile to delete."
+msgstr "삭제할 저장된 프로필을 선택하세요."
+
+#: src/plugin.rs:362
+msgid "Delete profile?"
+msgstr "프로필을 삭제하시겠습니까?"
+
+#. Translators: {} is the name of a profile
+#: src/plugin.rs:365
+msgid "Delete the profile “{}”? This cannot be undone."
+msgstr "프로필 “{}”을(를) 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다."
+
+#. Translators: a button: deletes the profile
+#: src/plugin.rs:369
+msgid "Delete"
+msgstr "삭제"
+
+#: src/plugin.rs:384
+msgid "Import a gamepad profile"
+msgstr "게임패드 프로필 가져오기"
+
+#. Translators: the name of an exported profile when none is selected
+#: src/plugin.rs:401
+msgctxt "Profile name"
+msgid "Gamepad profile"
+msgstr "게임패드 프로필"
+
+#: src/plugin.rs:407
+msgid "Export the gamepad profile"
+msgstr "게임패드 프로필 내보내기"
+
+#. Translators: {} is the path of a file
+#: src/plugin.rs:465
+msgid "Cannot import {}"
+msgstr "{}을(를) 가져올 수 없습니다"
+
+#. Translators: the name of an imported profile when its file name
+#. cannot be used
+#: src/plugin.rs:478
+msgctxt "Profile name"
+msgid "Imported"
+msgstr "가져온 프로필"
+
+#. Translators: {} is the name of a profile
+#: src/plugin.rs:496
+msgid "Imported the profile “{}”"
+msgstr "프로필 “{}”을(를) 가져왔습니다"
+
+#: src/plugin.rs:502
+msgid "You already have {n} profile. Delete one to import another."
+msgid_plural "You already have {n} profiles. Delete one to import another."
+msgstr[0] ""
+"이미 프로필이 {n}개 있습니다. 다른 프로필을 가져오려면 하나를 삭제하세요."
+
+#: src/plugin.rs:527
+msgid "Cannot export the profile"
+msgstr "프로필을 내보낼 수 없습니다"
+
+#. Translators: {name} is the name of a profile, {path} a file
+#: src/plugin.rs:536
+msgid "Exported “{name}” to {path}"
+msgstr "“{name}”을(를) {path}에 내보냈습니다"
+
+#. Translators: {} is the path of a file
+#: src/plugin.rs:543
+msgid "Cannot write {}"
+msgstr "{}에 쓸 수 없습니다"
+
+#: src/plugin.rs:640
+msgid "Imported the gamepad settings of the previous plugin version"
+msgstr "이전 플러그인 버전의 게임패드 설정을 가져왔습니다"
+
+#: src/plugin.rs:642
+msgid ""
+"Imported the gamepad settings and {n} profile of the previous plugin version"
+msgid_plural ""
+"Imported the gamepad settings and {n} profiles of the previous plugin version"
+msgstr[0] "이전 플러그인 버전의 게임패드 설정과 프로필 {n}개를 가져왔습니다"
+
+#: src/plugin.rs:653
+msgid "Some gamepad settings could not be read and use their defaults"
+msgstr "일부 게임패드 설정을 읽을 수 없어 기본값을 사용합니다"
+
+#. Translators: how eov moves the pointer on Wayland: the desktop portal for
+#. remote desktop control; name it as Linux desktops in your language do
+#: src/pointer.rs:44
+msgid "Remote Desktop portal"
+msgstr "원격 데스크톱 포털"
+
+#. Translators: how eov moves the pointer on macOS and Windows
+#: src/pointer.rs:46
+msgid "system events"
+msgstr "시스템 이벤트"
+
+#. Translators: {} is the reason
+#: src/pointer.rs:208
+msgid "System pointer control was turned off: {}"
+msgstr "시스템 포인터 제어가 꺼졌습니다: {}"
+
+#: src/pointer.rs:221
+msgid "System pointer control is not available"
+msgstr "시스템 포인터 제어를 사용할 수 없습니다"
+
+#. Translators: the Remote Desktop portal as in "Remote Desktop portal"; {} is the
+#. portal's own error, often in English
+#: src/pointer.rs:312
+msgid "the Remote Desktop portal is not available ({})"
+msgstr "원격 데스크톱 포털을 사용할 수 없습니다({})"
+
+#: src/pointer.rs:316
+msgid "cannot create a portal session ({})"
+msgstr "포털 세션을 만들 수 없습니다({})"
+
+#: src/pointer.rs:325
+msgid "cannot request pointer access ({})"
+msgstr "포인터 접근 권한을 요청할 수 없습니다({})"
+
+#: src/pointer.rs:331
+msgid "cannot start the portal session ({})"
+msgstr "포털 세션을 시작할 수 없습니다({})"
+
+#: src/pointer.rs:335
+msgid "pointer access was declined"
+msgstr "포인터 접근이 거부되었습니다"
+
+#: src/pointer.rs:338
+msgid "pointer access was not granted ({})"
+msgstr "포인터 접근 권한이 부여되지 않았습니다({})"
+
+#: src/pointer.rs:342
+msgid "pointer access was not granted"
+msgstr "포인터 접근 권한이 부여되지 않았습니다"
+
+#: src/pointer.rs:361
+msgid "no display server to send pointer motion to"
+msgstr "포인터 움직임을 보낼 디스플레이 서버가 없습니다"
+
+#. Translators: System Settings › Privacy & Security › Accessibility
+#. is where macOS grants the permission: use the names macOS shows
+#. in your language
+#: src/pointer.rs:403
+msgid ""
+"allow eov under System Settings › Privacy & Security › Accessibility; eov "
+"keeps trying"
+msgstr ""
+"시스템 설정 › 개인정보 보호 및 보안 › 손쉬운 사용에서 eov를 허용하세요. eov"
+"는 계속 시도합니다"
+
+#: src/pointer.rs:424
+msgid "not supported on this platform"
+msgstr "이 플랫폼에서는 지원되지 않습니다"
+
+#: src/shared.rs:267
+msgid "Gamepad settings could not be saved"
+msgstr "게임패드 설정을 저장할 수 없습니다"
+
+#. Translators: a notification: what happened, then why
+#: src/shared.rs:394
+msgid "{message}: {detail}"
+msgstr "{message}: {detail}"
+
+#. Translators: the first entry of the list of profiles (changes are
+#. then saved, but not to a profile)
+#: src/ui.rs:94
+msgid "No profile"
+msgstr "프로필 없음"
+
+#: src/ui.rs:156
+msgid "Starting…"
+msgstr "시작하는 중…"
+
+#. Translators: {} is the reason, from the system (often in English)
+#: src/ui.rs:159
+msgid "Controllers are unavailable: {}"
+msgstr "컨트롤러를 사용할 수 없습니다: {}"
+
+#. Translators: "Enable / Pause" is an action in the list of mappings
+#: src/ui.rs:164
+msgid ""
+"Paused. Turn it on here or press the controller button mapped to Enable / "
+"Pause."
+msgstr ""
+"일시 중지되었습니다. 여기에서 켜거나 활성화/일시 중지에 매핑된 컨트롤러 버튼"
+"을 누르세요."
+
+#: src/ui.rs:168
+msgid "Waiting for a controller"
+msgstr "컨트롤러를 기다리는 중"
+
+#: src/ui.rs:171
+msgid "Ready. Input is ignored while eov is in the background."
+msgstr "준비되었습니다. eov가 백그라운드에 있는 동안에는 입력이 무시됩니다."
+
+#. Translators: {} is the name of the controller in use
+#: src/ui.rs:189
+msgid "Ready: {}"
+msgstr "준비: {}"
+
+#: src/ui.rs:191
+msgid "Ready: {n} controller"
+msgid_plural "Ready: {n} controllers"
+msgstr[0] "준비: 컨트롤러 {n}개"
+
+#. Translators: {} is the reason, from the system (often in English)
+#: src/ui.rs:203
+msgid "The controller subsystem could not start: {}"
+msgstr "컨트롤러 하위 시스템을 시작할 수 없습니다: {}"
+
+#: src/ui.rs:210
+msgid "No controllers detected. Connect one by USB or Bluetooth."
+msgstr "감지된 컨트롤러가 없습니다. USB나 Bluetooth로 컨트롤러를 연결하세요."
+
+#: src/ui.rs:214
+msgid "The chosen controller is not connected, so every controller is used."
+msgstr "선택한 컨트롤러가 연결되어 있지 않아 모든 컨트롤러를 사용합니다."
+
+#: src/ui.rs:216
+msgid "Every connected controller drives eov."
+msgstr "연결된 모든 컨트롤러로 eov를 조작합니다."
+
+#. Translators: "Move Pointer" stands for the actions "Move Pointer
+#. Horizontally" and "Move Pointer Vertically" of the mappings
+#: src/ui.rs:228
+msgid ""
+"Your mappings include Move Pointer. Turn this on to let them move the system "
+"pointer while eov has focus."
+msgstr ""
+"매핑에 포인터 이동이 포함되어 있습니다. eov에 포커스가 있는 동안 매핑으로 시"
+"스템 포인터를 움직이려면 이 옵션을 켜세요."
+
+#. Translators: "Move Pointer" stands for the actions "Move Pointer
+#. Horizontally" and "Move Pointer Vertically"; Remote Desktop and
+#. Accessibility are the names of system permissions: write them as
+#. the system shows them in your language
+#: src/ui.rs:237
+msgid ""
+"Off. When on, Move Pointer mappings move the system pointer while eov has "
+"focus. Wayland asks for Remote Desktop permission and macOS for "
+"Accessibility access."
+msgstr ""
+"꺼짐. 켜면 eov에 포커스가 있는 동안 포인터 이동 매핑으로 시스템 포인터를 움직"
+"입니다. Wayland에서는 원격 데스크톱 권한을, macOS에서는 손쉬운 사용 접근 권한"
+"을 요청합니다."
+
+#: src/ui.rs:246
+msgid "On. Starts when a mapped stick moves."
+msgstr "켜짐. 매핑된 스틱을 움직이면 시작됩니다."
+
+#: src/ui.rs:248
+msgid ""
+"On. Starts when a mapped stick moves. Map a stick to Move Pointer to use it."
+msgstr ""
+"켜짐. 매핑된 스틱을 움직이면 시작됩니다. 사용하려면 스틱을 포인터 이동에 매핑"
+"하세요."
+
+#: src/ui.rs:250
+msgid "Connecting. The system may ask for permission."
+msgstr "연결 중. 시스템에서 권한을 요청할 수 있습니다."
+
+#: src/ui.rs:252
+msgid ""
+"Connecting. The system may ask for permission. Map a stick to Move Pointer "
+"to use it."
+msgstr ""
+"연결 중. 시스템에서 권한을 요청할 수 있습니다. 사용하려면 스틱을 포인터 이동"
+"에 매핑하세요."
+
+#. Translators: {} is how the pointer is moved, such as "XTest" or
+#. "Remote Desktop portal"
+#: src/ui.rs:257
+msgid "Active ({})."
+msgstr "활성({})."
+
+#: src/ui.rs:259
+msgid "Active ({}). Map a stick to Move Pointer to use it."
+msgstr "활성({}). 사용하려면 스틱을 포인터 이동에 매핑하세요."
+
+#. Translators: {} is the reason
+#: src/ui.rs:263
+msgid "Not available: {}"
+msgstr "사용할 수 없음: {}"
+
+#. Translators: {} is the reason, a phrase without a full stop
+#: src/ui.rs:267
+msgid "Not available: {}. Map a stick to Move Pointer to use it."
+msgstr "사용할 수 없음: {}. 사용하려면 스틱을 포인터 이동에 매핑하세요."
+
+#. Translators: the first entry of the list of controllers
+#: src/ui.rs:279
+msgid "All controllers"
+msgstr "모든 컨트롤러"
+
+#. Translators: {} is the name of the selected profile
+#: src/ui.rs:304
+msgid "Changes are saved to “{}”."
+msgstr "변경 사항은 “{}”에 저장됩니다."
+
+#: src/ui.rs:306
+msgid ""
+"Changes are saved automatically. Save them as a profile to keep several "
+"layouts."
+msgstr ""
+"변경 사항은 자동으로 저장됩니다. 여러 구성을 보관하려면 프로필로 저장하세요."
+
+#: src/ui.rs:309
+msgid "Changes are saved automatically but not to a profile."
+msgstr "변경 사항은 자동으로 저장되지만 프로필에는 저장되지 않습니다."
+
+#. Translators: shown in eov's status bar while gamepad input is paused
+#: src/worker.rs:46
+msgid "Gamepad paused"
+msgstr "게임패드 일시 중지됨"
+
+#: src/worker.rs:87
+msgid "Gamepad input resumed"
+msgstr "게임패드 입력이 다시 시작되었습니다"
+
+#: src/worker.rs:89
+msgid "Gamepad input paused"
+msgstr "게임패드 입력이 일시 중지되었습니다"
+
+#: src/worker.rs:138
+msgid "Game controllers are not available"
+msgstr "게임 컨트롤러를 사용할 수 없습니다"
+
+#. Translators: the state of a small switch; keep it very short
+#: ui/gamepad-window.slint:441
+msgctxt "ToggleChip"
+msgid "Off"
+msgstr "끔"
+
+#. Translators: the state of a small switch; keep it very short
+#: ui/gamepad-window.slint:441
+msgctxt "ToggleChip"
+msgid "On"
+msgstr "켬"
+
+#. Translators: for screen readers; {} is a setting, such as Pan Speed
+#: ui/gamepad-window.slint:594
+msgctxt "TuningField"
+msgid "Decrease {}"
+msgstr "{} 줄이기"
+
+#. Translators: for screen readers; {} is a setting, such as Pan Speed
+#: ui/gamepad-window.slint:615
+msgctxt "TuningField"
+msgid "Increase {}"
+msgstr "{} 늘리기"
+
+#: ui/gamepad-window.slint:641
+msgctxt "HeaderCard"
+msgid "Gamepad Control"
+msgstr "게임패드 조작"
+
+#: ui/gamepad-window.slint:649
+msgctxt "HeaderCard"
+msgid ""
+"Pan, zoom and move between panes, tabs and series items with a game "
+"controller. Input only acts while eov has focus."
+msgstr ""
+"게임 컨트롤러로 이동, 확대/축소하고 창, 탭, 시리즈 항목 사이를 오갈 수 있습니"
+"다. 입력은 eov에 포커스가 있을 때만 작동합니다."
+
+#. Translators: the name of the on/off switch, read out by screen readers
+#: ui/gamepad-window.slint:662
+msgctxt "HeaderCard"
+msgid "Gamepad input"
+msgstr "게임패드 입력"
+
+#. Translators: the title of the section where the game controller is chosen
+#: ui/gamepad-window.slint:700
+msgctxt "DeviceCard"
+msgid "Device"
+msgstr "장치"
+
+#: ui/gamepad-window.slint:701
+msgctxt "DeviceCard"
+msgid "Choose the controller that drives eov."
+msgstr "eov를 조작할 컨트롤러를 선택하세요."
+
+#. Translators: a profile is a saved set of gamepad settings
+#: ui/gamepad-window.slint:739
+msgctxt "ProfileCard"
+msgid "Profiles"
+msgstr "프로필"
+
+#: ui/gamepad-window.slint:772
+msgctxt "ProfileCard"
+msgid "Profile name"
+msgstr "프로필 이름"
+
+#. Translators: placeholder of the empty name field
+#: ui/gamepad-window.slint:781
+msgctxt "ProfileCard"
+msgid "Name for a new profile"
+msgstr "새 프로필 이름"
+
+#. Translators: saves the settings as a profile with the name typed
+#: ui/gamepad-window.slint:794
+msgctxt "ProfileCard"
+msgid "Save As"
+msgstr "이름으로 저장"
+
+#. Translators: saves the default settings as a new profile
+#: ui/gamepad-window.slint:824
+msgctxt "ProfileCard"
+msgid "New"
+msgstr "새로 만들기"
+
+#. Translators: imports a profile from a file
+#: ui/gamepad-window.slint:834
+msgctxt "ProfileCard"
+msgid "Import"
+msgstr "가져오기"
+
+#. Translators: exports the settings to a profile file
+#: ui/gamepad-window.slint:846
+msgctxt "ProfileCard"
+msgid "Export"
+msgstr "내보내기"
+
+#. Translators: deletes the selected profile
+#: ui/gamepad-window.slint:858
+msgctxt "ProfileCard"
+msgid "Delete"
+msgstr "삭제"
+
+#. Translators: the title of the gamepad settings window
+#: ui/gamepad-window.slint:987
+msgctxt "GamepadWindow"
+msgid "Gamepad"
+msgstr "게임패드"
+
+#. Translators: the section with dead zones, speeds and response curve
+#: ui/gamepad-window.slint:1149
+msgctxt "GamepadWindow"
+msgid "Tuning"
+msgstr "세부 조정"
+
+#: ui/gamepad-window.slint:1150
+msgctxt "GamepadWindow"
+msgid ""
+"Dead zones ignore stick drift. Speeds scale panning and zooming, and a "
+"higher response curve gives finer control near the centre. Double-click a "
+"slider to reset it."
+msgstr ""
+"데드존은 스틱 드리프트를 무시합니다. 속도는 이동과 확대/축소의 빠르기를 조절"
+"하며, 응답 곡선을 높이면 중앙 부근에서 더 세밀하게 조작할 수 있습니다. 슬라이"
+"더를 더블클릭하면 초기화됩니다."
+
+#. Translators: the mouse pointer of the system, which sticks can move
+#: ui/gamepad-window.slint:1163
+msgctxt "GamepadWindow"
+msgid "System Pointer"
+msgstr "시스템 포인터"
+
+#. Translators: the name of the on/off switch, read out by screen readers
+#: ui/gamepad-window.slint:1174
+msgctxt "GamepadWindow"
+msgid "System pointer control"
+msgstr "시스템 포인터 제어"
+
+#. Translators: the section that assigns actions to the controls
+#: ui/gamepad-window.slint:1202
+msgctxt "GamepadWindow"
+msgid "Mappings"
+msgstr "매핑"
+
+#. Translators: Start and Select are names printed on controller buttons
+#: ui/gamepad-window.slint:1204
+msgctxt "GamepadWindow"
+msgid ""
+"Defaults: the left stick pans, the right stick and the triggers zoom, the D-"
+"pad switches panes and tabs, the shoulder buttons step through the series, "
+"Start pauses and Select shows this window."
+msgstr ""
+"기본값: 왼쪽 스틱은 이동, 오른쪽 스틱과 트리거는 확대/축소, 방향 패드는 창과 "
+"탭 전환, 숄더 버튼은 시리즈 항목 이동, Start는 일시 중지, Select는 이 창 표시"
+"입니다."
+
+#. Translators: a heading (in capitals in English: use your own style)
+#: ui/gamepad-window.slint:1208
+msgctxt "GamepadWindow"
+msgid "STICKS AND TRIGGERS"
+msgstr "스틱 및 트리거"
+
+#. Translators: a heading (in capitals in English: use your own style)
+#: ui/gamepad-window.slint:1218
+msgctxt "GamepadWindow"
+msgid "BUTTONS"
+msgstr "버튼"

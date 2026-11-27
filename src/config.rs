@@ -5,7 +5,12 @@
 //! field has a default, unknown keys are ignored and each top-level field is
 //! read independently, so a newer or partly damaged file never resets the
 //! whole configuration (GPD-8).
+//!
+//! Keys (controls, actions, tuning values) are stored in English and never
+//! translated; their `label`s are what the window shows, in the language of
+//! the interface.
 
+use eov_plugin_api::i18n::{isolate, tr};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::collections::BTreeMap;
@@ -123,28 +128,48 @@ impl Control {
         }
     }
 
-    pub fn label(self) -> &'static str {
+    /// The name shown in the window, in the language of the interface.
+    pub fn label(self) -> String {
         match self {
-            Control::LeftStickX => "Left Stick X",
-            Control::LeftStickY => "Left Stick Y",
-            Control::RightStickX => "Right Stick X",
-            Control::RightStickY => "Right Stick Y",
-            Control::LeftTrigger => "Left Trigger",
-            Control::RightTrigger => "Right Trigger",
-            Control::DPadLeft => "D-Pad Left",
-            Control::DPadRight => "D-Pad Right",
-            Control::DPadUp => "D-Pad Up",
-            Control::DPadDown => "D-Pad Down",
-            Control::South => "South Button",
-            Control::East => "East Button",
-            Control::North => "North Button",
-            Control::West => "West Button",
-            Control::LeftShoulder => "Left Shoulder",
-            Control::RightShoulder => "Right Shoulder",
-            Control::LeftStickClick => "Left Stick Click",
-            Control::RightStickClick => "Right Stick Click",
-            Control::Start => "Start",
-            Control::Select => "Select",
+            // Translators: the horizontal (X) axis of the left stick of a game
+            // controller; keep the letter X
+            Control::LeftStickX => tr!("Left Stick X"),
+            // Translators: the vertical (Y) axis of the left stick
+            Control::LeftStickY => tr!("Left Stick Y"),
+            // Translators: the horizontal (X) axis of the right stick
+            Control::RightStickX => tr!("Right Stick X"),
+            // Translators: the vertical (Y) axis of the right stick
+            Control::RightStickY => tr!("Right Stick Y"),
+            // Translators: the analog trigger under the left shoulder (LT, L2)
+            Control::LeftTrigger => tr!("Left Trigger"),
+            // Translators: the analog trigger under the right shoulder (RT, R2)
+            Control::RightTrigger => tr!("Right Trigger"),
+            // Translators: D-Pad is the directional pad, the cross of four
+            // buttons on the left of a game controller
+            Control::DPadLeft => tr!("D-Pad Left"),
+            Control::DPadRight => tr!("D-Pad Right"),
+            Control::DPadUp => tr!("D-Pad Up"),
+            Control::DPadDown => tr!("D-Pad Down"),
+            // Translators: the four face buttons are named by their position:
+            // the bottom one (A on Xbox, Cross on PlayStation, B on Nintendo)
+            Control::South => tr!("South Button"),
+            // Translators: the right face button (B on Xbox, Circle on PlayStation)
+            Control::East => tr!("East Button"),
+            // Translators: the top face button (Y on Xbox, Triangle on PlayStation)
+            Control::North => tr!("North Button"),
+            // Translators: the left face button (X on Xbox, Square on PlayStation)
+            Control::West => tr!("West Button"),
+            // Translators: the left shoulder button, or bumper (LB, L1)
+            Control::LeftShoulder => tr!("Left Shoulder"),
+            // Translators: the right shoulder button, or bumper (RB, R1)
+            Control::RightShoulder => tr!("Right Shoulder"),
+            // Translators: pressing the left stick down like a button (LS, L3)
+            Control::LeftStickClick => tr!("Left Stick Click"),
+            // Translators: pressing the right stick down like a button (RS, R3)
+            Control::RightStickClick => tr!("Right Stick Click"),
+            // Printed on the buttons of controllers: not translated.
+            Control::Start => "Start".to_string(),
+            Control::Select => "Select".to_string(),
         }
     }
 
@@ -261,27 +286,39 @@ impl Action {
             .find(|action| action.key() == key)
     }
 
-    pub fn label(self) -> &'static str {
+    /// The name shown in the window, in the language of the interface.
+    pub fn label(self) -> String {
         match self {
-            Action::None => "Unassigned",
-            Action::PanHorizontal => "Pan Horizontally",
-            Action::PanVertical => "Pan Vertically",
-            Action::Zoom => "Zoom (Up / Right Zooms In)",
-            Action::ZoomIn => "Zoom In",
-            Action::ZoomOut => "Zoom Out",
-            Action::PointerHorizontal => "Move Pointer Horizontally",
-            Action::PointerVertical => "Move Pointer Vertically",
-            Action::PreviousPane => "Previous Pane",
-            Action::NextPane => "Next Pane",
-            Action::PreviousTab => "Previous Tab",
-            Action::NextTab => "Next Tab",
-            Action::ToggleSeriesBar => "Toggle Series Bar",
-            Action::PreviousSeriesItem => "Previous Series Item",
-            Action::NextSeriesItem => "Next Series Item",
-            Action::OpenSeriesItem => "Open Selected Series Item",
-            Action::FitView => "Fit View",
-            Action::ToggleWindow => "Show / Hide This Window",
-            Action::TogglePause => "Enable / Pause",
+            // Translators: a control that does nothing
+            Action::None => tr!("Unassigned"),
+            // Translators: an action of a game controller; to pan is to move
+            // the view of the slide sideways
+            Action::PanHorizontal => tr!("Pan Horizontally"),
+            Action::PanVertical => tr!("Pan Vertically"),
+            // Translators: for a stick or trigger: pushing it up or to the
+            // right zooms in, the other way zooms out
+            Action::Zoom => tr!("Zoom (Up / Right Zooms In)"),
+            Action::ZoomIn => tr!("Zoom In"),
+            Action::ZoomOut => tr!("Zoom Out"),
+            // Translators: moves the mouse pointer of the operating system
+            Action::PointerHorizontal => tr!("Move Pointer Horizontally"),
+            Action::PointerVertical => tr!("Move Pointer Vertically"),
+            // Translators: a pane is one of the views side by side in eov
+            Action::PreviousPane => tr!("Previous Pane"),
+            Action::NextPane => tr!("Next Pane"),
+            Action::PreviousTab => tr!("Previous Tab"),
+            Action::NextTab => tr!("Next Tab"),
+            // Translators: the series bar lists the slides of a series
+            Action::ToggleSeriesBar => tr!("Toggle Series Bar"),
+            Action::PreviousSeriesItem => tr!("Previous Series Item"),
+            Action::NextSeriesItem => tr!("Next Series Item"),
+            Action::OpenSeriesItem => tr!("Open Selected Series Item"),
+            // Translators: fits the whole slide into the view
+            Action::FitView => tr!("Fit View"),
+            // Translators: this window is the gamepad settings window
+            Action::ToggleWindow => tr!("Show / Hide This Window"),
+            // Translators: turns gamepad input back on, or pauses it
+            Action::TogglePause => tr!("Enable / Pause"),
         }
     }
 
@@ -414,15 +451,21 @@ impl TuningKey {
         Self::ALL.into_iter().find(|k| k.key() == key)
     }
 
-    pub fn label(self) -> &'static str {
+    /// The name shown in the window, in the language of the interface.
+    pub fn label(self) -> String {
         match self {
-            TuningKey::LeftDeadZone => "Left Dead Zone",
-            TuningKey::RightDeadZone => "Right Dead Zone",
-            TuningKey::TriggerDeadZone => "Trigger Dead Zone",
-            TuningKey::PanSensitivity => "Pan Speed",
-            TuningKey::ZoomSensitivity => "Zoom Speed",
-            TuningKey::ResponseCurve => "Response Curve",
-            TuningKey::PointerSpeed => "Pointer Speed",
+            // Translators: a dead zone is how far a stick may move before it
+            // counts as input (it hides stick drift); shown in a narrow column
+            TuningKey::LeftDeadZone => tr!("Left Dead Zone"),
+            TuningKey::RightDeadZone => tr!("Right Dead Zone"),
+            TuningKey::TriggerDeadZone => tr!("Trigger Dead Zone"),
+            TuningKey::PanSensitivity => tr!("Pan Speed"),
+            TuningKey::ZoomSensitivity => tr!("Zoom Speed"),
+            // Translators: how input grows with the deflection of a stick: a
+            // higher curve gives finer control near the centre
+            TuningKey::ResponseCurve => tr!("Response Curve"),
+            // Translators: the speed of the mouse pointer of the operating system
+            TuningKey::PointerSpeed => tr!("Pointer Speed"),
         }
     }
 
@@ -638,7 +681,7 @@ impl ProfileFile {
     pub fn from_value(value: &Value) -> Result<(Self, Vec<String>), String> {
         let map = value
             .as_object()
-            .ok_or_else(|| "not a profile object".to_string())?;
+            .ok_or_else(|| tr!("not a profile object"))?;
         let mut file = Self {
             version: 0,
             ..Self::default()
@@ -647,7 +690,8 @@ impl ProfileFile {
         if let Some(version) = map.get("version") {
             match version.as_u64().and_then(|v| u32::try_from(v).ok()) {
                 Some(version) => file.version = version,
-                None => warnings.push(format!("ignoring the version {version}")),
+                // Translators: {} is the value of the "version" field of a profile
+                None => warnings.push(tr!("ignoring the version {}", isolate(version))),
             }
         }
         for (key, slot) in [
@@ -662,7 +706,13 @@ impl ProfileFile {
             if let Some(value) = map.get(key) {
                 match value.as_f64() {
                     Some(number) => *slot = number as f32,
-                    None => warnings.push(format!("ignoring '{key}': {value} is not a number")),
+                    None => warnings.push(tr!(
+                        // Translators: {key} is a field of a profile file, such as
+                        // 'pan_sensitivity'; {value} is what the field holds
+                        "ignoring '{key}': {value} is not a number",
+                        key = isolate(key),
+                        value = isolate(value)
+                    )),
                 }
             }
         }
@@ -676,7 +726,8 @@ impl ProfileFile {
                         })
                         .collect();
                 }
-                None => warnings.push("ignoring 'mappings': not an object".to_string()),
+                // Translators: 'mappings' is a field of a profile file: keep the name
+                None => warnings.push(tr!("ignoring 'mappings': not an object")),
             }
         }
         Ok((file, warnings))
@@ -691,7 +742,7 @@ impl ProfileFile {
             .as_object()
             .is_some_and(|map| Self::FIELDS.iter().any(|key| map.contains_key(*key)));
         if !is_profile {
-            return Err("the file is not a gamepad profile".to_string());
+            return Err(tr!("the file is not a gamepad profile"));
         }
         Self::from_value(&value).map(|(file, _)| file)
     }
@@ -740,7 +791,7 @@ impl PersistedState {
             return (state, warnings);
         };
         let Some(map) = value.as_object() else {
-            warnings.push("the stored gamepad settings are not an object".to_string());
+            warnings.push(tr!("the stored gamepad settings are not an object"));
             return (state, warnings);
         };
         fn field<T: serde::de::DeserializeOwned>(
@@ -752,7 +803,13 @@ impl PersistedState {
             match serde_json::from_value(value.clone()) {
                 Ok(parsed) => Some(parsed),
                 Err(error) => {
-                    warnings.push(format!("ignoring the stored '{key}': {error}"));
+                    warnings.push(tr!(
+                        // Translators: {key} is a stored setting, such as 'enabled'; {error}
+                        // says why it cannot be read
+                        "ignoring the stored '{key}': {error}",
+                        key = isolate(key),
+                        error = error
+                    ));
                     None
                 }
             }
@@ -776,9 +833,14 @@ impl PersistedState {
             match ProfileFile::from_value(config) {
                 Ok((config, problems)) => {
                     state.config = config;
-                    warnings.extend(problems.into_iter().map(|p| format!("settings: {p}")));
+                    warnings.extend(
+                        problems
+                            .into_iter()
+                            // Translators: {} is a problem with the current settings (not a profile)
+                            .map(|problem| tr!("settings: {}", problem)),
+                    );
                 }
-                Err(error) => warnings.push(format!("ignoring the stored settings: {error}")),
+                Err(error) => warnings.push(tr!("ignoring the stored settings: {}", error)),
             }
         }
         if let Some(token) = field(map, "portal_restore_token", &mut warnings) {
@@ -786,22 +848,38 @@ impl PersistedState {
         }
         if let Some(profiles) = map.get("profiles").and_then(Value::as_object) {
             for (name, profile) in profiles {
+                // The name as written in the file (quoted, with escapes).
+                let quoted = isolate(format!("{name:?}"));
                 if normalize_profile_name(name).as_deref() != Ok(name) {
-                    warnings.push(format!("ignoring the profile with the name {name:?}"));
+                    warnings.push(tr!("ignoring the profile with the name {}", quoted));
                     continue;
                 }
                 if state.profiles.len() >= MAX_PROFILES {
-                    warnings.push(format!(
-                        "ignoring the profile {name:?}: at most {MAX_PROFILES} profiles are kept"
+                    warnings.push(tr!(
+                        "ignoring the profile {name}: at most {n} profile is kept"
+                            | "ignoring the profile {name}: at most {n} profiles are kept"
+                                % MAX_PROFILES,
+                        name = quoted
                     ));
                     continue;
                 }
                 match ProfileFile::from_value(profile) {
                     Ok((profile, problems)) => {
                         state.profiles.insert(name.clone(), profile);
-                        warnings.extend(problems.into_iter().map(|p| format!("{name}: {p}")));
+                        warnings.extend(problems.into_iter().map(|problem| {
+                            tr!(
+                                // Translators: {name} is the name of a profile,
+                                // {problem} what is wrong with it
+                                "{name}: {problem}",
+                                name = isolate(name),
+                                problem = problem
+                            )
+                        }));
                     }
-                    Err(error) => warnings.push(format!("ignoring the profile {name:?}: {error}")),
+                    Err(error) => {
+                        // Translators: the name of a profile, then why it cannot be read
+                        warnings.push(tr!("ignoring the profile {}: {}", quoted, error));
+                    }
                 }
             }
         }
@@ -902,15 +980,15 @@ impl Prefs {
 pub fn normalize_profile_name(raw: &str) -> Result<String, String> {
     let name = raw.trim();
     if name.is_empty() {
-        return Err("Enter a name for the profile.".to_string());
+        return Err(tr!("Enter a name for the profile."));
     }
     if name.chars().count() > MAX_PROFILE_NAME {
-        return Err(format!(
-            "Profile names are limited to {MAX_PROFILE_NAME} characters."
-        ));
+        return Err(tr!("Profile names are limited to {n} character."
+            | "Profile names are limited to {n} characters."
+                % MAX_PROFILE_NAME));
     }
     if name.chars().any(char::is_control) {
-        return Err("Profile names cannot contain control characters.".to_string());
+        return Err(tr!("Profile names cannot contain control characters."));
     }
     Ok(name.to_string())
 }
@@ -919,7 +997,14 @@ pub fn normalize_profile_name(raw: &str) -> Result<String, String> {
 pub fn unique_profile_name(base: &str, taken: impl Fn(&str) -> bool) -> String {
     let base: String = base.chars().take(MAX_PROFILE_NAME - 4).collect();
     let base = base.trim();
-    let base = if base.is_empty() { "Profile" } else { base };
+    let fallback;
+    let base = if base.is_empty() {
+        // Translators: the name given to a profile whose name would be empty
+        fallback = tr!("Profile name" => "Profile");
+        fallback.as_str()
+    } else {
+        base
+    };
     if !taken(base) {
         return base.to_string();
     }

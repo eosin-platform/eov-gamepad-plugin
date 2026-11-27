@@ -1,0 +1,954 @@
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: gamepad\n"
+"Report-Msgid-Bugs-To: https://github.com/eosin-platform/eov-gamepad-plugin/"
+"issues\n"
+"Language-Team: Romanian\n"
+"Language: ro\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=3; plural=(n==1 ? 0 : (n==0 || (n%100 > 0 && n%100 < "
+"20)) ? 1 : 2);\n"
+"X-Review-Status: machine-translated; not yet reviewed by a native speaker\n"
+
+#: plugin.toml
+msgctxt "plugin.toml"
+msgid "Gamepad"
+msgstr "Gamepad"
+
+#: plugin.toml
+msgctxt "plugin.toml"
+msgid ""
+"Provides support for using gamepads as input devices: pan, zoom and switch "
+"panes, tabs and series items with a game controller."
+msgstr ""
+"Permite folosirea gamepadurilor ca dispozitive de intrare: deplasați "
+"vizualizarea, faceți zoom și comutați între panouri, file și elemente ale "
+"seriei cu un controler de joc."
+
+#. Translators: the horizontal (X) axis of the left stick of a game
+#. controller; keep the letter X
+#: src/config.rs:136
+msgid "Left Stick X"
+msgstr "Stick stâng X"
+
+#. Translators: the vertical (Y) axis of the left stick
+#: src/config.rs:138
+msgid "Left Stick Y"
+msgstr "Stick stâng Y"
+
+#. Translators: the horizontal (X) axis of the right stick
+#: src/config.rs:140
+msgid "Right Stick X"
+msgstr "Stick drept X"
+
+#. Translators: the vertical (Y) axis of the right stick
+#: src/config.rs:142
+msgid "Right Stick Y"
+msgstr "Stick drept Y"
+
+#. Translators: the analog trigger under the left shoulder (LT, L2)
+#: src/config.rs:144
+msgid "Left Trigger"
+msgstr "Trăgaci stâng"
+
+#. Translators: the analog trigger under the right shoulder (RT, R2)
+#: src/config.rs:146
+msgid "Right Trigger"
+msgstr "Trăgaci drept"
+
+#. Translators: D-Pad is the directional pad, the cross of four
+#. buttons on the left of a game controller
+#: src/config.rs:149
+msgid "D-Pad Left"
+msgstr "D-pad stânga"
+
+#: src/config.rs:150
+msgid "D-Pad Right"
+msgstr "D-pad dreapta"
+
+#: src/config.rs:151
+msgid "D-Pad Up"
+msgstr "D-pad sus"
+
+#: src/config.rs:152
+msgid "D-Pad Down"
+msgstr "D-pad jos"
+
+#. Translators: the four face buttons are named by their position:
+#. the bottom one (A on Xbox, Cross on PlayStation, B on Nintendo)
+#: src/config.rs:155
+msgid "South Button"
+msgstr "Buton de jos"
+
+#. Translators: the right face button (B on Xbox, Circle on PlayStation)
+#: src/config.rs:157
+msgid "East Button"
+msgstr "Buton din dreapta"
+
+#. Translators: the top face button (Y on Xbox, Triangle on PlayStation)
+#: src/config.rs:159
+msgid "North Button"
+msgstr "Buton de sus"
+
+#. Translators: the left face button (X on Xbox, Square on PlayStation)
+#: src/config.rs:161
+msgid "West Button"
+msgstr "Buton din stânga"
+
+#. Translators: the left shoulder button, or bumper (LB, L1)
+#: src/config.rs:163
+msgid "Left Shoulder"
+msgstr "Buton de umăr stâng"
+
+#. Translators: the right shoulder button, or bumper (RB, R1)
+#: src/config.rs:165
+msgid "Right Shoulder"
+msgstr "Buton de umăr drept"
+
+#. Translators: pressing the left stick down like a button (LS, L3)
+#: src/config.rs:167
+msgid "Left Stick Click"
+msgstr "Apăsare stick stâng"
+
+#. Translators: pressing the right stick down like a button (RS, R3)
+#: src/config.rs:169
+msgid "Right Stick Click"
+msgstr "Apăsare stick drept"
+
+#. Translators: a control that does nothing
+#: src/config.rs:293
+msgid "Unassigned"
+msgstr "Neatribuit"
+
+#. Translators: an action of a game controller; to pan is to move
+#. the view of the slide sideways
+#: src/config.rs:296
+msgid "Pan Horizontally"
+msgstr "Deplasează orizontal"
+
+#: src/config.rs:297
+msgid "Pan Vertically"
+msgstr "Deplasează vertical"
+
+#. Translators: for a stick or trigger: pushing it up or to the
+#. right zooms in, the other way zooms out
+#: src/config.rs:300
+msgid "Zoom (Up / Right Zooms In)"
+msgstr "Zoom (sus / dreapta mărește)"
+
+#: src/config.rs:301
+msgid "Zoom In"
+msgstr "Mărește"
+
+#: src/config.rs:302
+msgid "Zoom Out"
+msgstr "Micșorează"
+
+#. Translators: moves the mouse pointer of the operating system
+#: src/config.rs:304
+msgid "Move Pointer Horizontally"
+msgstr "Mută cursorul orizontal"
+
+#: src/config.rs:305
+msgid "Move Pointer Vertically"
+msgstr "Mută cursorul vertical"
+
+#. Translators: a pane is one of the views side by side in eov
+#: src/config.rs:307
+msgid "Previous Pane"
+msgstr "Panoul anterior"
+
+#: src/config.rs:308
+msgid "Next Pane"
+msgstr "Panoul următor"
+
+#: src/config.rs:309
+msgid "Previous Tab"
+msgstr "Fila anterioară"
+
+#: src/config.rs:310
+msgid "Next Tab"
+msgstr "Fila următoare"
+
+#. Translators: the series bar lists the slides of a series
+#: src/config.rs:312
+msgid "Toggle Series Bar"
+msgstr "Afișează/ascunde bara seriei"
+
+#: src/config.rs:313
+msgid "Previous Series Item"
+msgstr "Elementul anterior din serie"
+
+#: src/config.rs:314
+msgid "Next Series Item"
+msgstr "Elementul următor din serie"
+
+#: src/config.rs:315
+msgid "Open Selected Series Item"
+msgstr "Deschide elementul selectat din serie"
+
+#. Translators: fits the whole slide into the view
+#: src/config.rs:317
+msgid "Fit View"
+msgstr "Încadrează lama în panou"
+
+#. Translators: this window is the gamepad settings window
+#: src/config.rs:319
+msgid "Show / Hide This Window"
+msgstr "Afișează / ascunde această fereastră"
+
+#. Translators: turns gamepad input back on, or pauses it
+#: src/config.rs:321
+msgid "Enable / Pause"
+msgstr "Activează / pune pe pauză"
+
+#. Translators: a dead zone is how far a stick may move before it
+#. counts as input (it hides stick drift); shown in a narrow column
+#: src/config.rs:459
+msgid "Left Dead Zone"
+msgstr "Zona moartă stânga"
+
+#: src/config.rs:460
+msgid "Right Dead Zone"
+msgstr "Zona moartă dreapta"
+
+#: src/config.rs:461
+msgid "Trigger Dead Zone"
+msgstr "Zona moartă trăgace"
+
+#: src/config.rs:462
+msgid "Pan Speed"
+msgstr "Viteza de deplasare"
+
+#: src/config.rs:463
+msgid "Zoom Speed"
+msgstr "Viteza de zoom"
+
+#. Translators: how input grows with the deflection of a stick: a
+#. higher curve gives finer control near the centre
+#: src/config.rs:466
+msgid "Response Curve"
+msgstr "Curba de răspuns"
+
+#. Translators: the speed of the mouse pointer of the operating system
+#: src/config.rs:468
+msgid "Pointer Speed"
+msgstr "Viteza cursorului"
+
+#: src/config.rs:684
+msgid "not a profile object"
+msgstr "nu este un obiect de profil"
+
+#. Translators: {} is the value of the "version" field of a profile
+#: src/config.rs:694
+msgid "ignoring the version {}"
+msgstr "se ignoră versiunea {}"
+
+#. Translators: {key} is a field of a profile file, such as
+#. 'pan_sensitivity'; {value} is what the field holds
+#: src/config.rs:712
+msgid "ignoring '{key}': {value} is not a number"
+msgstr "se ignoră „{key}”: {value} nu este un număr"
+
+#. Translators: 'mappings' is a field of a profile file: keep the name
+#: src/config.rs:730
+msgid "ignoring 'mappings': not an object"
+msgstr "se ignoră „mappings”: nu este un obiect"
+
+#: src/config.rs:745
+msgid "the file is not a gamepad profile"
+msgstr "fișierul nu este un profil de gamepad"
+
+#: src/config.rs:794
+msgid "the stored gamepad settings are not an object"
+msgstr "setările stocate ale gamepadului nu sunt un obiect"
+
+#. Translators: {key} is a stored setting, such as 'enabled'; {error}
+#. says why it cannot be read
+#: src/config.rs:809
+msgid "ignoring the stored '{key}': {error}"
+msgstr "se ignoră „{key}” stocat: {error}"
+
+#. Translators: {} is a problem with the current settings (not a profile)
+#: src/config.rs:840
+msgid "settings: {}"
+msgstr "setări: {}"
+
+#: src/config.rs:843
+msgid "ignoring the stored settings: {}"
+msgstr "se ignoră setările stocate: {}"
+
+#: src/config.rs:854
+msgid "ignoring the profile with the name {}"
+msgstr "se ignoră profilul cu numele {}"
+
+#: src/config.rs:859
+msgid "ignoring the profile {name}: at most {n} profile is kept"
+msgid_plural "ignoring the profile {name}: at most {n} profiles are kept"
+msgstr[0] "se ignoră profilul {name}: se păstrează cel mult {n} profil"
+msgstr[1] "se ignoră profilul {name}: se păstrează cel mult {n} profiluri"
+msgstr[2] "se ignoră profilul {name}: se păstrează cel mult {n} de profiluri"
+
+#. Translators: {name} is the name of a profile,
+#. {problem} what is wrong with it
+#: src/config.rs:873
+msgid "{name}: {problem}"
+msgstr "{name}: {problem}"
+
+#. Translators: the name of a profile, then why it cannot be read
+#: src/config.rs:881
+msgid "ignoring the profile {}: {}"
+msgstr "se ignoră profilul {}: {}"
+
+#: src/config.rs:983
+msgid "Enter a name for the profile."
+msgstr "Introduceți un nume pentru profil."
+
+#: src/config.rs:986
+msgid "Profile names are limited to {n} character."
+msgid_plural "Profile names are limited to {n} characters."
+msgstr[0] "Numele profilurilor sunt limitate la {n} caracter."
+msgstr[1] "Numele profilurilor sunt limitate la {n} caractere."
+msgstr[2] "Numele profilurilor sunt limitate la {n} de caractere."
+
+#: src/config.rs:991
+msgid "Profile names cannot contain control characters."
+msgstr "Numele profilurilor nu pot conține caractere de control."
+
+#. Translators: the name given to a profile whose name would be empty
+#: src/config.rs:1003
+msgctxt "Profile name"
+msgid "Profile"
+msgstr "Profil"
+
+#. Translators: shown after the name of a controller; {level} is the
+#. charge of its battery in percent
+#: src/engine.rs:74
+msgid "battery {level}%"
+msgstr "baterie {level}%"
+
+#. Translators: shown after the name of a controller; {level} is the
+#. charge of its battery in percent
+#: src/engine.rs:77
+msgid "charging, {level}%"
+msgstr "se încarcă, {level}%"
+
+#. Translators: shown after the name of a controller: its battery is full
+#: src/engine.rs:79
+msgid "charged"
+msgstr "încărcat"
+
+#. Translators: {} is a folder of the system, such as /dev/input
+#: src/environment.rs:88
+msgid "{} is not available, so no controller can be opened."
+msgstr "{} nu este disponibil, deci nu poate fi deschis niciun controler."
+
+#. Translators: udev is the Linux device manager and uaccess the name
+#. of its tag: keep both
+#: src/environment.rs:112
+msgid ""
+"A game controller is connected, but eov is not allowed to read it. udev "
+"normally gives the logged-in user access to controllers (the uaccess tag); "
+"if yours is not recognised as a joystick, add a udev rule that tags it with "
+"uaccess, then reconnect it."
+msgstr ""
+"Un controler de joc este conectat, dar eov nu are permisiunea de a-l citi. "
+"În mod normal, udev oferă utilizatorului autentificat acces la controlere "
+"(eticheta uaccess); dacă al dvs. nu este recunoscut ca joystick, adăugați o "
+"regulă udev care îi atribuie eticheta uaccess, apoi reconectați-l."
+
+#. Translators: {command} is a command to type and {option} one of
+#. its options: they stay as they are
+#: src/environment.rs:124
+msgid ""
+"eov runs as a Flatpak without access to input devices. Allow it by running "
+"{command} (Flatpak 1.15.6 or newer; older versions need {option}), then "
+"restart eov."
+msgstr ""
+"eov rulează ca Flatpak fără acces la dispozitivele de intrare. Permiteți "
+"accesul rulând {command} (Flatpak 1.15.6 sau mai nou; versiunile mai vechi "
+"necesită {option}), apoi reporniți eov."
+
+#. Translators: the type of file in the file dialog
+#: src/plugin.rs:91
+msgid "Gamepad profile"
+msgstr "Profil de gamepad"
+
+#. Translators: the tooltip of the toolbar button, and the title of
+#. the gamepad settings window
+#: src/plugin.rs:100 src/ui.rs:26
+msgid "Gamepad"
+msgstr "Gamepad"
+
+#: src/plugin.rs:108
+msgid "the path has no file name"
+msgstr "calea nu are un nume de fișier"
+
+#: src/plugin.rs:123
+msgid "the file is too large to be a gamepad profile"
+msgstr "fișierul este prea mare pentru a fi un profil de gamepad"
+
+#: src/plugin.rs:212
+msgid "Cannot open the gamepad window"
+msgstr "Nu se poate deschide fereastra gamepadului"
+
+#. Translators: {} is the name of a profile
+#: src/plugin.rs:272
+msgid "The profile “{}” no longer exists."
+msgstr "Profilul „{}” nu mai există."
+
+#. Translators: the name of a new profile when none was typed
+#: src/plugin.rs:280
+msgctxt "Profile name"
+msgid "Untitled"
+msgstr "Fără titlu"
+
+#. Translators: {} is the name of a profile
+#: src/plugin.rs:310
+msgid ""
+"A profile named “{}” already exists. Replace it with the default settings?"
+msgstr "Există deja un profil numit „{}”. Îl înlocuiți cu setările implicite?"
+
+#. Translators: {} is the name of a profile
+#: src/plugin.rs:316
+msgid ""
+"A profile named “{}” already exists. Replace it with the current settings?"
+msgstr "Există deja un profil numit „{}”. Îl înlocuiți cu setările curente?"
+
+#: src/plugin.rs:321
+msgid "Replace profile?"
+msgstr "Înlocuiți profilul?"
+
+#. Translators: a button: replaces the profile
+#: src/plugin.rs:324
+msgid "Replace"
+msgstr "Înlocuiește"
+
+#: src/plugin.rs:325 src/plugin.rs:370
+msgid "Cancel"
+msgstr "Anulează"
+
+#: src/plugin.rs:338
+msgid "You already have {n} profile. Delete one to save another."
+msgid_plural "You already have {n} profiles. Delete one to save another."
+msgstr[0] "Aveți deja {n} profil. Ștergeți unul pentru a salva altul."
+msgstr[1] "Aveți deja {n} profiluri. Ștergeți unul pentru a salva altul."
+msgstr[2] "Aveți deja {n} de profiluri. Ștergeți unul pentru a salva altul."
+
+#: src/plugin.rs:358
+msgid "Choose a saved profile to delete."
+msgstr "Alegeți un profil salvat pentru a-l șterge."
+
+#: src/plugin.rs:362
+msgid "Delete profile?"
+msgstr "Ștergeți profilul?"
+
+#. Translators: {} is the name of a profile
+#: src/plugin.rs:365
+msgid "Delete the profile “{}”? This cannot be undone."
+msgstr "Ștergeți profilul „{}”? Această acțiune nu poate fi anulată."
+
+#. Translators: a button: deletes the profile
+#: src/plugin.rs:369
+msgid "Delete"
+msgstr "Șterge"
+
+#: src/plugin.rs:384
+msgid "Import a gamepad profile"
+msgstr "Importă un profil de gamepad"
+
+#. Translators: the name of an exported profile when none is selected
+#: src/plugin.rs:401
+msgctxt "Profile name"
+msgid "Gamepad profile"
+msgstr "Profil de gamepad"
+
+#: src/plugin.rs:407
+msgid "Export the gamepad profile"
+msgstr "Exportă profilul de gamepad"
+
+#. Translators: {} is the path of a file
+#: src/plugin.rs:465
+msgid "Cannot import {}"
+msgstr "Nu se poate importa {}"
+
+#. Translators: the name of an imported profile when its file name
+#. cannot be used
+#: src/plugin.rs:478
+msgctxt "Profile name"
+msgid "Imported"
+msgstr "Importat"
+
+#. Translators: {} is the name of a profile
+#: src/plugin.rs:496
+msgid "Imported the profile “{}”"
+msgstr "S-a importat profilul „{}”"
+
+#: src/plugin.rs:502
+msgid "You already have {n} profile. Delete one to import another."
+msgid_plural "You already have {n} profiles. Delete one to import another."
+msgstr[0] "Aveți deja {n} profil. Ștergeți unul pentru a importa altul."
+msgstr[1] "Aveți deja {n} profiluri. Ștergeți unul pentru a importa altul."
+msgstr[2] "Aveți deja {n} de profiluri. Ștergeți unul pentru a importa altul."
+
+#: src/plugin.rs:527
+msgid "Cannot export the profile"
+msgstr "Nu se poate exporta profilul"
+
+#. Translators: {name} is the name of a profile, {path} a file
+#: src/plugin.rs:536
+msgid "Exported “{name}” to {path}"
+msgstr "S-a exportat „{name}” în {path}"
+
+#. Translators: {} is the path of a file
+#: src/plugin.rs:543
+msgid "Cannot write {}"
+msgstr "Nu se poate scrie {}"
+
+#: src/plugin.rs:640
+msgid "Imported the gamepad settings of the previous plugin version"
+msgstr ""
+"S-au importat setările gamepadului din versiunea anterioară a pluginului"
+
+#: src/plugin.rs:642
+msgid ""
+"Imported the gamepad settings and {n} profile of the previous plugin version"
+msgid_plural ""
+"Imported the gamepad settings and {n} profiles of the previous plugin version"
+msgstr[0] ""
+"S-au importat setările gamepadului și {n} profil din versiunea anterioară a "
+"pluginului"
+msgstr[1] ""
+"S-au importat setările gamepadului și {n} profiluri din versiunea anterioară "
+"a pluginului"
+msgstr[2] ""
+"S-au importat setările gamepadului și {n} de profiluri din versiunea "
+"anterioară a pluginului"
+
+#: src/plugin.rs:653
+msgid "Some gamepad settings could not be read and use their defaults"
+msgstr ""
+"Unele setări ale gamepadului nu au putut fi citite și folosesc valorile "
+"implicite"
+
+#. Translators: how eov moves the pointer on Wayland: the desktop portal for
+#. remote desktop control; name it as Linux desktops in your language do
+#: src/pointer.rs:44
+msgid "Remote Desktop portal"
+msgstr "portalul Remote Desktop"
+
+#. Translators: how eov moves the pointer on macOS and Windows
+#: src/pointer.rs:46
+msgid "system events"
+msgstr "evenimente de sistem"
+
+#. Translators: {} is the reason
+#: src/pointer.rs:208
+msgid "System pointer control was turned off: {}"
+msgstr "Controlul cursorului sistemului a fost dezactivat: {}"
+
+#: src/pointer.rs:221
+msgid "System pointer control is not available"
+msgstr "Controlul cursorului sistemului nu este disponibil"
+
+#. Translators: the Remote Desktop portal as in "Remote Desktop portal"; {} is the
+#. portal's own error, often in English
+#: src/pointer.rs:312
+msgid "the Remote Desktop portal is not available ({})"
+msgstr "portalul Remote Desktop nu este disponibil ({})"
+
+#: src/pointer.rs:316
+msgid "cannot create a portal session ({})"
+msgstr "nu se poate crea o sesiune de portal ({})"
+
+#: src/pointer.rs:325
+msgid "cannot request pointer access ({})"
+msgstr "nu se poate solicita accesul la cursor ({})"
+
+#: src/pointer.rs:331
+msgid "cannot start the portal session ({})"
+msgstr "nu se poate porni sesiunea de portal ({})"
+
+#: src/pointer.rs:335
+msgid "pointer access was declined"
+msgstr "accesul la cursor a fost refuzat"
+
+#: src/pointer.rs:338
+msgid "pointer access was not granted ({})"
+msgstr "accesul la cursor nu a fost acordat ({})"
+
+#: src/pointer.rs:342
+msgid "pointer access was not granted"
+msgstr "accesul la cursor nu a fost acordat"
+
+#: src/pointer.rs:361
+msgid "no display server to send pointer motion to"
+msgstr ""
+"nu există un server de afișare căruia să i se trimită mișcarea cursorului"
+
+#. Translators: System Settings › Privacy & Security › Accessibility
+#. is where macOS grants the permission: use the names macOS shows
+#. in your language
+#: src/pointer.rs:403
+msgid ""
+"allow eov under System Settings › Privacy & Security › Accessibility; eov "
+"keeps trying"
+msgstr ""
+"permiteți accesul pentru eov în Configurări sistem › Confidențialitate și "
+"securitate › Accesibilitate; eov continuă să încerce"
+
+#: src/pointer.rs:424
+msgid "not supported on this platform"
+msgstr "nu este acceptat pe această platformă"
+
+#: src/shared.rs:267
+msgid "Gamepad settings could not be saved"
+msgstr "Setările gamepadului nu au putut fi salvate"
+
+#. Translators: a notification: what happened, then why
+#: src/shared.rs:394
+msgid "{message}: {detail}"
+msgstr "{message}: {detail}"
+
+#. Translators: the first entry of the list of profiles (changes are
+#. then saved, but not to a profile)
+#: src/ui.rs:94
+msgid "No profile"
+msgstr "Niciun profil"
+
+#: src/ui.rs:156
+msgid "Starting…"
+msgstr "Se pornește…"
+
+#. Translators: {} is the reason, from the system (often in English)
+#: src/ui.rs:159
+msgid "Controllers are unavailable: {}"
+msgstr "Controlerele nu sunt disponibile: {}"
+
+#. Translators: "Enable / Pause" is an action in the list of mappings
+#: src/ui.rs:164
+msgid ""
+"Paused. Turn it on here or press the controller button mapped to Enable / "
+"Pause."
+msgstr ""
+"Pus pe pauză. Reactivați-l aici sau apăsați butonul controlerului atribuit "
+"acțiunii „Activează / pune pe pauză”."
+
+#: src/ui.rs:168
+msgid "Waiting for a controller"
+msgstr "Se așteaptă un controler"
+
+#: src/ui.rs:171
+msgid "Ready. Input is ignored while eov is in the background."
+msgstr "Gata. Comenzile sunt ignorate cât timp eov este în fundal."
+
+#. Translators: {} is the name of the controller in use
+#: src/ui.rs:189
+msgid "Ready: {}"
+msgstr "Gata: {}"
+
+#: src/ui.rs:191
+msgid "Ready: {n} controller"
+msgid_plural "Ready: {n} controllers"
+msgstr[0] "Gata: {n} controler"
+msgstr[1] "Gata: {n} controlere"
+msgstr[2] "Gata: {n} de controlere"
+
+#. Translators: {} is the reason, from the system (often in English)
+#: src/ui.rs:203
+msgid "The controller subsystem could not start: {}"
+msgstr "Subsistemul de controlere nu a putut porni: {}"
+
+#: src/ui.rs:210
+msgid "No controllers detected. Connect one by USB or Bluetooth."
+msgstr ""
+"Nu s-a detectat niciun controler. Conectați unul prin USB sau Bluetooth."
+
+#: src/ui.rs:214
+msgid "The chosen controller is not connected, so every controller is used."
+msgstr ""
+"Controlerul ales nu este conectat, așa că se folosesc toate controlerele."
+
+#: src/ui.rs:216
+msgid "Every connected controller drives eov."
+msgstr "Toate controlerele conectate comandă eov."
+
+#. Translators: "Move Pointer" stands for the actions "Move Pointer
+#. Horizontally" and "Move Pointer Vertically" of the mappings
+#: src/ui.rs:228
+msgid ""
+"Your mappings include Move Pointer. Turn this on to let them move the system "
+"pointer while eov has focus."
+msgstr ""
+"Atribuirile dvs. includ „Mută cursorul”. Activați această opțiune pentru a "
+"le permite să miște cursorul sistemului cât timp eov este fereastra activă."
+
+#. Translators: "Move Pointer" stands for the actions "Move Pointer
+#. Horizontally" and "Move Pointer Vertically"; Remote Desktop and
+#. Accessibility are the names of system permissions: write them as
+#. the system shows them in your language
+#: src/ui.rs:237
+msgid ""
+"Off. When on, Move Pointer mappings move the system pointer while eov has "
+"focus. Wayland asks for Remote Desktop permission and macOS for "
+"Accessibility access."
+msgstr ""
+"Dezactivat. Când este activat, atribuirile „Mută cursorul” mișcă cursorul "
+"sistemului cât timp eov este fereastra activă. Wayland solicită permisiunea "
+"Remote Desktop, iar macOS accesul la Accesibilitate."
+
+#: src/ui.rs:246
+msgid "On. Starts when a mapped stick moves."
+msgstr "Activat. Pornește când se mișcă un stick atribuit."
+
+#: src/ui.rs:248
+msgid ""
+"On. Starts when a mapped stick moves. Map a stick to Move Pointer to use it."
+msgstr ""
+"Activat. Pornește când se mișcă un stick atribuit. Atribuiți unui stick "
+"acțiunea „Mută cursorul” pentru a-l folosi."
+
+#: src/ui.rs:250
+msgid "Connecting. The system may ask for permission."
+msgstr "Se conectează. Sistemul poate cere permisiunea."
+
+#: src/ui.rs:252
+msgid ""
+"Connecting. The system may ask for permission. Map a stick to Move Pointer "
+"to use it."
+msgstr ""
+"Se conectează. Sistemul poate cere permisiunea. Atribuiți unui stick "
+"acțiunea „Mută cursorul” pentru a-l folosi."
+
+#. Translators: {} is how the pointer is moved, such as "XTest" or
+#. "Remote Desktop portal"
+#: src/ui.rs:257
+msgid "Active ({})."
+msgstr "Activ ({})."
+
+#: src/ui.rs:259
+msgid "Active ({}). Map a stick to Move Pointer to use it."
+msgstr ""
+"Activ ({}). Atribuiți unui stick acțiunea „Mută cursorul” pentru a-l folosi."
+
+#. Translators: {} is the reason
+#: src/ui.rs:263
+msgid "Not available: {}"
+msgstr "Indisponibil: {}"
+
+#. Translators: {} is the reason, a phrase without a full stop
+#: src/ui.rs:267
+msgid "Not available: {}. Map a stick to Move Pointer to use it."
+msgstr ""
+"Indisponibil: {}. Atribuiți unui stick acțiunea „Mută cursorul” pentru a-l "
+"folosi."
+
+#. Translators: the first entry of the list of controllers
+#: src/ui.rs:279
+msgid "All controllers"
+msgstr "Toate controlerele"
+
+#. Translators: {} is the name of the selected profile
+#: src/ui.rs:304
+msgid "Changes are saved to “{}”."
+msgstr "Modificările se salvează în „{}”."
+
+#: src/ui.rs:306
+msgid ""
+"Changes are saved automatically. Save them as a profile to keep several "
+"layouts."
+msgstr ""
+"Modificările se salvează automat. Salvați-le ca profil pentru a păstra mai "
+"multe configurații."
+
+#: src/ui.rs:309
+msgid "Changes are saved automatically but not to a profile."
+msgstr "Modificările se salvează automat, dar nu într-un profil."
+
+#. Translators: shown in eov's status bar while gamepad input is paused
+#: src/worker.rs:46
+msgid "Gamepad paused"
+msgstr "Gamepad pus pe pauză"
+
+#: src/worker.rs:87
+msgid "Gamepad input resumed"
+msgstr "Comenzile de la gamepad au fost reluate"
+
+#: src/worker.rs:89
+msgid "Gamepad input paused"
+msgstr "Comenzile de la gamepad au fost puse pe pauză"
+
+#: src/worker.rs:138
+msgid "Game controllers are not available"
+msgstr "Controlerele de joc nu sunt disponibile"
+
+#. Translators: the state of a small switch; keep it very short
+#: ui/gamepad-window.slint:441
+msgctxt "ToggleChip"
+msgid "Off"
+msgstr "Oprit"
+
+#. Translators: the state of a small switch; keep it very short
+#: ui/gamepad-window.slint:441
+msgctxt "ToggleChip"
+msgid "On"
+msgstr "Pornit"
+
+#. Translators: for screen readers; {} is a setting, such as Pan Speed
+#: ui/gamepad-window.slint:594
+msgctxt "TuningField"
+msgid "Decrease {}"
+msgstr "Micșorează {}"
+
+#. Translators: for screen readers; {} is a setting, such as Pan Speed
+#: ui/gamepad-window.slint:615
+msgctxt "TuningField"
+msgid "Increase {}"
+msgstr "Mărește {}"
+
+#: ui/gamepad-window.slint:641
+msgctxt "HeaderCard"
+msgid "Gamepad Control"
+msgstr "Control prin gamepad"
+
+#: ui/gamepad-window.slint:649
+msgctxt "HeaderCard"
+msgid ""
+"Pan, zoom and move between panes, tabs and series items with a game "
+"controller. Input only acts while eov has focus."
+msgstr ""
+"Deplasați vizualizarea, faceți zoom și treceți între panouri, file și "
+"elementele seriei cu un controler de joc. Comenzile au efect doar cât timp "
+"eov este fereastra activă."
+
+#. Translators: the name of the on/off switch, read out by screen readers
+#: ui/gamepad-window.slint:662
+msgctxt "HeaderCard"
+msgid "Gamepad input"
+msgstr "Comenzi de la gamepad"
+
+#. Translators: the title of the section where the game controller is chosen
+#: ui/gamepad-window.slint:700
+msgctxt "DeviceCard"
+msgid "Device"
+msgstr "Dispozitiv"
+
+#: ui/gamepad-window.slint:701
+msgctxt "DeviceCard"
+msgid "Choose the controller that drives eov."
+msgstr "Alegeți controlerul care comandă eov."
+
+#. Translators: a profile is a saved set of gamepad settings
+#: ui/gamepad-window.slint:739
+msgctxt "ProfileCard"
+msgid "Profiles"
+msgstr "Profiluri"
+
+#: ui/gamepad-window.slint:772
+msgctxt "ProfileCard"
+msgid "Profile name"
+msgstr "Numele profilului"
+
+#. Translators: placeholder of the empty name field
+#: ui/gamepad-window.slint:781
+msgctxt "ProfileCard"
+msgid "Name for a new profile"
+msgstr "Numele noului profil"
+
+#. Translators: saves the settings as a profile with the name typed
+#: ui/gamepad-window.slint:794
+msgctxt "ProfileCard"
+msgid "Save As"
+msgstr "Salvează ca"
+
+#. Translators: saves the default settings as a new profile
+#: ui/gamepad-window.slint:824
+msgctxt "ProfileCard"
+msgid "New"
+msgstr "Nou"
+
+#. Translators: imports a profile from a file
+#: ui/gamepad-window.slint:834
+msgctxt "ProfileCard"
+msgid "Import"
+msgstr "Importă"
+
+#. Translators: exports the settings to a profile file
+#: ui/gamepad-window.slint:846
+msgctxt "ProfileCard"
+msgid "Export"
+msgstr "Exportă"
+
+#. Translators: deletes the selected profile
+#: ui/gamepad-window.slint:858
+msgctxt "ProfileCard"
+msgid "Delete"
+msgstr "Șterge"
+
+#. Translators: the title of the gamepad settings window
+#: ui/gamepad-window.slint:987
+msgctxt "GamepadWindow"
+msgid "Gamepad"
+msgstr "Gamepad"
+
+#. Translators: the section with dead zones, speeds and response curve
+#: ui/gamepad-window.slint:1149
+msgctxt "GamepadWindow"
+msgid "Tuning"
+msgstr "Reglaje"
+
+#: ui/gamepad-window.slint:1150
+msgctxt "GamepadWindow"
+msgid ""
+"Dead zones ignore stick drift. Speeds scale panning and zooming, and a "
+"higher response curve gives finer control near the centre. Double-click a "
+"slider to reset it."
+msgstr ""
+"Zonele moarte ignoră deriva stick-urilor. Vitezele scalează deplasarea și "
+"zoomul, iar o curbă de răspuns mai mare oferă un control mai fin în "
+"apropierea centrului. Faceți dublu clic pe un glisor pentru a-l reseta."
+
+#. Translators: the mouse pointer of the system, which sticks can move
+#: ui/gamepad-window.slint:1163
+msgctxt "GamepadWindow"
+msgid "System Pointer"
+msgstr "Cursorul sistemului"
+
+#. Translators: the name of the on/off switch, read out by screen readers
+#: ui/gamepad-window.slint:1174
+msgctxt "GamepadWindow"
+msgid "System pointer control"
+msgstr "Controlul cursorului sistemului"
+
+#. Translators: the section that assigns actions to the controls
+#: ui/gamepad-window.slint:1202
+msgctxt "GamepadWindow"
+msgid "Mappings"
+msgstr "Atribuiri"
+
+#. Translators: Start and Select are names printed on controller buttons
+#: ui/gamepad-window.slint:1204
+msgctxt "GamepadWindow"
+msgid ""
+"Defaults: the left stick pans, the right stick and the triggers zoom, the D-"
+"pad switches panes and tabs, the shoulder buttons step through the series, "
+"Start pauses and Select shows this window."
+msgstr ""
+"Implicit: stick-ul stâng deplasează vizualizarea, stick-ul drept și "
+"trăgacele fac zoom, D-pad-ul comută între panouri și file, butoanele de umăr "
+"parcurg seria, Start pune pe pauză, iar Select afișează această fereastră."
+
+#. Translators: a heading (in capitals in English: use your own style)
+#: ui/gamepad-window.slint:1208
+msgctxt "GamepadWindow"
+msgid "STICKS AND TRIGGERS"
+msgstr "STICK-URI ȘI TRĂGACE"
+
+#. Translators: a heading (in capitals in English: use your own style)
+#: ui/gamepad-window.slint:1218
+msgctxt "GamepadWindow"
+msgid "BUTTONS"
+msgstr "BUTOANE"

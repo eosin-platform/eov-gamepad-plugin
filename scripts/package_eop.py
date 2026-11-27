@@ -2,9 +2,12 @@
 """Package the gamepad plugin as an eov plugin package (`.eop`).
 
 An `.eop` is a tar archive with `plugin.toml`, the plugin library and the
-`ui/` directory at its root. eov loads the library named after the manifest
-id (`lib<id>.so`, `lib<id>.dylib` or `<id>.dll`), so a mismatched file name
-is refused here rather than at load time.
+`ui/` directory at its root, and the translations: the gettext catalogs
+`translations/<tag>/LC_MESSAGES/*.po` (the folder the manifest's `[i18n]`
+table names), if there are any. The template (`.pot`) is not packaged. eov
+loads the library named after the manifest id (`lib<id>.so`,
+`lib<id>.dylib` or `<id>.dll`), so a mismatched file name is refused here
+rather than at load time.
 
 The archive is reproducible: entries are sorted and carry fixed owners,
 modes and the `SOURCE_DATE_EPOCH` timestamp (0 when unset).
@@ -79,6 +82,46 @@ def ui_files(plugin_root: pathlib.Path) -> list[pathlib.Path]:
     return files
 
 
+def catalogs_dir(plugin_root: pathlib.Path, manifest: dict[str, object]) -> pathlib.Path | None:
+    """The folder of the plugin's catalogs (`[i18n] catalogs`, by default
+    `translations`), or None when the plugin is not translated."""
+    i18n = manifest.get("i18n")
+    if i18n is None:
+        return None
+    if not isinstance(i18n, dict):
+        raise PackageError("plugin.toml: 'i18n' must be a table")
+    catalogs = i18n.get("catalogs", "translations")
+    if not isinstance(catalogs, str) or not catalogs:
+        raise PackageError("plugin.toml: 'i18n.catalogs' must be a folder name")
+    windows = pathlib.PureWindowsPath(catalogs)
+    relative = pathlib.PurePosixPath(catalogs.replace("\\", "/"))
+    if windows.drive or windows.root or relative.is_absolute() or ".." in relative.parts:
+        raise PackageError(
+            f"plugin.toml: 'i18n.catalogs' must stay inside the plugin, got '{catalogs}'"
+        )
+    return plugin_root / relative
+
+
+def translation_files(
+    plugin_root: pathlib.Path, manifest: dict[str, object]
+) -> list[pathlib.Path]:
+    """The catalogs to package, `<catalogs>/<tag>/LC_MESSAGES/*.po`; none
+    while the plugin has no translations yet."""
+    directory = catalogs_dir(plugin_root, manifest)
+    if directory is None or not directory.is_dir():
+        return []
+    files = []
+    for path in sorted(directory.glob("*/LC_MESSAGES/*.po")):
+        relative = path.relative_to(plugin_root)
+        if any(part.startswith(".") for part in path.relative_to(directory).parts):
+            continue
+        if any(p.is_symlink() for p in (directory, path.parent.parent, path.parent, path)):
+            raise PackageError(f"symbolic links cannot be packaged: {relative}")
+        if path.is_file():
+            files.append(path)
+    return files
+
+
 def add_file(
     archive: tarfile.TarFile, source: pathlib.Path, name: str, mode: int, mtime: int
 ) -> None:
@@ -115,7 +158,7 @@ def package(
     ]
     entries += [
         (path, path.relative_to(plugin_root).as_posix(), 0o644)
-        for path in ui_files(plugin_root)
+        for path in ui_files(plugin_root) + translation_files(plugin_root, manifest)
     ]
     output.parent.mkdir(parents=True, exist_ok=True)
     # Write next to the output and rename, so a failed run leaves no partial

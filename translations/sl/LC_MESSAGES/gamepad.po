@@ -1,0 +1,961 @@
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: gamepad\n"
+"Report-Msgid-Bugs-To: https://github.com/eosin-platform/eov-gamepad-plugin/"
+"issues\n"
+"Language-Team: Slovenian\n"
+"Language: sl\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=4; plural=(n%100==1 ? 0 : n%100==2 ? 1 : n%100==3 || "
+"n%100==4 ? 2 : 3);\n"
+"X-Review-Status: machine-translated; not yet reviewed by a native speaker\n"
+
+#: plugin.toml
+msgctxt "plugin.toml"
+msgid "Gamepad"
+msgstr "Igralni plošček"
+
+#: plugin.toml
+msgctxt "plugin.toml"
+msgid ""
+"Provides support for using gamepads as input devices: pan, zoom and switch "
+"panes, tabs and series items with a game controller."
+msgstr ""
+"Omogoča uporabo igralnih ploščkov kot vhodnih naprav: premikanje pogleda, "
+"povečavo ter preklapljanje med podokni, zavihki in elementi serije z "
+"igralnim krmilnikom."
+
+#. Translators: the horizontal (X) axis of the left stick of a game
+#. controller; keep the letter X
+#: src/config.rs:136
+msgid "Left Stick X"
+msgstr "Leva palica X"
+
+#. Translators: the vertical (Y) axis of the left stick
+#: src/config.rs:138
+msgid "Left Stick Y"
+msgstr "Leva palica Y"
+
+#. Translators: the horizontal (X) axis of the right stick
+#: src/config.rs:140
+msgid "Right Stick X"
+msgstr "Desna palica X"
+
+#. Translators: the vertical (Y) axis of the right stick
+#: src/config.rs:142
+msgid "Right Stick Y"
+msgstr "Desna palica Y"
+
+#. Translators: the analog trigger under the left shoulder (LT, L2)
+#: src/config.rs:144
+msgid "Left Trigger"
+msgstr "Levi sprožilec"
+
+#. Translators: the analog trigger under the right shoulder (RT, R2)
+#: src/config.rs:146
+msgid "Right Trigger"
+msgstr "Desni sprožilec"
+
+#. Translators: D-Pad is the directional pad, the cross of four
+#. buttons on the left of a game controller
+#: src/config.rs:149
+msgid "D-Pad Left"
+msgstr "Smerni križ levo"
+
+#: src/config.rs:150
+msgid "D-Pad Right"
+msgstr "Smerni križ desno"
+
+#: src/config.rs:151
+msgid "D-Pad Up"
+msgstr "Smerni križ gor"
+
+#: src/config.rs:152
+msgid "D-Pad Down"
+msgstr "Smerni križ dol"
+
+#. Translators: the four face buttons are named by their position:
+#. the bottom one (A on Xbox, Cross on PlayStation, B on Nintendo)
+#: src/config.rs:155
+msgid "South Button"
+msgstr "Spodnji gumb"
+
+#. Translators: the right face button (B on Xbox, Circle on PlayStation)
+#: src/config.rs:157
+msgid "East Button"
+msgstr "Desni gumb"
+
+#. Translators: the top face button (Y on Xbox, Triangle on PlayStation)
+#: src/config.rs:159
+msgid "North Button"
+msgstr "Zgornji gumb"
+
+#. Translators: the left face button (X on Xbox, Square on PlayStation)
+#: src/config.rs:161
+msgid "West Button"
+msgstr "Levi gumb"
+
+#. Translators: the left shoulder button, or bumper (LB, L1)
+#: src/config.rs:163
+msgid "Left Shoulder"
+msgstr "Levi ramenski gumb"
+
+#. Translators: the right shoulder button, or bumper (RB, R1)
+#: src/config.rs:165
+msgid "Right Shoulder"
+msgstr "Desni ramenski gumb"
+
+#. Translators: pressing the left stick down like a button (LS, L3)
+#: src/config.rs:167
+msgid "Left Stick Click"
+msgstr "Pritisk leve palice"
+
+#. Translators: pressing the right stick down like a button (RS, R3)
+#: src/config.rs:169
+msgid "Right Stick Click"
+msgstr "Pritisk desne palice"
+
+#. Translators: a control that does nothing
+#: src/config.rs:293
+msgid "Unassigned"
+msgstr "Ni dodeljeno"
+
+#. Translators: an action of a game controller; to pan is to move
+#. the view of the slide sideways
+#: src/config.rs:296
+msgid "Pan Horizontally"
+msgstr "Premakni pogled vodoravno"
+
+#: src/config.rs:297
+msgid "Pan Vertically"
+msgstr "Premakni pogled navpično"
+
+#. Translators: for a stick or trigger: pushing it up or to the
+#. right zooms in, the other way zooms out
+#: src/config.rs:300
+msgid "Zoom (Up / Right Zooms In)"
+msgstr "Povečava (gor/desno poveča)"
+
+#: src/config.rs:301
+msgid "Zoom In"
+msgstr "Povečaj"
+
+#: src/config.rs:302
+msgid "Zoom Out"
+msgstr "Pomanjšaj"
+
+#. Translators: moves the mouse pointer of the operating system
+#: src/config.rs:304
+msgid "Move Pointer Horizontally"
+msgstr "Premakni kazalec vodoravno"
+
+#: src/config.rs:305
+msgid "Move Pointer Vertically"
+msgstr "Premakni kazalec navpično"
+
+#. Translators: a pane is one of the views side by side in eov
+#: src/config.rs:307
+msgid "Previous Pane"
+msgstr "Prejšnje podokno"
+
+#: src/config.rs:308
+msgid "Next Pane"
+msgstr "Naslednje podokno"
+
+#: src/config.rs:309
+msgid "Previous Tab"
+msgstr "Prejšnji zavihek"
+
+#: src/config.rs:310
+msgid "Next Tab"
+msgstr "Naslednji zavihek"
+
+#. Translators: the series bar lists the slides of a series
+#: src/config.rs:312
+msgid "Toggle Series Bar"
+msgstr "Pokaži/skrij vrstico serije"
+
+#: src/config.rs:313
+msgid "Previous Series Item"
+msgstr "Prejšnji element serije"
+
+#: src/config.rs:314
+msgid "Next Series Item"
+msgstr "Naslednji element serije"
+
+#: src/config.rs:315
+msgid "Open Selected Series Item"
+msgstr "Odpri izbrani element serije"
+
+#. Translators: fits the whole slide into the view
+#: src/config.rs:317
+msgid "Fit View"
+msgstr "Prilagodi pogled"
+
+#. Translators: this window is the gamepad settings window
+#: src/config.rs:319
+msgid "Show / Hide This Window"
+msgstr "Pokaži/skrij to okno"
+
+#. Translators: turns gamepad input back on, or pauses it
+#: src/config.rs:321
+msgid "Enable / Pause"
+msgstr "Omogoči / začasno ustavi"
+
+#. Translators: a dead zone is how far a stick may move before it
+#. counts as input (it hides stick drift); shown in a narrow column
+#: src/config.rs:459
+msgid "Left Dead Zone"
+msgstr "Levo mrtvo območje"
+
+#: src/config.rs:460
+msgid "Right Dead Zone"
+msgstr "Desno mrtvo območje"
+
+#: src/config.rs:461
+msgid "Trigger Dead Zone"
+msgstr "Mrtvo obm. sprožilcev"
+
+#: src/config.rs:462
+msgid "Pan Speed"
+msgstr "Hitrost premikanja"
+
+#: src/config.rs:463
+msgid "Zoom Speed"
+msgstr "Hitrost povečave"
+
+#. Translators: how input grows with the deflection of a stick: a
+#. higher curve gives finer control near the centre
+#: src/config.rs:466
+msgid "Response Curve"
+msgstr "Krivulja odziva"
+
+#. Translators: the speed of the mouse pointer of the operating system
+#: src/config.rs:468
+msgid "Pointer Speed"
+msgstr "Hitrost kazalca"
+
+#: src/config.rs:684
+msgid "not a profile object"
+msgstr "ni objekt profila"
+
+#. Translators: {} is the value of the "version" field of a profile
+#: src/config.rs:694
+msgid "ignoring the version {}"
+msgstr "različica {} je prezrta"
+
+#. Translators: {key} is a field of a profile file, such as
+#. 'pan_sensitivity'; {value} is what the field holds
+#: src/config.rs:712
+msgid "ignoring '{key}': {value} is not a number"
+msgstr "polje »{key}« je prezrto: {value} ni število"
+
+#. Translators: 'mappings' is a field of a profile file: keep the name
+#: src/config.rs:730
+msgid "ignoring 'mappings': not an object"
+msgstr "polje »mappings« je prezrto: ni objekt"
+
+#: src/config.rs:745
+msgid "the file is not a gamepad profile"
+msgstr "datoteka ni profil igralnega ploščka"
+
+#: src/config.rs:794
+msgid "the stored gamepad settings are not an object"
+msgstr "shranjene nastavitve igralnega ploščka niso objekt"
+
+#. Translators: {key} is a stored setting, such as 'enabled'; {error}
+#. says why it cannot be read
+#: src/config.rs:809
+msgid "ignoring the stored '{key}': {error}"
+msgstr "shranjena nastavitev »{key}« je prezrta: {error}"
+
+#. Translators: {} is a problem with the current settings (not a profile)
+#: src/config.rs:840
+msgid "settings: {}"
+msgstr "nastavitve: {}"
+
+#: src/config.rs:843
+msgid "ignoring the stored settings: {}"
+msgstr "shranjene nastavitve so prezrte: {}"
+
+#: src/config.rs:854
+msgid "ignoring the profile with the name {}"
+msgstr "profil z imenom {} je prezrt"
+
+#: src/config.rs:859
+msgid "ignoring the profile {name}: at most {n} profile is kept"
+msgid_plural "ignoring the profile {name}: at most {n} profiles are kept"
+msgstr[0] "profil {name} je prezrt: ohrani se največ {n} profil"
+msgstr[1] "profil {name} je prezrt: ohranita se največ {n} profila"
+msgstr[2] "profil {name} je prezrt: ohranijo se največ {n} profili"
+msgstr[3] "profil {name} je prezrt: ohrani se največ {n} profilov"
+
+#. Translators: {name} is the name of a profile,
+#. {problem} what is wrong with it
+#: src/config.rs:873
+msgid "{name}: {problem}"
+msgstr "{name}: {problem}"
+
+#. Translators: the name of a profile, then why it cannot be read
+#: src/config.rs:881
+msgid "ignoring the profile {}: {}"
+msgstr "profil {} je prezrt: {}"
+
+#: src/config.rs:983
+msgid "Enter a name for the profile."
+msgstr "Vnesite ime profila."
+
+#: src/config.rs:986
+msgid "Profile names are limited to {n} character."
+msgid_plural "Profile names are limited to {n} characters."
+msgstr[0] "Imena profilov so omejena na {n} znak."
+msgstr[1] "Imena profilov so omejena na {n} znaka."
+msgstr[2] "Imena profilov so omejena na {n} znake."
+msgstr[3] "Imena profilov so omejena na {n} znakov."
+
+#: src/config.rs:991
+msgid "Profile names cannot contain control characters."
+msgstr "Imena profilov ne smejo vsebovati kontrolnih znakov."
+
+#. Translators: the name given to a profile whose name would be empty
+#: src/config.rs:1003
+msgctxt "Profile name"
+msgid "Profile"
+msgstr "Profil"
+
+#. Translators: shown after the name of a controller; {level} is the
+#. charge of its battery in percent
+#: src/engine.rs:74
+msgid "battery {level}%"
+msgstr "baterija {level} %"
+
+#. Translators: shown after the name of a controller; {level} is the
+#. charge of its battery in percent
+#: src/engine.rs:77
+msgid "charging, {level}%"
+msgstr "polnjenje, {level} %"
+
+#. Translators: shown after the name of a controller: its battery is full
+#: src/engine.rs:79
+msgid "charged"
+msgstr "napolnjeno"
+
+#. Translators: {} is a folder of the system, such as /dev/input
+#: src/environment.rs:88
+msgid "{} is not available, so no controller can be opened."
+msgstr "{} ni na voljo, zato ni mogoče odpreti nobenega krmilnika."
+
+#. Translators: udev is the Linux device manager and uaccess the name
+#. of its tag: keep both
+#: src/environment.rs:112
+msgid ""
+"A game controller is connected, but eov is not allowed to read it. udev "
+"normally gives the logged-in user access to controllers (the uaccess tag); "
+"if yours is not recognised as a joystick, add a udev rule that tags it with "
+"uaccess, then reconnect it."
+msgstr ""
+"Igralni krmilnik je priključen, vendar ga eov ne sme brati. udev "
+"prijavljenemu uporabniku običajno dodeli dostop do krmilnikov (oznaka "
+"uaccess); če vaš krmilnik ni prepoznan kot igralna palica, dodajte pravilo "
+"udev, ki mu dodeli oznako uaccess, in ga znova priključite."
+
+#. Translators: {command} is a command to type and {option} one of
+#. its options: they stay as they are
+#: src/environment.rs:124
+msgid ""
+"eov runs as a Flatpak without access to input devices. Allow it by running "
+"{command} (Flatpak 1.15.6 or newer; older versions need {option}), then "
+"restart eov."
+msgstr ""
+"eov se izvaja kot Flatpak brez dostopa do vhodnih naprav. Dostop omogočite z "
+"ukazom {command} (Flatpak 1.15.6 ali novejši; starejše različice potrebujejo "
+"{option}), nato znova zaženite eov."
+
+#. Translators: the type of file in the file dialog
+#: src/plugin.rs:91
+msgid "Gamepad profile"
+msgstr "Profil igralnega ploščka"
+
+#. Translators: the tooltip of the toolbar button, and the title of
+#. the gamepad settings window
+#: src/plugin.rs:100 src/ui.rs:26
+msgid "Gamepad"
+msgstr "Igralni plošček"
+
+#: src/plugin.rs:108
+msgid "the path has no file name"
+msgstr "pot nima imena datoteke"
+
+#: src/plugin.rs:123
+msgid "the file is too large to be a gamepad profile"
+msgstr "datoteka je prevelika za profil igralnega ploščka"
+
+#: src/plugin.rs:212
+msgid "Cannot open the gamepad window"
+msgstr "Okna igralnega ploščka ni mogoče odpreti"
+
+#. Translators: {} is the name of a profile
+#: src/plugin.rs:272
+msgid "The profile “{}” no longer exists."
+msgstr "Profil »{}« ne obstaja več."
+
+#. Translators: the name of a new profile when none was typed
+#: src/plugin.rs:280
+msgctxt "Profile name"
+msgid "Untitled"
+msgstr "Brez imena"
+
+#. Translators: {} is the name of a profile
+#: src/plugin.rs:310
+msgid ""
+"A profile named “{}” already exists. Replace it with the default settings?"
+msgstr ""
+"Profil z imenom »{}« že obstaja. Ali ga želite zamenjati s privzetimi "
+"nastavitvami?"
+
+#. Translators: {} is the name of a profile
+#: src/plugin.rs:316
+msgid ""
+"A profile named “{}” already exists. Replace it with the current settings?"
+msgstr ""
+"Profil z imenom »{}« že obstaja. Ali ga želite zamenjati s trenutnimi "
+"nastavitvami?"
+
+#: src/plugin.rs:321
+msgid "Replace profile?"
+msgstr "Ali želite zamenjati profil?"
+
+#. Translators: a button: replaces the profile
+#: src/plugin.rs:324
+msgid "Replace"
+msgstr "Zamenjaj"
+
+#: src/plugin.rs:325 src/plugin.rs:370
+msgid "Cancel"
+msgstr "Prekliči"
+
+#: src/plugin.rs:338
+msgid "You already have {n} profile. Delete one to save another."
+msgid_plural "You already have {n} profiles. Delete one to save another."
+msgstr[0] "Imate že {n} profil. Če želite shraniti novega, enega izbrišite."
+msgstr[1] "Imate že {n} profila. Če želite shraniti novega, enega izbrišite."
+msgstr[2] "Imate že {n} profile. Če želite shraniti novega, enega izbrišite."
+msgstr[3] "Imate že {n} profilov. Če želite shraniti novega, enega izbrišite."
+
+#: src/plugin.rs:358
+msgid "Choose a saved profile to delete."
+msgstr "Izberite shranjeni profil, ki ga želite izbrisati."
+
+#: src/plugin.rs:362
+msgid "Delete profile?"
+msgstr "Ali želite izbrisati profil?"
+
+#. Translators: {} is the name of a profile
+#: src/plugin.rs:365
+msgid "Delete the profile “{}”? This cannot be undone."
+msgstr "Ali želite izbrisati profil »{}«? Tega ni mogoče razveljaviti."
+
+#. Translators: a button: deletes the profile
+#: src/plugin.rs:369
+msgid "Delete"
+msgstr "Izbriši"
+
+#: src/plugin.rs:384
+msgid "Import a gamepad profile"
+msgstr "Uvoz profila igralnega ploščka"
+
+#. Translators: the name of an exported profile when none is selected
+#: src/plugin.rs:401
+msgctxt "Profile name"
+msgid "Gamepad profile"
+msgstr "Profil igralnega ploščka"
+
+#: src/plugin.rs:407
+msgid "Export the gamepad profile"
+msgstr "Izvoz profila igralnega ploščka"
+
+#. Translators: {} is the path of a file
+#: src/plugin.rs:465
+msgid "Cannot import {}"
+msgstr "Datoteke {} ni mogoče uvoziti"
+
+#. Translators: the name of an imported profile when its file name
+#. cannot be used
+#: src/plugin.rs:478
+msgctxt "Profile name"
+msgid "Imported"
+msgstr "Uvoženi profil"
+
+#. Translators: {} is the name of a profile
+#: src/plugin.rs:496
+msgid "Imported the profile “{}”"
+msgstr "Profil »{}« je uvožen"
+
+#: src/plugin.rs:502
+msgid "You already have {n} profile. Delete one to import another."
+msgid_plural "You already have {n} profiles. Delete one to import another."
+msgstr[0] "Imate že {n} profil. Če želite uvoziti novega, enega izbrišite."
+msgstr[1] "Imate že {n} profila. Če želite uvoziti novega, enega izbrišite."
+msgstr[2] "Imate že {n} profile. Če želite uvoziti novega, enega izbrišite."
+msgstr[3] "Imate že {n} profilov. Če želite uvoziti novega, enega izbrišite."
+
+#: src/plugin.rs:527
+msgid "Cannot export the profile"
+msgstr "Profila ni mogoče izvoziti"
+
+#. Translators: {name} is the name of a profile, {path} a file
+#: src/plugin.rs:536
+msgid "Exported “{name}” to {path}"
+msgstr "Profil »{name}« je izvožen v {path}"
+
+#. Translators: {} is the path of a file
+#: src/plugin.rs:543
+msgid "Cannot write {}"
+msgstr "Datoteke {} ni mogoče zapisati"
+
+#: src/plugin.rs:640
+msgid "Imported the gamepad settings of the previous plugin version"
+msgstr "Uvožene so nastavitve igralnega ploščka iz prejšnje različice vtičnika"
+
+#: src/plugin.rs:642
+msgid ""
+"Imported the gamepad settings and {n} profile of the previous plugin version"
+msgid_plural ""
+"Imported the gamepad settings and {n} profiles of the previous plugin version"
+msgstr[0] ""
+"Uvožene so nastavitve igralnega ploščka in {n} profil iz prejšnje različice "
+"vtičnika"
+msgstr[1] ""
+"Uvožene so nastavitve igralnega ploščka in {n} profila iz prejšnje različice "
+"vtičnika"
+msgstr[2] ""
+"Uvožene so nastavitve igralnega ploščka in {n} profili iz prejšnje različice "
+"vtičnika"
+msgstr[3] ""
+"Uvožene so nastavitve igralnega ploščka in {n} profilov iz prejšnje "
+"različice vtičnika"
+
+#: src/plugin.rs:653
+msgid "Some gamepad settings could not be read and use their defaults"
+msgstr ""
+"Nekaterih nastavitev igralnega ploščka ni bilo mogoče prebrati, zato so "
+"uporabljene privzete vrednosti"
+
+#. Translators: how eov moves the pointer on Wayland: the desktop portal for
+#. remote desktop control; name it as Linux desktops in your language do
+#: src/pointer.rs:44
+msgid "Remote Desktop portal"
+msgstr "portal Remote Desktop"
+
+#. Translators: how eov moves the pointer on macOS and Windows
+#: src/pointer.rs:46
+msgid "system events"
+msgstr "sistemski dogodki"
+
+#. Translators: {} is the reason
+#: src/pointer.rs:208
+msgid "System pointer control was turned off: {}"
+msgstr "Upravljanje sistemskega kazalca je bilo izklopljeno: {}"
+
+#: src/pointer.rs:221
+msgid "System pointer control is not available"
+msgstr "Upravljanje sistemskega kazalca ni na voljo"
+
+#. Translators: the Remote Desktop portal as in "Remote Desktop portal"; {} is the
+#. portal's own error, often in English
+#: src/pointer.rs:312
+msgid "the Remote Desktop portal is not available ({})"
+msgstr "portal Remote Desktop ni na voljo ({})"
+
+#: src/pointer.rs:316
+msgid "cannot create a portal session ({})"
+msgstr "seje portala ni mogoče ustvariti ({})"
+
+#: src/pointer.rs:325
+msgid "cannot request pointer access ({})"
+msgstr "dostopa do kazalca ni mogoče zahtevati ({})"
+
+#: src/pointer.rs:331
+msgid "cannot start the portal session ({})"
+msgstr "seje portala ni mogoče začeti ({})"
+
+#: src/pointer.rs:335
+msgid "pointer access was declined"
+msgstr "dostop do kazalca je bil zavrnjen"
+
+#: src/pointer.rs:338
+msgid "pointer access was not granted ({})"
+msgstr "dostop do kazalca ni bil odobren ({})"
+
+#: src/pointer.rs:342
+msgid "pointer access was not granted"
+msgstr "dostop do kazalca ni bil odobren"
+
+#: src/pointer.rs:361
+msgid "no display server to send pointer motion to"
+msgstr ""
+"ni prikaznega strežnika, ki bi mu bilo mogoče pošiljati premike kazalca"
+
+#. Translators: System Settings › Privacy & Security › Accessibility
+#. is where macOS grants the permission: use the names macOS shows
+#. in your language
+#: src/pointer.rs:403
+msgid ""
+"allow eov under System Settings › Privacy & Security › Accessibility; eov "
+"keeps trying"
+msgstr ""
+"omogočite eov v System Settings › Privacy & Security › Accessibility; eov bo "
+"poskušal še naprej"
+
+#: src/pointer.rs:424
+msgid "not supported on this platform"
+msgstr "na tej platformi ni podprto"
+
+#: src/shared.rs:267
+msgid "Gamepad settings could not be saved"
+msgstr "Nastavitev igralnega ploščka ni bilo mogoče shraniti"
+
+#. Translators: a notification: what happened, then why
+#: src/shared.rs:394
+msgid "{message}: {detail}"
+msgstr "{message}: {detail}"
+
+#. Translators: the first entry of the list of profiles (changes are
+#. then saved, but not to a profile)
+#: src/ui.rs:94
+msgid "No profile"
+msgstr "Brez profila"
+
+#: src/ui.rs:156
+msgid "Starting…"
+msgstr "Zagon …"
+
+#. Translators: {} is the reason, from the system (often in English)
+#: src/ui.rs:159
+msgid "Controllers are unavailable: {}"
+msgstr "Krmilniki niso na voljo: {}"
+
+#. Translators: "Enable / Pause" is an action in the list of mappings
+#: src/ui.rs:164
+msgid ""
+"Paused. Turn it on here or press the controller button mapped to Enable / "
+"Pause."
+msgstr ""
+"Začasno ustavljeno. Vklopite tukaj ali pritisnite gumb krmilnika, dodeljen "
+"dejanju »Omogoči / začasno ustavi«."
+
+#: src/ui.rs:168
+msgid "Waiting for a controller"
+msgstr "Čakanje na krmilnik"
+
+#: src/ui.rs:171
+msgid "Ready. Input is ignored while eov is in the background."
+msgstr "Pripravljeno. Ko je eov v ozadju, se vnos ne upošteva."
+
+#. Translators: {} is the name of the controller in use
+#: src/ui.rs:189
+msgid "Ready: {}"
+msgstr "Pripravljeno: {}"
+
+#: src/ui.rs:191
+msgid "Ready: {n} controller"
+msgid_plural "Ready: {n} controllers"
+msgstr[0] "Pripravljeno: {n} krmilnik"
+msgstr[1] "Pripravljeno: {n} krmilnika"
+msgstr[2] "Pripravljeno: {n} krmilniki"
+msgstr[3] "Pripravljeno: {n} krmilnikov"
+
+#. Translators: {} is the reason, from the system (often in English)
+#: src/ui.rs:203
+msgid "The controller subsystem could not start: {}"
+msgstr "Podsistema za krmilnike ni bilo mogoče zagnati: {}"
+
+#: src/ui.rs:210
+msgid "No controllers detected. Connect one by USB or Bluetooth."
+msgstr "Noben krmilnik ni zaznan. Priključite ga prek USB-ja ali Bluetootha."
+
+#: src/ui.rs:214
+msgid "The chosen controller is not connected, so every controller is used."
+msgstr "Izbrani krmilnik ni priključen, zato se uporabljajo vsi krmilniki."
+
+#: src/ui.rs:216
+msgid "Every connected controller drives eov."
+msgstr "Vsi priključeni krmilniki upravljajo eov."
+
+#. Translators: "Move Pointer" stands for the actions "Move Pointer
+#. Horizontally" and "Move Pointer Vertically" of the mappings
+#: src/ui.rs:228
+msgid ""
+"Your mappings include Move Pointer. Turn this on to let them move the system "
+"pointer while eov has focus."
+msgstr ""
+"Vaše dodelitve vključujejo Premakni kazalec. Vklopite to možnost, da bodo "
+"lahko premikale sistemski kazalec, ko je okno programa eov aktivno."
+
+#. Translators: "Move Pointer" stands for the actions "Move Pointer
+#. Horizontally" and "Move Pointer Vertically"; Remote Desktop and
+#. Accessibility are the names of system permissions: write them as
+#. the system shows them in your language
+#: src/ui.rs:237
+msgid ""
+"Off. When on, Move Pointer mappings move the system pointer while eov has "
+"focus. Wayland asks for Remote Desktop permission and macOS for "
+"Accessibility access."
+msgstr ""
+"Izklopljeno. Ko je vklopljeno, dodelitve Premakni kazalec premikajo "
+"sistemski kazalec, ko je okno programa eov aktivno. Wayland zahteva "
+"dovoljenje Remote Desktop (oddaljeno namizje), macOS pa dostop Accessibility "
+"(dostopnost)."
+
+#: src/ui.rs:246
+msgid "On. Starts when a mapped stick moves."
+msgstr "Vklopljeno. Začne delovati, ko premaknete dodeljeno palico."
+
+#: src/ui.rs:248
+msgid ""
+"On. Starts when a mapped stick moves. Map a stick to Move Pointer to use it."
+msgstr ""
+"Vklopljeno. Začne delovati, ko premaknete dodeljeno palico. Za uporabo "
+"palici dodelite Premakni kazalec."
+
+#: src/ui.rs:250
+msgid "Connecting. The system may ask for permission."
+msgstr "Povezovanje. Sistem bo morda zahteval dovoljenje."
+
+#: src/ui.rs:252
+msgid ""
+"Connecting. The system may ask for permission. Map a stick to Move Pointer "
+"to use it."
+msgstr ""
+"Povezovanje. Sistem bo morda zahteval dovoljenje. Za uporabo palici dodelite "
+"Premakni kazalec."
+
+#. Translators: {} is how the pointer is moved, such as "XTest" or
+#. "Remote Desktop portal"
+#: src/ui.rs:257
+msgid "Active ({})."
+msgstr "Aktivno ({})."
+
+#: src/ui.rs:259
+msgid "Active ({}). Map a stick to Move Pointer to use it."
+msgstr "Aktivno ({}). Za uporabo palici dodelite Premakni kazalec."
+
+#. Translators: {} is the reason
+#: src/ui.rs:263
+msgid "Not available: {}"
+msgstr "Ni na voljo: {}"
+
+#. Translators: {} is the reason, a phrase without a full stop
+#: src/ui.rs:267
+msgid "Not available: {}. Map a stick to Move Pointer to use it."
+msgstr "Ni na voljo: {}. Za uporabo palici dodelite Premakni kazalec."
+
+#. Translators: the first entry of the list of controllers
+#: src/ui.rs:279
+msgid "All controllers"
+msgstr "Vsi krmilniki"
+
+#. Translators: {} is the name of the selected profile
+#: src/ui.rs:304
+msgid "Changes are saved to “{}”."
+msgstr "Spremembe se shranjujejo v »{}«."
+
+#: src/ui.rs:306
+msgid ""
+"Changes are saved automatically. Save them as a profile to keep several "
+"layouts."
+msgstr ""
+"Spremembe se shranjujejo samodejno. Če želite ohraniti več postavitev, jih "
+"shranite kot profil."
+
+#: src/ui.rs:309
+msgid "Changes are saved automatically but not to a profile."
+msgstr "Spremembe se shranjujejo samodejno, vendar ne v profil."
+
+#. Translators: shown in eov's status bar while gamepad input is paused
+#: src/worker.rs:46
+msgid "Gamepad paused"
+msgstr "Igralni plošček je začasno ustavljen"
+
+#: src/worker.rs:87
+msgid "Gamepad input resumed"
+msgstr "Vnos z igralnim ploščkom se nadaljuje"
+
+#: src/worker.rs:89
+msgid "Gamepad input paused"
+msgstr "Vnos z igralnim ploščkom je začasno ustavljen"
+
+#: src/worker.rs:138
+msgid "Game controllers are not available"
+msgstr "Igralni krmilniki niso na voljo"
+
+#. Translators: the state of a small switch; keep it very short
+#: ui/gamepad-window.slint:441
+msgctxt "ToggleChip"
+msgid "Off"
+msgstr "Izkl."
+
+#. Translators: the state of a small switch; keep it very short
+#: ui/gamepad-window.slint:441
+msgctxt "ToggleChip"
+msgid "On"
+msgstr "Vkl."
+
+#. Translators: for screen readers; {} is a setting, such as Pan Speed
+#: ui/gamepad-window.slint:594
+msgctxt "TuningField"
+msgid "Decrease {}"
+msgstr "Zmanjšaj: {}"
+
+#. Translators: for screen readers; {} is a setting, such as Pan Speed
+#: ui/gamepad-window.slint:615
+msgctxt "TuningField"
+msgid "Increase {}"
+msgstr "Povečaj: {}"
+
+#: ui/gamepad-window.slint:641
+msgctxt "HeaderCard"
+msgid "Gamepad Control"
+msgstr "Upravljanje z igralnim ploščkom"
+
+#: ui/gamepad-window.slint:649
+msgctxt "HeaderCard"
+msgid ""
+"Pan, zoom and move between panes, tabs and series items with a game "
+"controller. Input only acts while eov has focus."
+msgstr ""
+"Premikajte pogled, povečujte in se pomikajte med podokni, zavihki in "
+"elementi serije z igralnim krmilnikom. Vnos deluje samo, ko je okno programa "
+"eov aktivno."
+
+#. Translators: the name of the on/off switch, read out by screen readers
+#: ui/gamepad-window.slint:662
+msgctxt "HeaderCard"
+msgid "Gamepad input"
+msgstr "Vnos z igralnim ploščkom"
+
+#. Translators: the title of the section where the game controller is chosen
+#: ui/gamepad-window.slint:700
+msgctxt "DeviceCard"
+msgid "Device"
+msgstr "Naprava"
+
+#: ui/gamepad-window.slint:701
+msgctxt "DeviceCard"
+msgid "Choose the controller that drives eov."
+msgstr "Izberite krmilnik, ki upravlja eov."
+
+#. Translators: a profile is a saved set of gamepad settings
+#: ui/gamepad-window.slint:739
+msgctxt "ProfileCard"
+msgid "Profiles"
+msgstr "Profili"
+
+#: ui/gamepad-window.slint:772
+msgctxt "ProfileCard"
+msgid "Profile name"
+msgstr "Ime profila"
+
+#. Translators: placeholder of the empty name field
+#: ui/gamepad-window.slint:781
+msgctxt "ProfileCard"
+msgid "Name for a new profile"
+msgstr "Ime novega profila"
+
+#. Translators: saves the settings as a profile with the name typed
+#: ui/gamepad-window.slint:794
+msgctxt "ProfileCard"
+msgid "Save As"
+msgstr "Shrani kot"
+
+#. Translators: saves the default settings as a new profile
+#: ui/gamepad-window.slint:824
+msgctxt "ProfileCard"
+msgid "New"
+msgstr "Nov"
+
+#. Translators: imports a profile from a file
+#: ui/gamepad-window.slint:834
+msgctxt "ProfileCard"
+msgid "Import"
+msgstr "Uvozi"
+
+#. Translators: exports the settings to a profile file
+#: ui/gamepad-window.slint:846
+msgctxt "ProfileCard"
+msgid "Export"
+msgstr "Izvozi"
+
+#. Translators: deletes the selected profile
+#: ui/gamepad-window.slint:858
+msgctxt "ProfileCard"
+msgid "Delete"
+msgstr "Izbriši"
+
+#. Translators: the title of the gamepad settings window
+#: ui/gamepad-window.slint:987
+msgctxt "GamepadWindow"
+msgid "Gamepad"
+msgstr "Igralni plošček"
+
+#. Translators: the section with dead zones, speeds and response curve
+#: ui/gamepad-window.slint:1149
+msgctxt "GamepadWindow"
+msgid "Tuning"
+msgstr "Fina nastavitev"
+
+#: ui/gamepad-window.slint:1150
+msgctxt "GamepadWindow"
+msgid ""
+"Dead zones ignore stick drift. Speeds scale panning and zooming, and a "
+"higher response curve gives finer control near the centre. Double-click a "
+"slider to reset it."
+msgstr ""
+"Mrtva območja prezrejo lezenje palic. Hitrosti prilagajajo premikanje "
+"pogleda in povečavo, višja krivulja odziva pa omogoča finejši nadzor blizu "
+"središča. Drsnik ponastavite z dvoklikom."
+
+#. Translators: the mouse pointer of the system, which sticks can move
+#: ui/gamepad-window.slint:1163
+msgctxt "GamepadWindow"
+msgid "System Pointer"
+msgstr "Sistemski kazalec"
+
+#. Translators: the name of the on/off switch, read out by screen readers
+#: ui/gamepad-window.slint:1174
+msgctxt "GamepadWindow"
+msgid "System pointer control"
+msgstr "Upravljanje sistemskega kazalca"
+
+#. Translators: the section that assigns actions to the controls
+#: ui/gamepad-window.slint:1202
+msgctxt "GamepadWindow"
+msgid "Mappings"
+msgstr "Dodelitve"
+
+#. Translators: Start and Select are names printed on controller buttons
+#: ui/gamepad-window.slint:1204
+msgctxt "GamepadWindow"
+msgid ""
+"Defaults: the left stick pans, the right stick and the triggers zoom, the D-"
+"pad switches panes and tabs, the shoulder buttons step through the series, "
+"Start pauses and Select shows this window."
+msgstr ""
+"Privzeto: leva palica premika pogled, desna palica in sprožilca spreminjajo "
+"povečavo, smerni križ preklaplja med podokni in zavihki, ramenska gumba se "
+"pomikata po seriji, Start začasno ustavi vnos, Select pa prikaže to okno."
+
+#. Translators: a heading (in capitals in English: use your own style)
+#: ui/gamepad-window.slint:1208
+msgctxt "GamepadWindow"
+msgid "STICKS AND TRIGGERS"
+msgstr "PALICE IN SPROŽILCI"
+
+#. Translators: a heading (in capitals in English: use your own style)
+#: ui/gamepad-window.slint:1218
+msgctxt "GamepadWindow"
+msgid "BUTTONS"
+msgstr "GUMBI"
